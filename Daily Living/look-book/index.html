@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atelier — The Look Book</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Jost:wght@300;400;500;600&family=Lora:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ivory:#F6F1E7;
+    --ivory-deep:#EFE7D8;
+    --ink:#211D19;
+    --ink-soft:#4A433B;
+    --oxblood:#7C2430;
+    --oxblood-deep:#5E1B24;
+    --brass:#BC9A5C;
+    --brass-light:#DDC48C;
+    --line:#D9CFBB;
+    --card:#FFFDF9;
+    --success:#4B6A4F;
+    --shadow: 0 18px 40px -22px rgba(33,29,25,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(188,154,92,0.10), transparent 60%),
+      var(--ivory);
+    color:var(--ink);
+    font-family:'Jost', sans-serif;
+    -webkit-font-smoothing:antialiased;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+
+  ::selection{ background:var(--brass-light); }
+
+  /* ---------- Start screen ---------- */
+  .start-screen{
+    flex:1 1 auto;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:26px;
+    padding:40px 20px;
+    text-align:center;
+    overflow-y:auto;
+  }
+  .start-screen.hide{ display:none; }
+  .start-masthead h1{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:clamp(34px, 5vw, 54px);
+    letter-spacing:0.03em;
+    margin:0;
+  }
+  .start-masthead .kicker{
+    display:block;
+    margin-top:8px;
+    font-size:12px;
+    letter-spacing:0.26em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .start-prompt{
+    font-family:'Lora', serif;
+    font-size:16px;
+    color:var(--ink-soft);
+    margin:0;
+  }
+  .start-instructions{
+    font-family:'Lora', serif;
+    font-size:13.5px;
+    color:var(--ink-soft);
+    line-height:1.6;
+    max-width:460px;
+    margin:-10px 0 4px;
+  }
+  .start-cards{
+    display:flex;
+    gap:26px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .start-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:16px 16px 14px;
+    cursor:pointer;
+    width:200px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+    font-family:'Jost', sans-serif;
+  }
+  .start-card:hover{
+    transform:translateY(-4px);
+    border-color:var(--oxblood);
+    box-shadow:var(--shadow);
+  }
+  .start-card:focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+  .start-card-frame{
+    width:100%;
+    aspect-ratio:800/1000;
+    background:var(--ivory-deep);
+    border-radius:2px;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    position:relative;
+  }
+  .start-card-frame img{
+    width:100%;
+    height:100%;
+    object-fit:contain;
+  }
+  .start-card-frame.no-art::after{
+    content:"Preview";
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  .start-card-label{
+    font-size:13px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink);
+  }
+
+  /* ---------- Game root visibility ---------- */
+  #gameRoot{
+    display:none;
+    flex-direction:column;
+    flex:1 1 auto;
+    min-height:0;
+    height:100%;
+  }
+  #gameRoot.show{ display:flex; }
+
+  .change-model-link{
+    background:none;
+    border:none;
+    font-family:'Jost', sans-serif;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+    text-underline-offset:3px;
+  }
+  .change-model-link:hover{ color:var(--oxblood); }
+  .change-model-link:focus-visible{ outline:2px solid var(--brass); outline-offset:3px; }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px clamp(18px,4vw,48px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    display:flex;
+    align-items:baseline;
+    gap:12px;
+  }
+  .brand h1{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-size:clamp(19px, 2.2vw, 24px);
+    letter-spacing:0.04em;
+    margin:0;
+  }
+  .brand .rule{ width:1px; height:16px; background:var(--line); }
+  .brand .kicker{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .masthead-right{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+  .look-counter, .score-counter{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:1px;
+  }
+  .look-counter b, .score-counter b{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:14px;
+    color:var(--ink);
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .masthead-divider{ width:1px; height:24px; background:var(--line); }
+
+  /* ---------- Main layout ---------- */
+  .stage-wrap{
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns: minmax(260px, 400px) 1fr;
+    gap:0;
+    max-width:1280px;
+    width:100%;
+    margin:0 auto;
+    overflow:hidden;
+  }
+
+  /* ---------- Doll stage (left) ---------- */
+  .doll-column{
+    padding:clamp(12px,2vw,22px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    border-right:1px solid var(--line);
+    position:relative;
+    min-height:0;
+    overflow:hidden;
+  }
+  .doll-frame{
+    position:relative;
+    width:auto;
+    height:min(52vh, 420px);
+    max-width:100%;
+    aspect-ratio:800/1000;
+    background:var(--card);
+    border-radius:2px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    flex:0 0 auto;
+  }
+  .doll-frame::before{
+    content:"";
+    position:absolute;
+    inset:10px;
+    border:1px solid var(--line);
+    pointer-events:none;
+    z-index:20;
+  }
+  .doll-layer{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:contain;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  .doll-frame.shake{ animation: shakeIt 0.42s ease; }
+  @keyframes shakeIt{
+    0%,100%{ transform:translateX(0); }
+    20%{ transform:translateX(-8px) rotate(-0.6deg); }
+    40%{ transform:translateX(7px) rotate(0.5deg); }
+    60%{ transform:translateX(-5px); }
+    80%{ transform:translateX(4px); }
+  }
+
+  .plinth{
+    margin-top:10px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:12.5px;
+  }
+  .plinth .dot{ width:5px; height:5px; border-radius:50%; background:var(--brass); }
+
+  .stage-actions{
+    margin-top:12px;
+    flex:0 0 auto;
+    display:flex;
+    gap:10px;
+  }
+  .ghost-btn{
+    font-family:'Jost', sans-serif;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--ink);
+    color:var(--ink);
+    padding:8px 16px;
+    cursor:pointer;
+    border-radius:999px;
+    transition:background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .ghost-btn:hover{ background:var(--ink); color:var(--ivory); }
+  .ghost-btn:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+
+  /* Stamp */
+  .stamp{
+    position:absolute;
+    top:12%;
+    right:6%;
+    width:130px;
+    height:130px;
+    z-index:30;
+    pointer-events:none;
+    opacity:0;
+    transform:scale(0.4) rotate(-18deg);
+  }
+  .stamp.show{
+    animation: stampIn .6s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+  @keyframes stampIn{
+    0%{ opacity:0; transform:scale(0.3) rotate(-25deg); }
+    60%{ opacity:1; transform:scale(1.08) rotate(-12deg); }
+    100%{ opacity:1; transform:scale(1) rotate(-12deg); }
+  }
+
+  /* ---------- Wardrobe (right) ---------- */
+  .wardrobe-column{
+    padding:clamp(12px,2vw,22px) clamp(16px,3vw,32px);
+    overflow-y:auto;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+  }
+  .wardrobe-header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom:10px;
+    flex:0 0 auto;
+  }
+  .wardrobe-header h2{
+    font-family:'Playfair Display', serif;
+    font-weight:600;
+    font-size:17px;
+    margin:0;
+  }
+  .wardrobe-header span{
+    font-size:10.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
+  .section-block{ flex:0 0 auto; }
+  .section-block + .section-block{ margin-top:12px; }
+  .section-eyebrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-bottom:7px;
+    font-weight:500;
+  }
+  .section-eyebrow::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(84px,1fr));
+    gap:8px;
+  }
+
+  .item-card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:3px;
+    padding:6px 5px 7px;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    font-family:'Jost', sans-serif;
+  }
+  .item-card:hover{
+    transform:translateY(-3px);
+    border-color:var(--oxblood);
+    box-shadow:0 10px 20px -14px rgba(33,29,25,0.5);
+  }
+  .item-card:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+  .item-card .punch{
+    position:absolute;
+    top:8px;
+    left:8px;
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--ivory);
+    border:1px solid var(--line);
+  }
+  .item-card .thumb-wrap{
+    width:100%;
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--ivory-deep);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .item-card img{
+    max-width:82%;
+    max-height:82%;
+    object-fit:contain;
+  }
+  .item-card .placeholder-icon{
+    font-family:'Playfair Display', serif;
+    font-style:italic;
+    color:var(--ink-soft);
+    font-size:9.5px;
+    text-align:center;
+    padding:0 4px;
+  }
+  .item-card .label{
+    font-size:10px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color:var(--ink);
+    text-align:center;
+  }
+  .item-card.selected{
+    border-color:var(--oxblood);
+    background:linear-gradient(0deg, rgba(124,36,48,0.04), rgba(124,36,48,0.04)), var(--card);
+  }
+  .item-card.selected .thumb-wrap{
+    box-shadow: inset 0 0 0 2px var(--oxblood);
+  }
+  .item-card .check{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:18px;
+    height:18px;
+    border-radius:50%;
+    background:var(--oxblood);
+    color:var(--ivory);
+    font-size:11px;
+    display:none;
+    align-items:center;
+    justify-content:center;
+  }
+  .item-card.selected .check{ display:flex; }
+
+  /* ---------- Brief bar (bottom) ---------- */
+  .brief-bar{
+    flex:0 0 auto;
+    position:relative;
+    border-top:1px solid var(--line);
+    background:var(--ivory-deep);
+    padding:12px clamp(18px,4vw,48px);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .brief-pointer{
+    position:absolute;
+    left:clamp(18px,4vw,48px);
+    bottom:100%;
+    margin-bottom:2px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2px;
+    pointer-events:none;
+    z-index:40;
+    animation: pointerBounce 1.3s ease-in-out infinite;
+  }
+  .brief-pointer.hide{ display:none; }
+  .brief-pointer .pointer-label{
+    font-family:'Jost', sans-serif;
+    font-size:11px;
+    font-weight:500;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--oxblood);
+    background:var(--card);
+    border:1px solid var(--oxblood);
+    padding:5px 12px;
+    border-radius:999px;
+    white-space:nowrap;
+    box-shadow:0 6px 14px -8px rgba(33,29,25,0.35);
+  }
+  .brief-pointer svg{ width:20px; height:20px; }
+  @keyframes pointerBounce{
+    0%, 100%{ transform:translateY(0); }
+    50%{ transform:translateY(7px); }
+  }
+  .brief-text-wrap{ max-width:640px; }
+  .brief-eyebrow{
+    font-size:10px;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-bottom:4px;
+    display:block;
+  }
+  .brief-text{
+    font-family:'Lora', serif;
+    font-style:normal;
+    font-weight:500;
+    font-size:clamp(15px, 1.8vw, 18px);
+    color:var(--ink);
+    margin:0;
+    line-height:1.45;
+  }
+  .brief-highlight{
+    color:var(--oxblood);
+    font-weight:600;
+    padding:0 1px;
+    border-bottom:1.5px solid var(--brass);
+  }
+  .feedback-line{
+    font-size:12px;
+    letter-spacing:0.02em;
+    margin-top:5px;
+    min-height:15px;
+    font-weight:500;
+  }
+  .feedback-line.ok{ color:var(--success); }
+  .feedback-line.bad{ color:var(--oxblood); }
+
+  .brief-actions{
+    display:flex;
+    align-items:center;
+    gap:14px;
+  }
+  .primary-btn{
+    font-family:'Jost', sans-serif;
+    font-size:12.5px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    background:var(--oxblood);
+    color:var(--ivory);
+    border:1px solid var(--oxblood);
+    padding:11px 26px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:background .2s ease, transform .15s ease, box-shadow .2s ease;
+    box-shadow: 0 10px 22px -14px rgba(124,36,48,0.7);
+  }
+  .primary-btn:hover{ background:var(--oxblood-deep); transform:translateY(-1px); }
+  .primary-btn:active{ transform:translateY(0); }
+  .primary-btn:disabled{
+    background:#C9BFA9;
+    border-color:#C9BFA9;
+    box-shadow:none;
+    cursor:not-allowed;
+  }
+  .primary-btn:focus-visible{ outline:2px solid var(--brass); outline-offset:2px; }
+
+  .primary-btn.next{ background:var(--ink); border-color:var(--ink); box-shadow:0 10px 22px -14px rgba(33,29,25,0.6); }
+  .primary-btn.next:hover{ background:#000; }
+
+  /* ---------- Final overlay ---------- */
+  .overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(33,29,25,0.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:100;
+    padding:20px;
+  }
+  .overlay.show{ display:flex; }
+  .finale-card{
+    background:var(--ivory);
+    max-width:460px;
+    width:100%;
+    padding:44px 38px 36px;
+    text-align:center;
+    border-radius:3px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.5);
+    position:relative;
+  }
+  .finale-card::before, .finale-card::after{
+    content:"";
+    position:absolute;
+    left:24px; right:24px;
+    height:1px;
+    background:var(--brass);
+  }
+  .finale-card::before{ top:16px; }
+  .finale-card::after{ bottom:16px; }
+  .finale-eyebrow{
+    font-size:11px;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    color:var(--brass);
+    margin-bottom:10px;
+  }
+  .finale-card h2{
+    font-family:'Playfair Display', serif;
+    font-weight:700;
+    font-style:italic;
+    font-size:30px;
+    margin:0 0 8px;
+  }
+  .finale-score{
+    font-family:'Playfair Display', serif;
+    font-size:56px;
+    font-weight:700;
+    margin:14px 0 4px;
+    color:var(--oxblood);
+  }
+  .finale-sub{
+    color:var(--ink-soft);
+    font-size:14px;
+    margin-bottom:26px;
+  }
+
+  @media (max-width: 880px){
+    html,body{ height:auto; min-height:100%; }
+    body{ overflow:auto; }
+    #gameRoot{ height:auto; }
+    .stage-wrap{ grid-template-columns:1fr; overflow:visible; }
+    .doll-column{ border-right:none; border-bottom:1px solid var(--line); }
+    .doll-frame{ height:min(46vh, 340px); }
+    .wardrobe-column{ overflow-y:visible; }
+    .masthead-right{ gap:14px; }
+    .brief-bar{ flex-direction:column; align-items:flex-start; }
+    .brief-actions{ width:100%; justify-content:flex-end; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div class="start-screen" id="startScreen">
+  <div class="start-masthead">
+    <h1>Atelier</h1>
+    <span class="kicker">The Look Book</span>
+  </div>
+  <p class="start-prompt">Choose a model below and read the style brief to dress them.</p>
+  <div class="start-cards">
+    <button class="start-card" type="button" data-gender="girl">
+      <span class="start-card-frame">
+        <img src="assets/girl/base.png" alt="Girl model" onerror="this.style.display='none'; this.parentElement.classList.add('no-art');">
+      </span>
+      <span class="start-card-label">Girl</span>
+    </button>
+    <button class="start-card" type="button" data-gender="boy">
+      <span class="start-card-frame">
+        <img src="assets/boy/base.png" alt="Boy model" onerror="this.style.display='none'; this.parentElement.classList.add('no-art');">
+      </span>
+      <span class="start-card-label">Boy</span>
+    </button>
+  </div>
+</div>
+
+<div id="gameRoot">
+
+<header class="masthead">
+  <div class="brand">
+    <h1>Atelier</h1>
+    <div class="rule"></div>
+    <span class="kicker">The Look Book</span>
+  </div>
+  <div class="masthead-right">
+    <button class="change-model-link" id="changeModelBtn" type="button">Change Model</button>
+    <div class="masthead-divider"></div>
+    <div class="look-counter">
+      <span>Look</span>
+      <b id="lookCounter">01 / 05</b>
+    </div>
+    <div class="masthead-divider"></div>
+    <div class="score-counter">
+      <span>Score</span>
+      <b id="scoreCounter">0</b>
+    </div>
+  </div>
+</header>
+
+<div class="stage-wrap">
+
+  <!-- LEFT: DOLL -->
+  <section class="doll-column">
+    <div class="doll-frame" id="dollFrame">
+      <img class="doll-layer" id="layerBase" alt="" style="z-index:1;">
+      <img class="doll-layer" id="layerBottom" alt="" style="z-index:2; display:none;">
+      <img class="doll-layer" id="layerTop" alt="" style="z-index:3; display:none;">
+      <img class="doll-layer" id="layerAccA" alt="" style="z-index:4; display:none;">
+      <img class="doll-layer" id="layerAccB" alt="" style="z-index:5; display:none;">
+      <svg class="stamp" id="stampSvg" viewBox="0 0 130 130" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="65" cy="65" r="58" fill="none" stroke="#BC9A5C" stroke-width="3"/>
+        <circle cx="65" cy="65" r="49" fill="none" stroke="#BC9A5C" stroke-width="1.5"/>
+        <path id="stampArcTop" fill="none" d="M 20 65 A 45 45 0 0 1 110 65"/>
+        <text font-family="Playfair Display, serif" font-style="italic" font-weight="600" font-size="13" fill="#BC9A5C" text-anchor="middle">
+          <textPath href="#stampArcTop" startOffset="50%">APPROVED LOOK</textPath>
+        </text>
+        <text x="65" y="72" font-family="Playfair Display, serif" font-style="italic" font-weight="700" font-size="20" fill="#BC9A5C" text-anchor="middle">Atelier</text>
+        <text x="65" y="90" font-family="Jost, sans-serif" font-size="8" letter-spacing="2" fill="#BC9A5C" text-anchor="middle">S/S COLLECTION</text>
+      </svg>
+    </div>
+    <div class="plinth"><span class="dot"></span> On Display <span class="dot"></span></div>
+    <div class="stage-actions">
+      <button class="ghost-btn" id="resetBtn" type="button">Clear Look</button>
+    </div>
+  </section>
+
+  <!-- RIGHT: WARDROBE -->
+  <section class="wardrobe-column">
+    <div class="wardrobe-header">
+      <h2>The Wardrobe</h2>
+      <span id="wardrobeHint">Select pieces to dress the look</span>
+    </div>
+
+    <div class="section-block">
+      <div class="section-eyebrow">Tops</div>
+      <div class="card-grid" id="gridTops"></div>
+    </div>
+    <div class="section-block">
+      <div class="section-eyebrow">Bottoms</div>
+      <div class="card-grid" id="gridBottoms"></div>
+    </div>
+    <div class="section-block" id="sectionDresses">
+      <div class="section-eyebrow">Dresses</div>
+      <div class="card-grid" id="gridDresses"></div>
+    </div>
+    <div class="section-block">
+      <div class="section-eyebrow">Accessories</div>
+      <div class="card-grid" id="gridAccessories"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- BOTTOM: BRIEF -->
+<div class="brief-bar">
+  <div class="brief-pointer" id="briefPointer">
+    <span class="pointer-label">Read your brief</span>
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2 V18" stroke="#7C2430" stroke-width="2" stroke-linecap="round"/>
+      <path d="M5 12 L12 19 L19 12" stroke="#7C2430" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="brief-text-wrap">
+    <span class="brief-eyebrow">Stylist's Brief</span>
+    <p class="brief-text" id="briefText">Loading today's brief…</p>
+    <div class="feedback-line" id="feedbackLine"></div>
+  </div>
+  <div class="brief-actions">
+    <button class="primary-btn" id="confirmBtn" type="button">Confirm Look</button>
+    <button class="primary-btn next" id="nextBtn" type="button" style="display:none;">Next Look →</button>
+  </div>
+</div>
+
+</div><!-- /#gameRoot -->
+
+<!-- FINALE OVERLAY -->
+<div class="overlay" id="finaleOverlay">
+  <div class="finale-card">
+    <div class="finale-eyebrow">Final Edit</div>
+    <h2 id="finaleTitle">Fashion Icon</h2>
+    <div class="finale-score" id="finaleScore">100</div>
+    <div class="finale-sub" id="finaleSub">out of 100 — five looks, perfectly cast.</div>
+    <button class="primary-btn" id="playAgainBtn" type="button">Style Again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+
+  // ---------- Catalog ----------
+  const GENDER_CATALOGS = {
+    girl: {
+      tops: [
+        { id:'blouse', label:'Blouse' },
+        { id:'shirt', label:'T-Shirt' },
+        { id:'cardigan', label:'Cardigan' },
+        { id:'sweater', label:'Sweater' },
+        { id:'raincoat', label:'Raincoat' },
+      ],
+      bottoms: [
+        { id:'skirt', label:'Skirt' },
+        { id:'jeans', label:'Jeans' },
+      ],
+      dresses: [
+        { id:'casualdress', label:'Casual Dress' },
+        { id:'formaldress', label:'Formal Dress' },
+      ],
+      accessories: [
+        { id:'sunglasses', label:'Sunglasses' },
+        { id:'hat', label:'Hat' },
+      ]
+    },
+    boy: {
+      tops: [
+        { id:'tshirt', label:'T-Shirt' },
+        { id:'polo', label:'Polo Shirt' },
+        { id:'plaid', label:'Plaid Shirt' },
+        { id:'shirtandtie', label:'Shirt & Tie' },
+        { id:'jacket', label:'Jacket' },
+      ],
+      bottoms: [
+        { id:'shorts', label:'Shorts' },
+        { id:'cargopants', label:'Cargo Pants' },
+        { id:'formalpants', label:'Formal Pants' },
+        { id:'jeans', label:'Jeans' },
+      ],
+      dresses: [],
+      accessories: [
+        { id:'sunglasses', label:'Sunglasses' },
+        { id:'cap', label:'Cap' },
+      ]
+    }
+  };
+
+  const NO_ARTICLE = new Set(['jeans','sunglasses','shorts','cargopants','formalpants']);
+
+  let currentGender = null; // 'girl' | 'boy'
+  let CATALOG = null;
+
+  function assetPath(kind, id){
+    // kind: 'base' | 'clothes' | 'menu'
+    if(kind === 'base') return `assets/${currentGender}/base.png`;
+    return `assets/${currentGender}/${kind}/${id}.png`;
+  }
+
+  function labelOf(id){
+    for(const cat of Object.values(CATALOG)){
+      const found = cat.find(i=>i.id===id);
+      if(found) return found.label;
+    }
+    return id;
+  }
+
+  function phraseFor(id){
+    const label = labelOf(id).toLowerCase();
+    return NO_ARTICLE.has(id) ? label : ('a ' + label);
+  }
+
+  function joinWithCommaAnd(parts){
+    if(parts.length === 1) return parts[0];
+    if(parts.length === 2) return parts[0] + ' and ' + parts[1];
+    return parts.slice(0,-1).join(', ') + ', and ' + parts[parts.length-1];
+  }
+
+  // ---------- Game state ----------
+  const TOTAL_ROUNDS = 5;
+  let rounds = [];
+  let roundIndex = 0;
+  let score = 0;
+  let wrongAttemptsThisRound = 0;
+  let locked = false; // true once a round has been solved, until Next is pressed
+
+  const selected = {
+    top: null,
+    bottom: null,
+    dress: null,
+    accessories: new Set()
+  };
+
+  function randChoice(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+
+  function generateRound(){
+    const hasDresses = CATALOG.dresses.length > 0;
+    const useDress = hasDresses && Math.random() < 0.5;
+    const r = Math.random();
+    let accCount = 0;
+    if(r > 0.85) accCount = 2;
+    else if(r > 0.45) accCount = 1;
+
+    const accessoryPool = CATALOG.accessories.map(a=>a.id);
+    let accessories = [];
+    if(accCount === 1){
+      accessories = [randChoice(accessoryPool)];
+    } else if(accCount === 2){
+      accessories = accessoryPool.slice();
+    }
+
+    if(useDress){
+      return {
+        dress: randChoice(CATALOG.dresses).id,
+        top: null,
+        bottom: null,
+        accessories
+      };
+    } else {
+      return {
+        dress: null,
+        top: randChoice(CATALOG.tops).id,
+        bottom: randChoice(CATALOG.bottoms).id,
+        accessories
+      };
+    }
+  }
+
+  function buildRounds(){
+    rounds = [];
+    let prevKey = '';
+    for(let i=0;i<TOTAL_ROUNDS;i++){
+      let candidate;
+      let tries = 0;
+      do{
+        candidate = generateRound();
+        tries++;
+      } while(JSON.stringify(candidate) === prevKey && tries < 8);
+      prevKey = JSON.stringify(candidate);
+      rounds.push(candidate);
+    }
+  }
+
+  function targetSet(t){
+    const s = new Set();
+    if(t.dress) s.add(t.dress);
+    if(t.top) s.add(t.top);
+    if(t.bottom) s.add(t.bottom);
+    t.accessories.forEach(a=>s.add(a));
+    return s;
+  }
+
+  function currentSelectionSet(){
+    const s = new Set();
+    if(selected.dress) s.add(selected.dress);
+    if(selected.top) s.add(selected.top);
+    if(selected.bottom) s.add(selected.bottom);
+    selected.accessories.forEach(a=>s.add(a));
+    return s;
+  }
+
+  function setsEqual(a,b){
+    if(a.size !== b.size) return false;
+    for(const v of a){ if(!b.has(v)) return false; }
+    return true;
+  }
+
+  // ---------- Rendering: wardrobe ----------
+  const grids = {
+    tops: document.getElementById('gridTops'),
+    bottoms: document.getElementById('gridBottoms'),
+    dresses: document.getElementById('gridDresses'),
+    accessories: document.getElementById('gridAccessories'),
+  };
+
+  function categoryOf(id){
+    for(const [cat, list] of Object.entries(CATALOG)){
+      if(list.find(i=>i.id===id)) return cat.slice(0,-1); // singular-ish: tops->top
+    }
+    return null;
+  }
+
+  function buildWardrobe(){
+    document.getElementById('sectionDresses').style.display = CATALOG.dresses.length ? '' : 'none';
+
+    Object.entries(CATALOG).forEach(([catKey, items])=>{
+      const grid = grids[catKey];
+      grid.innerHTML = '';
+      items.forEach(item=>{
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'item-card';
+        card.dataset.id = item.id;
+        card.setAttribute('aria-pressed','false');
+        card.innerHTML = `
+          <span class="punch"></span>
+          <span class="check">✓</span>
+          <span class="thumb-wrap">
+            <img src="${assetPath('menu', item.id)}" alt="${item.label}"
+                 onerror="this.style.display='none'; this.parentElement.insertAdjacentHTML('beforeend','<span class=\\'placeholder-icon\\'>${item.label}</span>');">
+          </span>
+          <span class="label">${item.label}</span>
+        `;
+        card.addEventListener('click', ()=> handleCardClick(item.id, catKey));
+        grid.appendChild(card);
+      });
+    });
+  }
+
+  function handleCardClick(id, catKey){
+    if(locked) return; // round already solved, waiting for Next
+    dismissBriefPointer();
+
+    if(catKey === 'dresses'){
+      if(selected.dress === id){
+        selected.dress = null;
+      } else {
+        selected.dress = id;
+        selected.top = null;
+        selected.bottom = null;
+      }
+    } else if(catKey === 'tops'){
+      selected.dress = null;
+      selected.top = (selected.top === id) ? null : id;
+    } else if(catKey === 'bottoms'){
+      selected.dress = null;
+      selected.bottom = (selected.bottom === id) ? null : id;
+    } else if(catKey === 'accessories'){
+      if(selected.accessories.has(id)) selected.accessories.delete(id);
+      else selected.accessories.add(id);
+    }
+
+    refreshWardrobeSelectedStates();
+    refreshDollLayers();
+    clearFeedback();
+  }
+
+  function refreshWardrobeSelectedStates(){
+    document.querySelectorAll('.item-card').forEach(card=>{
+      const id = card.dataset.id;
+      const isSel = (id === selected.dress) || (id === selected.top) || (id === selected.bottom) || selected.accessories.has(id);
+      card.classList.toggle('selected', isSel);
+      card.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+    });
+  }
+
+  // ---------- Rendering: doll ----------
+  const layerBottom = document.getElementById('layerBottom');
+  const layerTop = document.getElementById('layerTop');
+  const layerAccA = document.getElementById('layerAccA');
+  const layerAccB = document.getElementById('layerAccB');
+
+  function setLayer(imgEl, id){
+    if(!id){
+      imgEl.style.display = 'none';
+      imgEl.removeAttribute('src');
+      return;
+    }
+    imgEl.src = assetPath('clothes', id);
+    imgEl.style.display = 'block';
+    imgEl.onerror = () => { imgEl.style.display = 'none'; };
+  }
+
+  function refreshDollLayers(){
+    if(selected.dress){
+      setLayer(layerBottom, selected.dress);
+      setLayer(layerTop, null);
+    } else {
+      setLayer(layerBottom, selected.bottom);
+      setLayer(layerTop, selected.top);
+    }
+    const accs = Array.from(selected.accessories);
+    setLayer(layerAccA, accs[0] || null);
+    setLayer(layerAccB, accs[1] || null);
+  }
+
+  // ---------- Brief / HUD ----------
+  const briefText = document.getElementById('briefText');
+  const feedbackLine = document.getElementById('feedbackLine');
+  const lookCounter = document.getElementById('lookCounter');
+  const scoreCounter = document.getElementById('scoreCounter');
+  const confirmBtn = document.getElementById('confirmBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const stampSvg = document.getElementById('stampSvg');
+  const dollFrame = document.getElementById('dollFrame');
+
+  function pad2(n){ return n < 10 ? '0'+n : ''+n; }
+
+  function highlightPhrase(id){
+    return `<span class="brief-highlight">${phraseFor(id)}</span>`;
+  }
+
+  function renderBrief(){
+    const t = rounds[roundIndex];
+    const parts = [];
+    if(t.dress){
+      parts.push(highlightPhrase(t.dress));
+    } else {
+      parts.push(highlightPhrase(t.top));
+      parts.push(highlightPhrase(t.bottom));
+    }
+    t.accessories.forEach(a=> parts.push(highlightPhrase(a)));
+    briefText.innerHTML = 'I want to wear ' + joinWithCommaAnd(parts) + '.';
+    lookCounter.textContent = `${pad2(roundIndex+1)} / ${pad2(TOTAL_ROUNDS)}`;
+    scoreCounter.textContent = score;
+  }
+
+  function clearFeedback(){
+    feedbackLine.textContent = '';
+    feedbackLine.className = 'feedback-line';
+  }
+
+  function showFeedback(msg, ok){
+    feedbackLine.textContent = msg;
+    feedbackLine.className = 'feedback-line ' + (ok ? 'ok' : 'bad');
+  }
+
+  // ---------- Round flow ----------
+  function resetSelectionOnly(){
+    selected.top = null;
+    selected.bottom = null;
+    selected.dress = null;
+    selected.accessories.clear();
+    refreshWardrobeSelectedStates();
+    refreshDollLayers();
+  }
+
+  const briefPointer = document.getElementById('briefPointer');
+  let pointerDismissed = false;
+
+  function dismissBriefPointer(){
+    pointerDismissed = true;
+    briefPointer.classList.add('hide');
+  }
+
+  function updateBriefPointerVisibility(){
+    if(roundIndex === 0 && !pointerDismissed){
+      briefPointer.classList.remove('hide');
+    } else {
+      briefPointer.classList.add('hide');
+    }
+  }
+
+  function startRound(){
+    locked = false;
+    wrongAttemptsThisRound = 0;
+    resetSelectionOnly();
+    clearFeedback();
+    stampSvg.classList.remove('show');
+    confirmBtn.style.display = 'inline-block';
+    confirmBtn.disabled = false;
+    nextBtn.style.display = 'none';
+    renderBrief();
+    updateBriefPointerVisibility();
+  }
+
+  function onConfirm(){
+    if(locked) return;
+    const target = targetSet(rounds[roundIndex]);
+    const current = currentSelectionSet();
+
+    if(current.size === 0){
+      showFeedback('Choose at least one piece before confirming.', false);
+      return;
+    }
+
+    if(setsEqual(target, current)){
+      const pts = Math.max(20 - (5 * wrongAttemptsThisRound), 5);
+      score += pts;
+      scoreCounter.textContent = score;
+      locked = true;
+      confirmBtn.disabled = true;
+      showFeedback(`Perfect casting — +${pts} points.`, true);
+      stampSvg.classList.add('show');
+      if(roundIndex === TOTAL_ROUNDS - 1){
+        nextBtn.textContent = 'See Final Edit →';
+      } else {
+        nextBtn.textContent = 'Next Look →';
+      }
+      nextBtn.style.display = 'inline-block';
+    } else {
+      wrongAttemptsThisRound++;
+      showFeedback('Not quite this season — check the brief again.', false);
+      dollFrame.classList.remove('shake');
+      void dollFrame.offsetWidth;
+      dollFrame.classList.add('shake');
+    }
+  }
+
+  function onNext(){
+    if(roundIndex === TOTAL_ROUNDS - 1){
+      showFinale();
+      return;
+    }
+    roundIndex++;
+    startRound();
+  }
+
+  function onReset(){
+    if(locked) return;
+    resetSelectionOnly();
+    clearFeedback();
+  }
+
+  // ---------- Finale ----------
+  const overlay = document.getElementById('finaleOverlay');
+  const finaleTitle = document.getElementById('finaleTitle');
+  const finaleScore = document.getElementById('finaleScore');
+  const finaleSub = document.getElementById('finaleSub');
+  const playAgainBtn = document.getElementById('playAgainBtn');
+
+  function tierFor(score){
+    if(score >= 95) return ['Fashion Icon', 'Every look, first cast. A vision from brief to runway.'];
+    if(score >= 75) return ['Stylist Extraordinaire', 'A sharp eye for the brief — the atelier approves.'];
+    if(score >= 55) return ['Rising Talent', 'Good instincts — a few more seasons and you will be unstoppable.'];
+    return ['Getting There', 'Fashion is a language — keep practicing your vocabulary.'];
+  }
+
+  function showFinale(){
+    const [title, sub] = tierFor(score);
+    finaleTitle.textContent = title;
+    finaleScore.textContent = score;
+    finaleSub.textContent = `out of 100 — ${sub}`;
+    overlay.classList.add('show');
+  }
+
+  function playAgain(){
+    overlay.classList.remove('show');
+    score = 0;
+    roundIndex = 0;
+    pointerDismissed = false;
+    buildRounds();
+    startRound();
+  }
+
+
+  // ---------- Gender selection / init ----------
+  const startScreen = document.getElementById('startScreen');
+  const gameRoot = document.getElementById('gameRoot');
+  const layerBase = document.getElementById('layerBase');
+
+  function selectGender(gender){
+    currentGender = gender;
+    CATALOG = GENDER_CATALOGS[gender];
+
+    layerBase.src = assetPath('base');
+    layerBase.style.display = 'block';
+
+    score = 0;
+    roundIndex = 0;
+    pointerDismissed = false;
+    overlay.classList.remove('show');
+
+    buildWardrobe();
+    buildRounds();
+    startRound();
+
+    startScreen.classList.add('hide');
+    gameRoot.classList.add('show');
+  }
+
+  function backToStart(){
+    gameRoot.classList.remove('show');
+    startScreen.classList.remove('hide');
+  }
+
+  document.querySelectorAll('.start-card').forEach(card=>{
+    card.addEventListener('click', ()=> selectGender(card.dataset.gender));
+  });
+  document.getElementById('changeModelBtn').addEventListener('click', backToStart);
+
+  // ---------- Init ----------
+  confirmBtn.addEventListener('click', onConfirm);
+  nextBtn.addEventListener('click', onNext);
+  document.getElementById('resetBtn').addEventListener('click', onReset);
+  playAgainBtn.addEventListener('click', playAgain);
+
+})();
+</script>
+
+</body>
+</html>
