@@ -34,9 +34,11 @@
     font-family:'Jost', sans-serif;
     -webkit-font-smoothing:antialiased;
     height:100vh;
+    height:100dvh; /* actual visible area on tablets/mobile, where 100vh can be taller than what's shown */
     display:flex;
     flex-direction:column;
-    overflow:hidden;
+    overflow-y:auto;   /* safety net: if content is ever taller than the viewport, scroll instead of clipping */
+    overflow-x:hidden;
   }
 
   ::selection{ background:var(--brass-light); }
