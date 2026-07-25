@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kitchen Catch! - Educational Game</title>
+
+  <!-- Ubuntu Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       MODERN FUN PALETTE & BASE RESETS
+       ========================================================================== */
+    :root {
+      --bg-main: #FFF9F2;
+      --card-bg: #FFFFFF;
+      --primary-coral: #FF5A5F;
+      --primary-hover: #E0484C;
+      --secondary-teal: #00B4D8;
+      --secondary-dark: #0096C7;
+      --accent-yellow: #FFC300;
+      --success-green: #2EC4B6;
+      --text-dark: #2B2D42;
+      --text-muted: #6C757D;
+      --border-color: #FFE5D9;
+      --font-ubuntu: 'Ubuntu', sans-serif;
+      --shadow-sm: 0 4px 12px rgba(43, 45, 66, 0.08);
+      --shadow-md: 0 8px 24px rgba(43, 45, 66, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg-main);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(255, 90, 95, 0.08) 0%, transparent 35%),
+        radial-gradient(circle at 90% 80%, rgba(0, 180, 216, 0.08) 0%, transparent 35%);
+      font-family: var(--font-ubuntu);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    /* ==========================================================================
+       APP CONTAINER & LAYOUT STRUCTURE
+       ========================================================================== */
+    #app-container {
+      width: 100%;
+      height: 100%;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: var(--shadow-md);
+      border: 2px solid var(--border-color);
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      animation: fadeIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .game-title {
+      font-size: clamp(1.8rem, 5vw, 2.6rem);
+      font-weight: 700;
+      text-align: center;
+      color: var(--primary-coral);
+      letter-spacing: -0.5px;
+      text-shadow: 2px 2px 0px rgba(255, 195, 0, 0.35);
+      margin-bottom: 0.25rem;
+    }
+
+    /* Interactive Buttons */
+    .btn {
+      min-height: 48px;
+      min-width: 44px;
+      padding: 0.6rem 1.25rem;
+      font-family: var(--font-ubuntu);
+      font-size: 1rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn:focus-visible {
+      outline: 3px solid var(--secondary-teal);
+      outline-offset: 2px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-coral);
+      color: #FFFFFF;
+    }
+
+    .btn-primary:hover, .btn-primary:active {
+      background-color: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 90, 95, 0.3);
+    }
+
+    .btn-secondary {
+      background-color: #F8F9FA;
+      color: var(--text-dark);
+      border: 2px solid #E9ECEF;
+    }
+
+    .btn-secondary.active {
+      background-color: var(--secondary-teal);
+      color: #FFFFFF;
+      border-color: var(--secondary-teal);
+      box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+    }
+
+    /* ==========================================================================
+       1. PRELOADER SCREEN
+       ========================================================================== */
+    #loading-screen {
+      justify-content: center;
+      align-items: center;
+      gap: 1.25rem;
+      text-align: center;
+    }
+
+    .loader-box {
+      width: 100%;
+      max-width: 360px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 5px solid #FFE5D9;
+      border-top: 5px solid var(--primary-coral);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .loading-progress-bar {
+      width: 100%;
+      height: 10px;
+      background: #E9ECEF;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .loading-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--primary-coral);
+      transition: width 0.2s ease;
+    }
+
+    /* ==========================================================================
+       2. START SCREEN
+       ========================================================================== */
+    #start-screen {
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.5rem;
+    }
+
+    .start-card {
+      width: 100%;
+      max-width: 520px;
+      padding: 1.5rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .instructions {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .config-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: left;
+    }
+
+    .config-label {
+      font-size: 0.85rem;
+      color: var(--primary-coral);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .button-selector {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .button-selector .btn {
+      flex: 1;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+      min-height: 44px;
+    }
+
+    /* ==========================================================================
+       3. MAIN GAME SCREEN
+       ========================================================================== */
+    #game-screen {
+      gap: 0.5rem;
+    }
+
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1.25rem;
+      gap: 1rem;
+    }
+
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .hud-title {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .hud-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--secondary-teal);
+    }
+
+    .progress-container {
+      flex: 1;
+      max-width: 200px;
+      height: 12px;
+      background: #E9ECEF;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-yellow), var(--primary-coral));
+      transition: width 0.3s ease;
+    }
+
+    .target-banner {
+      text-align: center;
+      padding: 0.5rem 1rem;
+      background: #FFF0F1;
+      border: 2px solid #FFD6D8;
+      border-radius: 16px;
+    }
+
+    .target-banner span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .target-banner h2 {
+      font-size: clamp(1.2rem, 4vw, 1.7rem);
+      color: var(--primary-coral);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* Flying Equipment Arena */
+    #arena {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      background: #FFFFFF;
+      border: 2px dashed #E0E6ED;
+    }
+
+    /* Flying Equipment Card */
+    .flying-item {
+      position: absolute;
+      width: 85px;
+      height: 85px;
+      min-width: 44px;
+      min-height: 44px;
+      background: #FFFFFF;
+      border: 3px solid var(--secondary-teal);
+      border-radius: 18px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      will-change: transform;
+      padding: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .flying-item:focus-visible {
+      outline: 3px solid var(--primary-coral);
+    }
+
+    .flying-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+      border-radius: 12px;
+    }
+
+    /* Pulsing Green Glow Hint Animation (Glows while moving freely) */
+    .flying-item.hint-active {
+      border-color: var(--success-green) !important;
+      border-width: 4px !important;
+      animation: pulseGreenHighlight 0.6s infinite alternate ease-in-out;
+      z-index: 10;
+    }
+
+    @keyframes pulseGreenHighlight {
+      0% {
+        box-shadow: 0 0 10px var(--success-green), inset 0 0 5px var(--success-green);
+        filter: brightness(1);
+      }
+      100% {
+        box-shadow: 0 0 30px var(--success-green), inset 0 0 15px var(--success-green);
+        filter: brightness(1.15);
+      }
+    }
+
+    .game-bottom-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding-top: 0.2rem;
+    }
+
+    /* ==========================================================================
+       4. END SCREEN & REVIEW
+       ========================================================================== */
+    #end-screen {
+      justify-content: center;
+      align-items: center;
+      padding: 0.5rem;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+
+    .end-card {
+      width: 100%;
+      max-width: 600px;
+      padding: 1.25rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .score-summary {
+      display: flex;
+      justify-content: space-around;
+      background: #FFF8F0;
+      padding: 0.8rem;
+      border-radius: 16px;
+      border: 2px solid #FFE8D6;
+    }
+
+    .summary-box h3 {
+      font-size: 1.8rem;
+      color: var(--primary-coral);
+    }
+
+    .summary-box p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .review-section {
+      text-align: left;
+    }
+
+    .review-title {
+      font-size: 0.85rem;
+      color: var(--secondary-teal);
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.5px;
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.5rem;
+      max-height: 180px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .review-card {
+      background: #FFFFFF;
+      border: 2px solid #E9ECEF;
+      border-radius: 12px;
+      padding: 0.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.3rem;
+    }
+
+    .review-card img {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .review-card span {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F1F1F1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary-teal);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+
+    <!-- ==========================================================================
+         PRELOADER SCREEN
+         ========================================================================== -->
+    <section id="loading-screen" class="screen active">
+      <h1 class="game-title">Kitchen Catch!</h1>
+      <div class="card loader-box">
+        <div class="spinner"></div>
+        <p style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">
+          Loading Kitchen Assets...
+        </p>
+        <div class="loading-progress-bar">
+          <div id="loading-fill" class="loading-progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         START SCREEN
+         ========================================================================== -->
+    <section id="start-screen" class="screen">
+      <h1 class="game-title">Kitchen Catch!</h1>
+      
+      <div class="card start-card">
+        <p class="instructions">
+          Test your appliance knowledge! Kitchen equipment will fly around the screen. Tap or click the correct equipment matching the prompt at the top.
+        </p>
+
+        <!-- Round Selector (3 to 10 rounds) -->
+        <div class="config-group">
+          <label class="config-label">Number of Rounds</label>
+          <div class="button-selector" id="rounds-selector">
+            <button class="btn btn-secondary" data-val="3">3</button>
+            <button class="btn btn-secondary active" data-val="5">5</button>
+            <button class="btn btn-secondary" data-val="8">8</button>
+            <button class="btn btn-secondary" data-val="10">10</button>
+          </div>
+        </div>
+
+        <!-- Equipment Density Selector -->
+        <div class="config-group">
+          <label class="config-label">Flying Equipment Count</label>
+          <div class="button-selector" id="density-selector">
+            <button class="btn btn-secondary" data-val="3">3</button>
+            <button class="btn btn-secondary active" data-val="5">5</button>
+            <button class="btn btn-secondary" data-val="7">7</button>
+            <button class="btn btn-secondary" data-val="8">8</button>
+          </div>
+        </div>
+
+        <button id="start-btn" class="btn btn-primary" style="margin-top: 0.25rem;">
+          Start Game
+        </button>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         MAIN GAME SCREEN
+         ========================================================================== -->
+    <section id="game-screen" class="screen">
+      <!-- HUD -->
+      <div class="card hud-bar">
+        <div class="hud-item">
+          <span class="hud-title">Score</span>
+          <span id="score-display" class="hud-value">0</span>
+        </div>
+
+        <div class="progress-container">
+          <div id="progress-bar" class="progress-fill"></div>
+        </div>
+
+        <div class="hud-item" style="align-items: flex-end;">
+          <span class="hud-title">Round</span>
+          <span id="round-display" class="hud-value">1/5</span>
+        </div>
+      </div>
+
+      <!-- Target Banner -->
+      <div class="target-banner">
+        <span>Tap The Correct Item</span>
+        <h2 id="target-name">AIR FRYER</h2>
+      </div>
+
+      <!-- Flying Equipment Arena -->
+      <div id="arena"></div>
+
+      <!-- Bottom Hint Control -->
+      <div class="game-bottom-bar">
+        <button id="hint-btn" class="btn btn-secondary">
+          💡 Hint
+        </button>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         END SCREEN
+         ========================================================================== -->
+    <section id="end-screen" class="screen">
+      <h1 class="game-title">Great Job!</h1>
+
+      <div class="card end-card">
+        <div class="score-summary">
+          <div class="summary-box">
+            <h3 id="final-score">0</h3>
+            <p>Final Score</p>
+          </div>
+          <div class="summary-box">
+            <h3 id="final-accuracy">100%</h3>
+            <p>Accuracy</p>
+          </div>
+        </div>
+
+        <!-- Kitchen Equipment Answer Review Grid -->
+        <div class="review-section">
+          <h4 class="review-title">Kitchen Equipment Answer Guide</h4>
+          <div id="review-grid" class="review-grid"></div>
+        </div>
+
+        <button id="play-again-btn" class="btn btn-primary" style="margin-top: 0.25rem;">
+          Play Again
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       USER ASSETS DATABASE
+       ========================================================================== */
+    const EQUIPMENT_DATA = [
+      { id: 'air_fryer', name: 'Air Fryer', img: 'https://i.postimg.cc/GhP4pn65/air-fryer.jpg' },
+      { id: 'grill', name: 'Grill', img: 'https://i.postimg.cc/ZKPWqzXg/grill.jpg' },
+      { id: 'induction_cooker', name: 'Induction Cooker', img: 'https://i.postimg.cc/dtRh0czc/induction-cooker.webp' },
+      { id: 'stove', name: 'Kitchen Stove', img: 'https://i.postimg.cc/m23PrW04/kitchen-stove.jpg' },
+      { id: 'microwave', name: 'Microwave', img: 'https://i.postimg.cc/jd6DjYB4/microwave.jpg' },
+      { id: 'oven', name: 'Oven', img: 'https://i.postimg.cc/J43shC9L/oven.png' },
+      { id: 'rice_cooker', name: 'Rice Cooker', img: 'https://i.postimg.cc/pXQmdM31/rice-cooker.jpg' },
+      { id: 'toaster', name: 'Toaster', img: 'https://i.postimg.cc/Wbmd4cxX/toaster.jpg' }
+    ];
+
+    /* ==========================================================================
+       WEB AUDIO SYNTHESIZER (DING FX)
+       ========================================================================== */
+    class SoundFX {
+      constructor() {
+        this.ctx = null;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+
+      playDing() {
+        this.init();
+        if (!this.ctx) return;
+        
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(1046.50, now + 0.15); // C6
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.35);
+      }
+
+      playBuzz() {
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(100, now + 0.2);
+
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+    }
+
+    const sfx = new SoundFX();
+
+    /* ==========================================================================
+       GAME STATE
+       ========================================================================== */
+    const state = {
+      totalRounds: 5,
+      density: 5,
+      currentRound: 1,
+      score: 0,
+      attempts: 0,
+      correctHits: 0,
+      targetEquipment: null,
+      activeItems: [],
+      animationFrameId: null,
+      arenaBounds: { width: 0, height: 0 }
+    };
+
+    /* ==========================================================================
+       DOM ELEMENTS
+       ========================================================================== */
+    const screens = {
+      loading: document.getElementById('loading-screen'),
+      start: document.getElementById('start-screen'),
+      game: document.getElementById('game-screen'),
+      end: document.getElementById('end-screen')
+    };
+
+    const ui = {
+      loadingFill: document.getElementById('loading-fill'),
+      roundsSelector: document.getElementById('rounds-selector'),
+      densitySelector: document.getElementById('density-selector'),
+      startBtn: document.getElementById('start-btn'),
+      playAgainBtn: document.getElementById('play-again-btn'),
+      hintBtn: document.getElementById('hint-btn'),
+      scoreDisplay: document.getElementById('score-display'),
+      roundDisplay: document.getElementById('round-display'),
+      progressBar: document.getElementById('progress-bar'),
+      targetName: document.getElementById('target-name'),
+      arena: document.getElementById('arena'),
+      finalScore: document.getElementById('final-score'),
+      finalAccuracy: document.getElementById('final-accuracy'),
+      reviewGrid: document.getElementById('review-grid')
+    };
+
+    /* ==========================================================================
+       PRELOADER LOGIC
+       ========================================================================== */
+    function preloadAssets() {
+      let loaded = 0;
+      const total = EQUIPMENT_DATA.length;
+
+      return Promise.all(EQUIPMENT_DATA.map(item => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => {
+            loaded++;
+            ui.loadingFill.style.width = `${(loaded / total) * 100}%`;
+            resolve();
+          };
+          img.onerror = () => {
+            loaded++;
+            ui.loadingFill.style.width = `${(loaded / total) * 100}%`;
+            resolve(); // Continue even if one image fails
+          };
+          img.src = item.img;
+        });
+      }));
+    }
+
+    /* ==========================================================================
+       INITIALIZATION & BINDINGS
+       ========================================================================== */
+    function initApp() {
+      // Configuration Selectors
+      setupSelector(ui.roundsSelector, (val) => state.totalRounds = parseInt(val));
+      setupSelector(ui.densitySelector, (val) => state.density = parseInt(val));
+
+      // Buttons Binding (Pointer Events for Touch & Desktop)
+      ui.startBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); startGame(); });
+      ui.playAgainBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); resetToStartScreen(); });
+      ui.hintBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); triggerHint(); });
+
+      // Keyboard Accessibility
+      ui.startBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') startGame(); });
+      ui.playAgainBtn.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') resetToStartScreen(); });
+
+      // Window Resize Handler
+      window.addEventListener('resize', updateArenaBounds);
+
+      // Preload image assets before start screen
+      preloadAssets().then(() => {
+        setTimeout(() => {
+          showScreen('start');
+        }, 300);
+      });
+    }
+
+    function setupSelector(container, callback) {
+      container.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn')) {
+          Array.from(container.children).forEach(btn => btn.classList.remove('active'));
+          e.target.classList.add('active');
+          callback(e.target.dataset.val);
+        }
+      });
+    }
+
+    function showScreen(screenKey) {
+      Object.keys(screens).forEach(key => {
+        screens[key].classList.toggle('active', key === screenKey);
+      });
+    }
+
+    function updateArenaBounds() {
+      if (ui.arena) {
+        state.arenaBounds = {
+          width: ui.arena.clientWidth,
+          height: ui.arena.clientHeight
+        };
+      }
+    }
+
+    /* ==========================================================================
+       GAME ENGINE & BOUNCE PHYSICS
+       ========================================================================== */
+    function startGame() {
+      state.score = 0;
+      state.currentRound = 1;
+      state.attempts = 0;
+      state.correctHits = 0;
+
+      showScreen('game');
+      updateArenaBounds();
+      nextRound();
+    }
+
+    function nextRound() {
+      if (state.currentRound > state.totalRounds) {
+        endGame();
+        return;
+      }
+
+      // Update HUD Indicators
+      ui.scoreDisplay.textContent = state.score;
+      ui.roundDisplay.textContent = `${state.currentRound}/${state.totalRounds}`;
+      ui.progressBar.style.width = `${((state.currentRound - 1) / state.totalRounds) * 100}%`;
+
+      // Randomize Equipment Pool for current round
+      const shuffled = [...EQUIPMENT_DATA].sort(() => 0.5 - Math.random());
+      const selectedPool = shuffled.slice(0, Math.min(state.density, EQUIPMENT_DATA.length));
+      
+      // Select Target Item
+      state.targetEquipment = selectedPool[Math.floor(Math.random() * selectedPool.length)];
+      ui.targetName.textContent = state.targetEquipment.name;
+
+      // Spawn Flying Items
+      spawnFlyingItems(selectedPool);
+    }
+
+    function spawnFlyingItems(items) {
+      if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+      ui.arena.innerHTML = '';
+      state.activeItems = [];
+
+      const itemSize = 85;
+      const maxX = Math.max(0, state.arenaBounds.width - itemSize);
+      const maxY = Math.max(0, state.arenaBounds.height - itemSize);
+
+      items.forEach((data) => {
+        const el = document.createElement('div');
+        el.className = 'flying-item';
+        el.tabIndex = 0;
+        el.setAttribute('role', 'button');
+        el.setAttribute('aria-label', data.name);
+        
+        const imgEl = document.createElement('img');
+        imgEl.src = data.img;
+        imgEl.alt = data.name;
+        
+        el.appendChild(imgEl);
+        el.dataset.id = data.id;
+
+        // Pointer Handler (Click/Tap)
+        const hitHandler = (e) => {
+          e.preventDefault();
+          handleItemClick(e, data);
+        };
+
+        el.addEventListener('pointerdown', hitHandler);
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') hitHandler(e);
+        });
+
+        // Motion Physics Setup
+        const x = Math.random() * maxX;
+        const y = Math.random() * maxY;
+        const speed = 1.2 + Math.random() * 1.5;
+        const angle = Math.random() * Math.PI * 2;
+
+        const itemObj = {
+          el,
+          id: data.id,
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed
+        };
+
+        ui.arena.appendChild(el);
+        state.activeItems.push(itemObj);
+      });
+
+      runAnimationLoop();
+    }
+
+    function runAnimationLoop() {
+      const maxX = state.arenaBounds.width - 85;
+      const maxY = state.arenaBounds.height - 85;
+
+      state.activeItems.forEach(item => {
+        item.x += item.vx;
+        item.y += item.vy;
+
+        // Bounce physics on edge collision
+        if (item.x <= 0 || item.x >= maxX) {
+          item.vx *= -1;
+          item.x = Math.max(0, Math.min(item.x, maxX));
+        }
+        if (item.y <= 0 || item.y >= maxY) {
+          item.vy *= -1;
+          item.y = Math.max(0, Math.min(item.y, maxY));
+        }
+
+        // Apply hardware-accelerated transform (keeps moving smoothly even when hinted)
+        item.el.style.transform = `translate3d(${item.x}px, ${item.y}px, 0)`;
+      });
+
+      state.animationFrameId = requestAnimationFrame(runAnimationLoop);
+    }
+
+    function handleItemClick(e, itemData) {
+      state.attempts++;
+
+      if (itemData.id === state.targetEquipment.id) {
+        // Correct Choice: Ding Sound & Score
+        sfx.playDing();
+        state.score += 100;
+        state.correctHits++;
+
+        e.currentTarget.style.borderColor = 'var(--success-green)';
+        e.currentTarget.style.boxShadow = '0 0 20px var(--success-green)';
+
+        setTimeout(() => {
+          state.currentRound++;
+          nextRound();
+        }, 250);
+
+      } else {
+        // Incorrect Choice: Buzz Sound & Penalty
+        sfx.playBuzz();
+        state.score = Math.max(0, state.score - 25);
+        ui.scoreDisplay.textContent = state.score;
+
+        e.currentTarget.style.borderColor = 'var(--primary-coral)';
+        e.currentTarget.style.boxShadow = '0 0 15px var(--primary-coral)';
+        setTimeout(() => {
+          e.currentTarget.style.borderColor = 'var(--secondary-teal)';
+          e.currentTarget.style.boxShadow = 'var(--shadow-sm)';
+        }, 350);
+      }
+    }
+
+    /* Hint Feature: Adds green pulsing glow class to correct equipment while it continues moving */
+    function triggerHint() {
+      const targetObj = state.activeItems.find(item => item.id === state.targetEquipment.id);
+      if (targetObj && targetObj.el) {
+        targetObj.el.classList.add('hint-active');
+        setTimeout(() => {
+          targetObj.el.classList.remove('hint-active');
+        }, 2500);
+      }
+    }
+
+    function endGame() {
+      if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+
+      const accuracy = state.attempts > 0 ? Math.round((state.correctHits / state.attempts) * 100) : 100;
+
+      ui.finalScore.textContent = state.score;
+      ui.finalAccuracy.textContent = `${accuracy}%`;
+
+      // Build Answer Review Key
+      ui.reviewGrid.innerHTML = EQUIPMENT_DATA.map(eq => `
+        <div class="review-card">
+          <img src="${eq.img}" alt="${eq.name}" />
+          <span>${eq.name}</span>
+        </div>
+      `).join('');
+
+      showScreen('end');
+    }
+
+    function resetToStartScreen() {
+      showScreen('start');
+    }
+
+    // Launch Application
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
