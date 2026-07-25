@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Food Group Sort 🧺</title>
+  <!-- Google Fonts: Poppins -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       1. CSS VARIABLES & RESET (Sunny Day Palette)
+       ========================================================================== */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #FFF9E6 0%, #E3F6FF 100%);
+      --primary-sun: #FFB300;
+      --primary-sun-hover: #FFA000;
+      --card-bg: #FFFFFF;
+      --text-main: #2C3E50;
+      --text-muted: #7F8C8D;
+      --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      
+      /* Food Group Colors */
+      --color-fruits: #FF5252;
+      --color-vegetables: #2ECC71;
+      --color-grains: #F39C12;
+      --color-protein: #E67E22;
+      --color-dairy: #3498DB;
+
+      /* Feedback Colors */
+      --color-correct: #27AE60;
+      --color-wrong: #E74C3C;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+    }
+
+    /* App Container fitting viewport strictly without scrollbars */
+    #app {
+      width: 100vw;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    /* ==========================================================================
+       2. START SCREEN
+       ========================================================================== */
+    #start-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      z-index: 10;
+      background: var(--bg-gradient);
+    }
+
+    /* Top Controls Bar */
+    .start-top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .config-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      padding: 0.8rem 1.2rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-width: 48%;
+    }
+
+    .config-card h3 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .group-checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .pill-checkbox {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: #F0F3F4;
+      padding: 0.4rem 0.7rem;
+      border-radius: 50px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px; /* Touch target minimum */
+    }
+
+    .pill-checkbox input {
+      accent-color: var(--primary-sun);
+      width: 16px;
+      height: 16px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .btn-group {
+      display: flex;
+      background: #F0F3F4;
+      padding: 3px;
+      border-radius: 50px;
+    }
+
+    .btn-option {
+      padding: 0.4rem 0.8rem;
+      border-radius: 50px;
+      background: transparent;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+    }
+
+    .btn-option.active {
+      background: #FFFFFF;
+      color: var(--text-main);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    /* Central Title & Start */
+    .hero-section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 1.2rem;
+    }
+
+    .game-title {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 800;
+      color: #D35400;
+      text-shadow: 2px 2px 0px #FFF, 4px 4px 0px rgba(0,0,0,0.05);
+      line-height: 1.1;
+    }
+
+    .game-subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.2rem);
+      color: var(--text-muted);
+      max-width: 500px;
+    }
+
+    .btn-start {
+      background: var(--primary-sun);
+      color: #FFFFFF;
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding: 0.9rem 3rem;
+      border-radius: 50px;
+      box-shadow: 0 8px 20px rgba(255, 179, 0, 0.4);
+      min-height: 52px;
+    }
+
+    .btn-start:hover {
+      background: var(--primary-sun-hover);
+      transform: translateY(-2px);
+    }
+
+    /* ==========================================================================
+       3. MAIN GAME SCREEN
+       ========================================================================== */
+    #game-screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 0.8rem;
+      gap: 0.8rem;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(5px);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .btn-home {
+      background: #E0E0E0;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      min-height: 44px;
+    }
+
+    .game-status {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-main);
+    }
+
+    /* Top Tray / Plate */
+    .plate-container {
+      background: #FFFFFF;
+      border: 3px dashed #E0E0E0;
+      border-radius: var(--radius-lg);
+      padding: 0.8rem;
+      min-height: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      overflow-x: auto;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.03);
+    }
+
+    /* Food Cards */
+    .food-card {
+      width: 85px;
+      height: 95px;
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border: 2px solid #F0F0F0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      touch-action: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .food-card:active {
+      cursor: grabbing;
+    }
+
+    .food-card .emoji {
+      font-size: 2.2rem;
+      pointer-events: none;
+    }
+
+    .food-card .label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-top: 4px;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .food-card.dragging {
+      opacity: 0.4;
+    }
+
+    /* Drag Clone overlay */
+    .drag-clone {
+      position: fixed;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%) scale(1.1);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-sun);
+    }
+
+    /* Bottom Baskets Area */
+    .baskets-container {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 0.8rem;
+      overflow-y: auto;
+    }
+
+    .basket {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: var(--radius-lg);
+      border: 3px solid transparent;
+      padding: 0.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+
+    .basket.hovered {
+      transform: scale(1.02);
+      background: #FFFFFF;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .basket-header {
+      width: 100%;
+      text-align: center;
+      padding: 0.4rem 0.2rem;
+      border-radius: 12px;
+      color: #FFFFFF;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+
+    /* Basket Theme Colors */
+    .basket[data-group="fruits"] { border-color: rgba(255, 82, 82, 0.3); }
+    .basket[data-group="fruits"] .basket-header { background: var(--color-fruits); }
+
+    .basket[data-group="vegetables"] { border-color: rgba(46, 204, 113, 0.3); }
+    .basket[data-group="vegetables"] .basket-header { background: var(--color-vegetables); }
+
+    .basket[data-group="grains"] { border-color: rgba(243, 156, 18, 0.3); }
+    .basket[data-group="grains"] .basket-header { background: var(--color-grains); }
+
+    .basket[data-group="protein"] { border-color: rgba(230, 126, 34, 0.3); }
+    .basket[data-group="protein"] .basket-header { background: var(--color-protein); }
+
+    .basket[data-group="dairy"] { border-color: rgba(52, 152, 219, 0.3); }
+    .basket[data-group="dairy"] .basket-header { background: var(--color-dairy); }
+
+    .basket-contents {
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-content: flex-start;
+      justify-content: center;
+      min-height: 80px;
+    }
+
+    .placed-item {
+      width: 55px;
+      height: 55px;
+      border-radius: 10px;
+      background: #FFF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      font-size: 1.3rem;
+      position: relative;
+      border: 2px solid #E0E0E0;
+    }
+
+    .placed-item .mini-label {
+      font-size: 0.55rem;
+      font-weight: 600;
+      color: var(--text-main);
+      line-height: 1;
+      margin-top: 2px;
+      text-align: center;
+      max-width: 90%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Outlines for End Game Review */
+    .placed-item.correct {
+      border: 3px solid var(--color-correct) !important;
+      background: #E8F8F5;
+    }
+
+    .placed-item.wrong {
+      border: 3px solid var(--color-wrong) !important;
+      background: #FDEDEC;
+    }
+
+    /* ==========================================================================
+       4. END SCREEN / OVERLAY
+       ========================================================================== */
+    #end-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    #end-screen.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .end-card {
+      background: #FFFFFF;
+      padding: 2rem;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      max-width: 600px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+
+    .end-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary-sun-hover);
+    }
+
+    .end-score {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    .review-grid {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      text-align: left;
+    }
+
+    .review-basket-row {
+      background: #F9F9F9;
+      padding: 0.6rem;
+      border-radius: var(--radius-md);
+    }
+
+    .review-basket-title {
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 0.4rem;
+      color: var(--text-muted);
+    }
+
+    .review-items-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .btn-again {
+      background: var(--color-vegetables);
+      color: #FFFFFF;
+      font-size: 1.1rem;
+      font-weight: 700;
+      padding: 0.8rem 2.5rem;
+      border-radius: 50px;
+      box-shadow: 0 6px 15px rgba(46, 204, 113, 0.3);
+      min-height: 48px;
+    }
+
+    .btn-again:hover {
+      transform: translateY(-2px);
+      background: #27AE60;
+    }
+
+    canvas#confetti-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 25;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Animations */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    .shake {
+      animation: shake 0.4s ease-in-out;
+    }
+
+    /* Responsive scaling for mobile devices */
+    @media (max-width: 600px) {
+      .start-top-bar {
+        flex-direction: column;
+      }
+      .config-card {
+        max-width: 100%;
+      }
+      .baskets-container {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .food-card {
+        width: 70px;
+        height: 80px;
+      }
+      .food-card .emoji {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <!-- CONFETTI CANVAS -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <!-- ==========================================
+         1. START SCREEN
+         ========================================== -->
+    <div id="start-screen">
+      <div class="start-top-bar">
+        <!-- TOP LEFT: Food Group Choices -->
+        <div class="config-card">
+          <h3>Include Food Groups</h3>
+          <div class="group-checkboxes">
+            <label class="pill-checkbox">
+              <input type="checkbox" value="fruits" checked /> 🍎 Fruits
+            </label>
+            <label class="pill-checkbox">
+              <input type="checkbox" value="vegetables" checked /> 🥦 Veggies
+            </label>
+            <label class="pill-checkbox">
+              <input type="checkbox" value="grains" checked /> 🍞 Grains
+            </label>
+            <label class="pill-checkbox">
+              <input type="checkbox" value="protein" checked /> 🍗 Protein
+            </label>
+            <label class="pill-checkbox">
+              <input type="checkbox" value="dairy" checked /> 🥛 Dairy
+            </label>
+          </div>
+        </div>
+
+        <!-- TOP RIGHT: Number of Items & Feedback Mode -->
+        <div class="config-card">
+          <div class="setting-row">
+            <h3>Items:</h3>
+            <div class="btn-group" id="count-selector">
+              <button class="btn-option" data-value="5">5</button>
+              <button class="btn-option active" data-value="10">10</button>
+              <button class="btn-option" data-value="15">15</button>
+            </div>
+          </div>
+          <div class="setting-row">
+            <h3>Correction:</h3>
+            <div class="btn-group" id="mode-selector">
+              <button class="btn-option active" data-value="immediate">Instant</button>
+              <button class="btn-option" data-value="endgame">End-Game</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HERO CENTER -->
+      <div class="hero-section">
+        <h1 class="game-title">Food Group Sort 🧺</h1>
+        <p class="game-subtitle">Drag and drop tasty foods into their correct nutritional basket!</p>
+        <button class="btn-start" id="btn-start-game">Play Game</button>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         2. MAIN GAME SCREEN
+         ========================================== -->
+    <div id="game-screen" class="hidden">
+      <div class="game-header">
+        <button class="btn-home" id="btn-home">⚙️ Settings</button>
+        <div class="game-status" id="game-progress-text">Items Left: 0</div>
+      </div>
+
+      <!-- TOP PLATE (FOOD CONTAINER) -->
+      <div class="plate-container" id="food-plate">
+        <!-- Draggable food cards will render here -->
+      </div>
+
+      <!-- BOTTOM BASKETS CONTAINER -->
+      <div class="baskets-container" id="baskets-container">
+        <!-- Dynamic baskets will render here -->
+      </div>
+    </div>
+
+    <!-- ==========================================
+         3. END SCREEN / OVERLAY
+         ========================================== -->
+    <div id="end-screen">
+      <div class="end-card">
+        <h2 class="end-title" id="end-title">Good Job! 🎉</h2>
+        <div class="end-score" id="end-score-text">You sorted everything!</div>
+        
+        <!-- Detailed breakdown for End-Game correction mode -->
+        <div class="review-grid hidden" id="review-grid"></div>
+
+        <button class="btn-again" id="btn-play-again">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       DATA & SOUND SYNTHESIZER
+       ========================================================================== */
+    const FOOD_DATABASE = {
+      fruits: [
+        { id: 'f1', name: 'Apple', icon: '🍎' },
+        { id: 'f2', name: 'Banana', icon: '🍌' },
+        { id: 'f3', name: 'Strawberry', icon: '🍓' },
+        { id: 'f4', name: 'Grapes', icon: '🍇' },
+        { id: 'f5', name: 'Orange', icon: '🍊' },
+        { id: 'f6', name: 'Watermelon', icon: '🍉' },
+        { id: 'f7', name: 'Peach', icon: '🍑' }
+      ],
+      vegetables: [
+        { id: 'v1', name: 'Broccoli', icon: '🥦' },
+        { id: 'v2', name: 'Carrot', icon: '🥕' },
+        { id: 'v3', name: 'Corn', icon: '🌽' },
+        { id: 'v4', name: 'Tomato', icon: '🍅' },
+        { id: 'v5', name: 'Cucumber', icon: '🥒' },
+        { id: 'v6', name: 'Eggplant', icon: '🍆' }
+      ],
+      grains: [
+        { id: 'g1', name: 'Bread', icon: '🍞' },
+        { id: 'g2', name: 'Rice', icon: '🍚' },
+        { id: 'g3', name: 'Pasta', icon: '🍝' },
+        { id: 'g4', name: 'Bagel', icon: '🥯' },
+        { id: 'g5', name: 'Croissant', icon: '🥐' },
+        { id: 'g6', name: 'Pretzel', icon: '🥨' }
+      ],
+      protein: [
+        { id: 'p1', name: 'Chicken', icon: '🍗' },
+        { id: 'p2', name: 'Steak', icon: '🥩' },
+        { id: 'p3', name: 'Fish', icon: '🐟' },
+        { id: 'p4', name: 'Egg', icon: '🥚' },
+        { id: 'p5', name: 'Shrimp', icon: '🦐' },
+        { id: 'p6', name: 'Peanuts', icon: '🥜' }
+      ],
+      dairy: [
+        { id: 'd1', name: 'Milk', icon: '🥛' },
+        { id: 'd2', name: 'Cheese', icon: '🧀' },
+        { id: 'd3', name: 'Ice Cream', icon: '🍦' },
+        { id: 'd4', name: 'Butter', icon: '🧈' },
+        { id: 'd5', name: 'Yogurt', icon: '🍨' }
+      ]
+    };
+
+    const GROUP_TITLES = {
+      fruits: '🍎 Fruits',
+      vegetables: '🥦 Veggies',
+      grains: '🍞 Grains',
+      protein: '🍗 Protein',
+      dairy: '🥛 Dairy'
+    };
+
+    // Web Audio Synthesizer for self-contained audio effects
+    class SoundManager {
+      constructor() {
+        this.ctx = null;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playPop() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, this.ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.08);
+      }
+      playCorrect() {
+        this.init();
+        const now = this.ctx.currentTime;
+        [523.25, 659.25, 783.99].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, now + idx * 0.07);
+          gain.gain.linearRampToValueAtTime(0.2, now + idx * 0.07 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.07 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.07);
+          osc.stop(now + idx * 0.07 + 0.2);
+        });
+      }
+      playWrong() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.2);
+      }
+      playFanfare() {
+        this.init();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        const now = this.ctx.currentTime;
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, now + idx * 0.1);
+          gain.gain.linearRampToValueAtTime(0.25, now + idx * 0.1 + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.1 + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.1);
+          osc.stop(now + idx * 0.1 + 0.35);
+        });
+      }
+    }
+
+    const sound = new SoundManager();
+
+    /* ==========================================================================
+       GAME STATE & CONFIGURATION
+       ========================================================================== */
+    const state = {
+      selectedGroups: ['fruits', 'vegetables', 'grains', 'protein', 'dairy'],
+      itemCount: 10,
+      correctionMode: 'immediate', // 'immediate' or 'endgame'
+      gameItems: [], // Items array to sort
+      userPlacements: {}, // { groupKey: [itemObj, ...] }
+      remainingCount: 0
+    };
+
+    /* ==========================================================================
+       DOM ELEMENTS
+       ========================================================================== */
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const endScreen = document.getElementById('end-screen');
+    const foodPlate = document.getElementById('food-plate');
+    const basketsContainer = document.getElementById('baskets-container');
+    const gameProgressText = document.getElementById('game-progress-text');
+    const btnStartGame = document.getElementById('btn-start-game');
+    const btnHome = document.getElementById('btn-home');
+    const btnPlayAgain = document.getElementById('btn-play-again');
+    const reviewGrid = document.getElementById('review-grid');
+
+    /* ==========================================================================
+       INIT & EVENT LISTENERS
+       ========================================================================== */
+    // Setup UI options on start screen
+    document.querySelectorAll('.group-checkboxes input').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const checked = Array.from(document.querySelectorAll('.group-checkboxes input:checked'))
+                            .map(c => c.value);
+        if (checked.length < 2) {
+          cb.checked = true; // Force minimum 2 groups
+          alert('Please select at least 2 food groups to play!');
+          return;
+        }
+        state.selectedGroups = checked;
+      });
+    });
+
+    setupButtonGroup('count-selector', val => state.itemCount = parseInt(val, 10));
+    setupButtonGroup('mode-selector', val => state.correctionMode = val);
+
+    function setupButtonGroup(containerId, callback) {
+      const container = document.getElementById(containerId);
+      container.querySelectorAll('.btn-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+          container.querySelectorAll('.btn-option').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          callback(btn.dataset.value);
+        });
+      });
+    }
+
+    btnStartGame.addEventListener('click', startGame);
+    btnHome.addEventListener('click', showStartScreen);
+    btnPlayAgain.addEventListener('click', showStartScreen);
+
+    /* ==========================================================================
+       GAME LOGIC
+       ========================================================================== */
+    function startGame() {
+      // Build food items pool based on selected food groups
+      let pool = [];
+      state.selectedGroups.forEach(group => {
+        FOOD_DATABASE[group].forEach(item => {
+          pool.push({ ...item, group: group });
+        });
+      });
+
+      // Shuffle pool and select item count
+      pool.sort(() => Math.random() - 0.5);
+      state.gameItems = pool.slice(0, Math.min(state.itemCount, pool.length));
+      state.remainingCount = state.gameItems.length;
+
+      // Reset user placements
+      state.userPlacements = {};
+      state.selectedGroups.forEach(g => state.userPlacements[g] = []);
+
+      // Render UI
+      renderBaskets();
+      renderPlate();
+      updateStatusText();
+
+      // Transition screen
+      startScreen.classList.add('hidden');
+      endScreen.classList.remove('active');
+      gameScreen.classList.remove('hidden');
+    }
+
+    function showStartScreen() {
+      gameScreen.classList.add('hidden');
+      endScreen.classList.remove('active');
+      startScreen.classList.remove('hidden');
+    }
+
+    function renderBaskets() {
+      basketsContainer.innerHTML = '';
+      state.selectedGroups.forEach(groupKey => {
+        const basket = document.createElement('div');
+        basket.className = 'basket';
+        basket.dataset.group = groupKey;
+        basket.innerHTML = `
+          <div class="basket-header">${GROUP_TITLES[groupKey]}</div>
+          <div class="basket-contents"></div>
+        `;
+        basketsContainer.appendChild(basket);
+      });
+    }
+
+    function renderPlate() {
+      foodPlate.innerHTML = '';
+      state.gameItems.forEach(item => {
+        const card = createFoodCard(item);
+        foodPlate.appendChild(card);
+      });
+    }
+
+    function createFoodCard(item) {
+      const card = document.createElement('div');
+      card.className = 'food-card';
+      card.dataset.id = item.id;
+      card.dataset.group = item.group;
+      card.dataset.name = item.name;
+      card.dataset.icon = item.icon;
+
+      card.innerHTML = `
+        <span class="emoji">${item.icon}</span>
+        <span class="label">${item.name}</span>
+      `;
+
+      attachPointerDrag(card, item);
+      return card;
+    }
+
+    function updateStatusText() {
+      gameProgressText.textContent = `Items Remaining: ${state.remainingCount}`;
+    }
+
+    /* ==========================================================================
+       POINTER EVENTS DRAG AND DROP (TOUCH + MOUSE SUPPORT)
+       ========================================================================== */
+    function attachPointerDrag(card, item) {
+      let dragClone = null;
+      let activeBasket = null;
+
+      card.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        sound.playPop();
+
+        // Create visual floating drag element
+        dragClone = card.cloneNode(true);
+        dragClone.classList.add('drag-clone');
+        document.body.appendChild(dragClone);
+
+        positionClone(e);
+        card.classList.add('dragging');
+
+        const onPointerMove = (moveEvent) => {
+          positionClone(moveEvent);
+          detectHoverBasket(moveEvent);
+        };
+
+        const onPointerUp = (upEvent) => {
+          window.removeEventListener('pointermove', onPointerMove);
+          window.removeEventListener('pointerup', onPointerUp);
+
+          if (dragClone) {
+            dragClone.remove();
+            dragClone = null;
+          }
+          card.classList.remove('dragging');
+
+          if (activeBasket) {
+            const targetGroup = activeBasket.dataset.group;
+            activeBasket.classList.remove('hovered');
+            handleItemDrop(card, item, targetGroup, activeBasket);
+          }
+          activeBasket = null;
+        };
+
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', onPointerUp);
+      });
+
+      function positionClone(e) {
+        if (!dragClone) return;
+        dragClone.style.left = `${e.clientX}px`;
+        dragClone.style.top = `${e.clientY}px`;
+      }
+
+      function detectHoverBasket(e) {
+        // Temporarily hide clone so elementFromPoint sees elements below it
+        if (dragClone) dragClone.style.display = 'none';
+        const elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+        if (dragClone) dragClone.style.display = 'flex';
+
+        const basket = elemBelow ? elemBelow.closest('.basket') : null;
+
+        document.querySelectorAll('.basket').forEach(b => b.classList.remove('hovered'));
+        if (basket) {
+          basket.classList.add('hovered');
+          activeBasket = basket;
+        } else {
+          activeBasket = null;
+        }
+      }
+    }
+
+    /* ==========================================================================
+       DROP HANDLING & CORRECTION LOGIC
+       ========================================================================== */
+    function handleItemDrop(cardElement, item, targetGroup, basketElement) {
+      if (state.correctionMode === 'immediate') {
+        // Immediate Feedback Mode
+        if (item.group === targetGroup) {
+          // Correct Drop
+          sound.playCorrect();
+          appendMiniItem(basketElement.querySelector('.basket-contents'), item);
+          cardElement.remove();
+          state.remainingCount--;
+          updateStatusText();
+          checkGameOver();
+        } else {
+          // Wrong Drop
+          sound.playWrong();
+          cardElement.classList.add('shake');
+          setTimeout(() => cardElement.classList.remove('shake'), 400);
+        }
+      } else {
+        // End-Game Feedback Mode
+        sound.playPop();
+        state.userPlacements[targetGroup].push(item);
+        appendMiniItem(basketElement.querySelector('.basket-contents'), item);
+        cardElement.remove();
+        state.remainingCount--;
+        updateStatusText();
+        checkGameOver();
+      }
+    }
+
+    function appendMiniItem(container, item, statusClass = '') {
+      const mini = document.createElement('div');
+      mini.className = `placed-item ${statusClass}`;
+      mini.innerHTML = `
+        <span>${item.icon}</span>
+        <span class="mini-label">${item.name}</span>
+      `;
+      container.appendChild(mini);
+    }
+
+    /* ==========================================================================
+       END GAME EVALUATION
+       ========================================================================== */
+    function checkGameOver() {
+      if (state.remainingCount === 0) {
+        setTimeout(triggerEndScreen, 300);
+      }
+    }
+
+    function triggerEndScreen() {
+      sound.playFanfare();
+      triggerConfetti();
+
+      const endTitle = document.getElementById('end-title');
+      const endScoreText = document.getElementById('end-score-text');
+
+      if (state.correctionMode === 'immediate') {
+        endTitle.textContent = "Good Job! 🎉";
+        endScoreText.textContent = "You successfully sorted all the foods!";
+        reviewGrid.classList.add('hidden');
+      } else {
+        // Evaluate End-Game mode results
+        let correctTotal = 0;
+        let totalItems = state.gameItems.length;
+
+        reviewGrid.innerHTML = '';
+        reviewGrid.classList.remove('hidden');
+
+        state.selectedGroups.forEach(groupKey => {
+          const itemsInBasket = state.userPlacements[groupKey] || [];
+          if (itemsInBasket.length === 0) return;
+
+          const row = document.createElement('div');
+          row.className = 'review-basket-row';
+          row.innerHTML = `<div class="review-basket-title">Placed in ${GROUP_TITLES[groupKey]}:</div>`;
+
+          const flex = document.createElement('div');
+          flex.className = 'review-items-flex';
+
+          itemsInBasket.forEach(item => {
+            const isCorrect = item.group === groupKey;
+            if (isCorrect) correctTotal++;
+
+            const statusClass = isCorrect ? 'correct' : 'wrong';
+            appendMiniItem(flex, item, statusClass);
+          });
+
+          row.appendChild(flex);
+          reviewGrid.appendChild(row);
+        });
+
+        endTitle.textContent = correctTotal === totalItems ? "Perfect Score! 🌟" : "Game Complete! 📊";
+        endScoreText.textContent = `You correctly placed ${correctTotal} out of ${totalItems} foods.`;
+      }
+
+      endScreen.classList.add('active');
+    }
+
+    /* ==========================================================================
+       CONFETTI CANVAS ANIMATION
+       ========================================================================== */
+    function triggerConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const particles = [];
+      const colors = ['#FF5252', '#2ECC71', '#F39C12', '#3498DB', '#FFB300', '#9B59B6'];
+
+      for (let i = 0; i < 70; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          vx: (Math.random() - 0.5) * 4,
+          vy: Math.random() * 4 + 2,
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 8
+        });
+      }
+
+      let frameCount = 0;
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let stillVisible = false;
+
+        particles.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotSpeed;
+
+          if (p.y < canvas.height) stillVisible = true;
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+
+        frameCount++;
+        if (stillVisible && frameCount < 200) {
+          requestAnimationFrame(animate);
+        } else {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>
