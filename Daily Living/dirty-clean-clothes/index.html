@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Clean or Dirty?</title>
+  
+  <!-- Google Fonts: Ubuntu -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       CSS VARIABLES & PALETTE (Ocean Breeze)
+       ========================================================================== */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 50%, #80deea 100%);
+      --primary-teal: #00695c;
+      --primary-mid: #00838f;
+      --primary-light: #26a69a;
+      --accent-cyan: #00acc1;
+      
+      --clean-blue: #0288d1;
+      --clean-bg: #e1f5fe;
+      --clean-border: #29b6f6;
+
+      --dirty-green: #558b2f;
+      --dirty-bg: #f1f8e9;
+      --dirty-border: #7cb342;
+
+      --text-dark: #004d40;
+      --text-muted: #4db6ac;
+      --white: #ffffff;
+      
+      --shadow-sm: 0 4px 12px rgba(0, 105, 92, 0.08);
+      --shadow-md: 0 8px 24px rgba(0, 105, 92, 0.15);
+      --shadow-lg: 0 16px 32px rgba(0, 105, 92, 0.2);
+      
+      --radius-sm: 12px;
+      --radius-md: 20px;
+      --radius-lg: 28px;
+    }
+
+    /* ==========================================================================
+       RESET & BASE STYLES
+       ========================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      font-family: 'Ubuntu', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #app-viewport {
+      width: 100%;
+      max-width: 900px;
+      height: 100%;
+      max-height: 900px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Target minimum 44px touch sizes */
+    button, .touch-target {
+      min-width: 44px;
+      min-height: 44px;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ==========================================================================
+       SCREENS SETUP
+       ========================================================================== */
+    .screen {
+      position: absolute;
+      top: 1rem;
+      bottom: 1rem;
+      left: 1rem;
+      right: 1rem;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 2rem 1.5rem;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 10;
+    }
+
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
+      z-index: 1;
+    }
+
+    /* Audio Toggle Button */
+    .audio-btn {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: var(--white);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      font-size: 1.3rem;
+      z-index: 50;
+      transition: transform 0.2s ease;
+    }
+
+    .audio-btn:active {
+      transform: scale(0.9);
+    }
+
+    /* ==========================================================================
+       START SCREEN
+       ========================================================================== */
+    #start-screen {
+      text-align: center;
+      justify-content: center;
+      gap: 1.5rem;
+    }
+
+    .game-logo-box {
+      background: var(--white);
+      padding: 1.5rem;
+      border-radius: 50%;
+      box-shadow: var(--shadow-md);
+      display: inline-flex;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    .title-group h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      color: var(--primary-teal);
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .title-group p {
+      font-size: clamp(1rem, 2.5vw, 1.2rem);
+      color: var(--primary-mid);
+    }
+
+    .setting-card {
+      background: var(--white);
+      padding: 1.25rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .setting-card label {
+      display: block;
+      font-weight: 700;
+      color: var(--primary-teal);
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .selector-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    .count-btn {
+      background: var(--clean-bg);
+      color: var(--primary-teal);
+      border: 2px solid transparent;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 1.1rem;
+      transition: all 0.2s ease;
+    }
+
+    .count-btn.selected {
+      background: var(--primary-teal);
+      color: var(--white);
+      border-color: var(--primary-mid);
+      transform: scale(1.05);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-teal) 100%);
+      color: var(--white);
+      font-size: 1.3rem;
+      font-weight: 700;
+      padding: 0.9rem 2.5rem;
+      border-radius: 50px;
+      box-shadow: var(--shadow-md);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover, .btn-primary:active {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* ==========================================================================
+       MAIN GAME SCREEN
+       ========================================================================== */
+    #game-screen {
+      padding: 1rem;
+    }
+
+    .game-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+    }
+
+    .badge {
+      background: var(--white);
+      padding: 0.5rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 700;
+      color: var(--primary-teal);
+      box-shadow: var(--shadow-sm);
+      font-size: 1rem;
+    }
+
+    .play-area {
+      flex: 1;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      grid-template-rows: 1fr;
+      gap: 0.75rem;
+      align-items: center;
+      margin: 0.5rem 0;
+      position: relative;
+    }
+
+    /* Laundry Baskets */
+    .basket-zone {
+      height: 100%;
+      max-height: 320px;
+      border-radius: var(--radius-md);
+      border: 3px dashed transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 0.5rem;
+      text-align: center;
+      transition: all 0.25 ease;
+      position: relative;
+    }
+
+    .basket-zone.clean-zone {
+      background: var(--clean-bg);
+      border-color: var(--clean-border);
+      color: var(--clean-blue);
+    }
+
+    .basket-zone.dirty-zone {
+      background: var(--dirty-bg);
+      border-color: var(--dirty-border);
+      color: var(--dirty-green);
+    }
+
+    .basket-zone.drag-over {
+      transform: scale(1.05);
+      border-style: solid;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .basket-icon {
+      width: 90px;
+      height: 90px;
+      margin-bottom: 0.5rem;
+      transition: transform 0.2s ease;
+    }
+
+    .basket-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Draggable Garment Card Slot */
+    .garment-slot {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .garment-card {
+      width: 100%;
+      max-width: 240px;
+      aspect-ratio: 1 / 1.1;
+      background: var(--white);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      cursor: grab;
+      position: relative;
+      touch-action: none;
+      z-index: 20;
+      transition: transform 0.1s linear, box-shadow 0.2s ease;
+    }
+
+    .garment-card:active {
+      cursor: grabbing;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .garment-svg-wrap {
+      width: 100%;
+      height: 75%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .garment-img {
+      max-width: 100%;
+      max-height: 100%;
+      width: auto;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 12px;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    .garment-label {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary-teal);
+      margin-top: 0.5rem;
+      text-align: center;
+      text-transform: capitalize;
+    }
+
+    /* Quick Action Buttons for Accessibility/Mobile Tapping */
+    .action-bar {
+      width: 100%;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .btn-action {
+      flex: 1;
+      max-width: 180px;
+      padding: 0.8rem 1rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .btn-action:active {
+      transform: scale(0.96);
+    }
+
+    .btn-icon {
+      width: 40px;
+      height: 40px;
+      object-fit: contain;
+      pointer-events: none;
+      -webkit-user-drag: none;
+    }
+
+    .btn-clean {
+      background: var(--clean-blue);
+      color: var(--white);
+    }
+
+    .btn-dirty {
+      background: var(--dirty-green);
+      color: var(--white);
+    }
+
+    /* Feedback Overlay / Toast */
+    .feedback-toast {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.5);
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--white);
+      pointer-events: none;
+      opacity: 0;
+      z-index: 100;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .feedback-toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .feedback-toast.correct {
+      background: #2e7d32;
+    }
+
+    .feedback-toast.wrong {
+      background: #c62828;
+    }
+
+    /* Smell Wave Animations */
+    @keyframes smellFloat {
+      0% { transform: translateY(0) scaleX(1); opacity: 0.5; }
+      50% { transform: translateY(-8px) scaleX(1.15); opacity: 0.9; }
+      100% { transform: translateY(0) scaleX(1); opacity: 0.5; }
+    }
+
+    .smell-wave {
+      animation: smellFloat 2s infinite ease-in-out;
+      transform-origin: center;
+    }
+
+    /* ==========================================================================
+       END SCREEN / RESULTS
+       ========================================================================== */
+    #end-screen {
+      justify-content: flex-start;
+      gap: 1rem;
+      overflow: hidden;
+    }
+
+    .results-header {
+      text-align: center;
+    }
+
+    .results-header h2 {
+      font-size: 2rem;
+      color: var(--primary-teal);
+    }
+
+    .score-summary {
+      font-size: 1.2rem;
+      color: var(--primary-mid);
+      margin-top: 0.25rem;
+      font-weight: 700;
+    }
+
+    .results-list {
+      width: 100%;
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 0.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .results-list::-webkit-scrollbar {
+      width: 6px;
+    }
+    .results-list::-webkit-scrollbar-thumb {
+      background: var(--primary-light);
+      border-radius: 10px;
+    }
+
+    .result-item-card {
+      background: var(--white);
+      border-radius: var(--radius-sm);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .result-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .result-thumb {
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .result-thumb .garment-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+    }
+
+    .result-details {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .result-name {
+      font-weight: 700;
+      text-transform: capitalize;
+      color: var(--text-dark);
+    }
+
+    .result-status {
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .result-badge {
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .result-badge.correct {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .result-badge.wrong {
+      background: #ffebee;
+      color: #c62828;
+    }
+
+    /* ==========================================================================
+       RESPONSIVE ADJUSTMENTS
+       ========================================================================== */
+    @media (max-width: 680px) {
+      .play-area {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto 1fr;
+      }
+      .garment-slot {
+        grid-column: 1 / -1;
+        grid-row: 1;
+        height: 200px;
+      }
+      .basket-zone {
+        height: 140px;
+      }
+      .basket-icon {
+        width: 60px;
+        height: 60px;
+      }
+      .basket-title {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-viewport">
+    
+    <!-- AUDIO TOGGLE BUTTON -->
+    <button class="audio-btn" id="audio-toggle" aria-label="Toggle Sound">
+      🔊
+    </button>
+
+    <!-- START SCREEN -->
+    <section id="start-screen" class="screen">
+      <div class="game-logo-box">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#e0f7fa"/>
+          <!-- Basket outline icon -->
+          <path d="M 25,40 L 75,40 L 70,80 L 30,80 Z" fill="none" stroke="#00838f" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M 20,40 L 80,40" stroke="#00838f" stroke-width="6" stroke-linecap="round"/>
+          <path d="M 35,25 C 35,15 65,15 65,25" fill="none" stroke="#00838f" stroke-width="6"/>
+          <!-- Sparkles -->
+          <path d="M 25,20 L 28,25 L 33,28 L 28,31 L 25,36 L 22,31 L 17,28 L 22,25 Z" fill="#00acc1"/>
+          <path d="M 75,25 L 77,29 L 81,31 L 77,33 L 75,37 L 73,33 L 69,31 L 73,29 Z" fill="#7cb342"/>
+        </svg>
+      </div>
+
+      <div class="title-group">
+        <h1>Clean or Dirty?</h1>
+        <p>Sort the laundry into the correct basket!</p>
+      </div>
+
+      <div class="setting-card">
+        <label>How many items to sort?</label>
+        <div class="selector-grid" id="count-selector">
+          <button class="count-btn" data-count="3">3</button>
+          <button class="count-btn selected" data-count="5">5</button>
+          <button class="count-btn" data-count="7">7</button>
+          <button class="count-btn" data-count="10">10</button>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="start-btn">
+        <span>Start Game</span> 🧺
+      </button>
+    </section>
+
+    <!-- MAIN GAME SCREEN -->
+    <section id="game-screen" class="screen hidden">
+      <div class="game-header">
+        <div class="badge" id="progress-badge">Item 1 / 5</div>
+        <div class="badge" id="score-badge">Score: 0</div>
+      </div>
+
+      <div class="play-area">
+        <!-- CLEAN BASKET -->
+        <div class="basket-zone clean-zone" id="clean-basket">
+          <svg class="basket-icon" viewBox="0 0 100 100">
+            <!-- Sparkle Bubbles -->
+            <circle cx="30" cy="20" r="6" fill="#80deea" opacity="0.8"/>
+            <circle cx="70" cy="15" r="8" fill="#4dd0e1" opacity="0.8"/>
+            <circle cx="80" cy="30" r="4" fill="#26c6da" opacity="0.8"/>
+            <!-- Basket SVG -->
+            <path d="M 20,40 L 80,40 L 73,85 C 72,90 68,92 63,92 L 37,92 C 32,92 28,90 27,85 Z" fill="#ffffff" stroke="#0288d1" stroke-width="5"/>
+            <path d="M 15,40 L 85,40 L 85,34 C 85,30 80,28 75,28 L 25,28 C 20,28 15,30 15,34 Z" fill="#0288d1"/>
+            <line x1="35" y1="48" x2="38" y2="84" stroke="#0288d1" stroke-width="4" stroke-linecap="round"/>
+            <line x1="50" y1="48" x2="50" y2="84" stroke="#0288d1" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="48" x2="62" y2="84" stroke="#0288d1" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <div class="basket-title">Clean</div>
+        </div>
+
+        <!-- GARMENT DRAG SLOT -->
+        <div class="garment-slot">
+          <div class="garment-card" id="garment-card">
+            <div class="garment-svg-wrap" id="garment-svg-container"></div>
+            <div class="garment-label" id="garment-label">T-Shirt</div>
+          </div>
+        </div>
+
+        <!-- DIRTY BASKET -->
+        <div class="basket-zone dirty-zone" id="dirty-basket">
+          <svg class="basket-icon" viewBox="0 0 100 100">
+            <!-- Smell waves -->
+            <path class="smell-wave" d="M 30,22 Q 25,12 30,5" stroke="#7cb342" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path class="smell-wave" d="M 50,22 Q 55,12 50,5" stroke="#7cb342" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <path class="smell-wave" d="M 70,22 Q 65,12 70,5" stroke="#7cb342" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <!-- Basket SVG -->
+            <path d="M 20,40 L 80,40 L 73,85 C 72,90 68,92 63,92 L 37,92 C 32,92 28,90 27,85 Z" fill="#ffffff" stroke="#558b2f" stroke-width="5"/>
+            <path d="M 15,40 L 85,40 L 85,34 C 85,30 80,28 75,28 L 25,28 C 20,28 15,30 15,34 Z" fill="#558b2f"/>
+            <line x1="35" y1="48" x2="38" y2="84" stroke="#558b2f" stroke-width="4" stroke-linecap="round"/>
+            <line x1="50" y1="48" x2="50" y2="84" stroke="#558b2f" stroke-width="4" stroke-linecap="round"/>
+            <line x1="65" y1="48" x2="62" y2="84" stroke="#558b2f" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <div class="basket-title">Dirty</div>
+        </div>
+      </div>
+
+      <!-- TAP ACTION BUTTONS FOR ACCESSIBILITY / RAPID PLAY -->
+      <div class="action-bar">
+        <button class="btn-action btn-clean" id="tap-clean">
+          <img src="assets/buttons/clean.png" alt="" class="btn-icon" />
+          <span>Clean</span>
+        </button>
+        <button class="btn-action btn-dirty" id="tap-dirty">
+          <img src="assets/buttons/dirty.png" alt="" class="btn-icon" />
+          <span>Dirty</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- END SCREEN -->
+    <section id="end-screen" class="screen hidden">
+      <div class="results-header">
+        <h2>Laundry Day Done! 🎉</h2>
+        <div class="score-summary" id="results-score-text">You got 4 out of 5 right!</div>
+      </div>
+
+      <div class="results-list" id="results-list">
+        <!-- Dynamic Result Items injected via JS -->
+      </div>
+
+      <button class="btn-primary" id="play-again-btn">
+        <span>Play Again</span> 🔄
+      </button>
+    </section>
+
+    <!-- FEEDBACK TOAST -->
+    <div class="feedback-toast" id="feedback-toast">Correct!</div>
+
+  </div>
+
+  <!-- ==========================================================================
+     JAVASCRIPT GAME ENGINE
+     ========================================================================== -->
+  <script>
+    /* --------------------------------------------------------------------------
+       AUDIO ENGINE (Web Audio API Synthesizer)
+       -------------------------------------------------------------------------- */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+      }
+
+      playCorrect() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now); // C5
+        osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.1); // E5
+        osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25); // G5
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      }
+
+      playWrong() {
+        if (this.muted || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+
+      playFanfare() {
+        if (this.muted || !this.ctx) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, i) => {
+          const now = this.ctx.currentTime + (i * 0.1);
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.3);
+        });
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    /* --------------------------------------------------------------------------
+       CLOTHING DATA & SVG GENERATOR
+       -------------------------------------------------------------------------- */
+    /* Each garment maps to a file in assets/clean/ and assets/dirty/.
+       File extensions can differ between the clean and dirty version of the
+       same item, so they're tracked separately here. */
+    const GARMENT_TYPES = [
+      { id: 'shirt', name: 'Shirt', cleanExt: 'png', dirtyExt: 'png' },
+      { id: 'shorts', name: 'Shorts', cleanExt: 'png', dirtyExt: 'png' },
+      { id: 'socks', name: 'Socks', cleanExt: 'webp', dirtyExt: 'png' },
+      { id: 'schoolshorts', name: 'School Shorts', cleanExt: 'webp', dirtyExt: 'png' },
+      { id: 'skort', name: 'Skort', cleanExt: 'jpg', dirtyExt: 'png' },
+      { id: 'uniform', name: 'Uniform', cleanExt: 'jpg', dirtyExt: 'png' },
+      { id: 'longsleeveshirt', name: 'Long Sleeve Shirt', cleanExt: 'png', dirtyExt: 'png' }
+    ];
+
+    function createGarmentImage(typeId, isDirty) {
+      const garment = GARMENT_TYPES.find(g => g.id === typeId);
+      const folder = isDirty ? 'dirty' : 'clean';
+      const ext = isDirty ? garment.dirtyExt : garment.cleanExt;
+      const src = `assets/${folder}/${typeId}.${ext}`;
+
+      return `<img class="garment-img" src="${src}" alt="${garment.name}" draggable="false" />`;
+    }
+
+    /* --------------------------------------------------------------------------
+       GAME STATE & LOGIC
+       -------------------------------------------------------------------------- */
+    let totalItemsToPlay = 5;
+    let currentItemIndex = 0;
+    let score = 0;
+    let gameSequence = [];
+    let gameHistory = [];
+
+    // DOM Elements
+    const startScreen = document.getElementById('start-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const endScreen = document.getElementById('end-screen');
+
+    const countSelector = document.getElementById('count-selector');
+    const startBtn = document.getElementById('start-btn');
+    const playAgainBtn = document.getElementById('play-again-btn');
+    const audioToggle = document.getElementById('audio-toggle');
+
+    const progressBadge = document.getElementById('progress-badge');
+    const scoreBadge = document.getElementById('score-badge');
+
+    const garmentCard = document.getElementById('garment-card');
+    const garmentSvgContainer = document.getElementById('garment-svg-container');
+    const garmentLabel = document.getElementById('garment-label');
+
+    const cleanBasket = document.getElementById('clean-basket');
+    const dirtyBasket = document.getElementById('dirty-basket');
+
+    const tapClean = document.getElementById('tap-clean');
+    const tapDirty = document.getElementById('tap-dirty');
+
+    const toast = document.getElementById('feedback-toast');
+    const resultsList = document.getElementById('results-list');
+    const resultsScoreText = document.getElementById('results-score-text');
+
+    /* Setup Option Selector */
+    countSelector.addEventListener('click', (e) => {
+      if (e.target.classList.contains('count-btn')) {
+        document.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('selected'));
+        e.target.classList.add('selected');
+        totalItemsToPlay = parseInt(e.target.getAttribute('data-count'), 10);
+      }
+    });
+
+    audioToggle.addEventListener('click', () => {
+      sound.muted = !sound.muted;
+      audioToggle.textContent = sound.muted ? '🔇' : '🔊';
+    });
+
+    startBtn.addEventListener('click', () => {
+      sound.init();
+      startGame();
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      showScreen(startScreen);
+    });
+
+    function showScreen(screenToShow) {
+      [startScreen, gameScreen, endScreen].forEach(s => s.classList.add('hidden'));
+      screenToShow.classList.remove('hidden');
+    }
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function buildGarmentSequence(count) {
+      const sequence = [];
+      while (sequence.length < count) {
+        const batch = shuffleArray(GARMENT_TYPES);
+
+        // Avoid the same item landing twice in a row across batch boundaries
+        const lastItem = sequence[sequence.length - 1];
+        if (lastItem && batch[0].id === lastItem.id) {
+          const swapIndex = batch.findIndex((g) => g.id !== lastItem.id);
+          if (swapIndex > 0) {
+            [batch[0], batch[swapIndex]] = [batch[swapIndex], batch[0]];
+          }
+        }
+
+        const remaining = count - sequence.length;
+        sequence.push(...batch.slice(0, remaining));
+      }
+      return sequence;
+    }
+
+    function startGame() {
+      currentItemIndex = 0;
+      score = 0;
+      gameHistory = [];
+
+      // Generate randomized deck without repeating an item until every
+      // other item has been used at least once
+      gameSequence = buildGarmentSequence(totalItemsToPlay).map((garment) => ({
+        ...garment,
+        isDirty: Math.random() < 0.5 // 50/50 clean vs dirty
+      }));
+
+      showScreen(gameScreen);
+      loadCurrentItem();
+    }
+
+    function loadCurrentItem() {
+      if (currentItemIndex >= gameSequence.length) {
+        endGame();
+        return;
+      }
+
+      const item = gameSequence[currentItemIndex];
+      progressBadge.textContent = `Item ${currentItemIndex + 1} / ${gameSequence.length}`;
+      scoreBadge.textContent = `Score: ${score}`;
+
+      garmentLabel.textContent = item.name;
+      garmentSvgContainer.innerHTML = createGarmentImage(item.id, item.isDirty);
+
+      // Reset card position and transitions
+      garmentCard.style.transition = 'none';
+      garmentCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+      garmentCard.style.opacity = '1';
+    }
+
+    function handleChoice(userChoice) {
+      const currentItem = gameSequence[currentItemIndex];
+      const actualStatus = currentItem.isDirty ? 'dirty' : 'clean';
+      const isCorrect = (userChoice === actualStatus);
+
+      if (isCorrect) {
+        score++;
+        sound.playCorrect();
+        showToast('Correct! ✨', 'correct');
+      } else {
+        sound.playWrong();
+        showToast(currentItem.isDirty ? 'It was Dirty! 🦨' : 'It was Clean! 🧼', 'wrong');
+      }
+
+      gameHistory.push({
+        item: currentItem,
+        userChoice: userChoice,
+        actualStatus: actualStatus,
+        isCorrect: isCorrect
+      });
+
+      currentItemIndex++;
+
+      // Animate card out then load next
+      garmentCard.style.transition = 'all 0.3s ease';
+      const flyX = userChoice === 'clean' ? -300 : 300;
+      garmentCard.style.transform = `translate(${flyX}px, 50px) rotate(${flyX * 0.1}deg)`;
+      garmentCard.style.opacity = '0';
+
+      setTimeout(() => {
+        loadCurrentItem();
+      }, 350);
+    }
+
+    function showToast(message, type) {
+      toast.textContent = message;
+      toast.className = `feedback-toast ${type} show`;
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 900);
+    }
+
+    /* --------------------------------------------------------------------------
+       POINTER EVENTS DRAG & DROP SYSTEM (Cross-platform touch/mouse)
+       -------------------------------------------------------------------------- */
+    let isDragging = false;
+    let startX = 0, startY = 0;
+    let currentX = 0, currentY = 0;
+
+    garmentCard.addEventListener('pointerdown', (e) => {
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      garmentCard.setPointerCapture(e.pointerId);
+      garmentCard.style.transition = 'none';
+    });
+
+    garmentCard.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      currentX = e.clientX - startX;
+      currentY = e.clientY - startY;
+      const rotate = currentX * 0.08;
+
+      garmentCard.style.transform = `translate(${currentX}px, ${currentY}px) rotate(${rotate}deg)`;
+
+      // Hover feedback on baskets
+      const cleanRect = cleanBasket.getBoundingClientRect();
+      const dirtyRect = dirtyBasket.getBoundingClientRect();
+
+      if (isOverlapping(e.clientX, e.clientY, cleanRect)) {
+        cleanBasket.classList.add('drag-over');
+        dirtyBasket.classList.remove('drag-over');
+      } else if (isOverlapping(e.clientX, e.clientY, dirtyRect)) {
+        dirtyBasket.classList.add('drag-over');
+        cleanBasket.classList.remove('drag-over');
+      } else {
+        cleanBasket.classList.remove('drag-over');
+        dirtyBasket.classList.remove('drag-over');
+      }
+    });
+
+    garmentCard.addEventListener('pointerup', (e) => {
+      if (!isDragging) return;
+      isDragging = false;
+      cleanBasket.classList.remove('drag-over');
+      dirtyBasket.classList.remove('drag-over');
+
+      const cleanRect = cleanBasket.getBoundingClientRect();
+      const dirtyRect = dirtyBasket.getBoundingClientRect();
+
+      if (isOverlapping(e.clientX, e.clientY, cleanRect)) {
+        handleChoice('clean');
+      } else if (isOverlapping(e.clientX, e.clientY, dirtyRect)) {
+        handleChoice('dirty');
+      } else {
+        // Snap back to center
+        garmentCard.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+        garmentCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+      }
+    });
+
+    garmentCard.addEventListener('pointercancel', () => {
+      isDragging = false;
+      cleanBasket.classList.remove('drag-over');
+      dirtyBasket.classList.remove('drag-over');
+      garmentCard.style.transition = 'transform 0.3s ease';
+      garmentCard.style.transform = 'translate(0px, 0px) rotate(0deg)';
+    });
+
+    function isOverlapping(x, y, rect) {
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
+    }
+
+    /* Fallback Tap Controls */
+    tapClean.addEventListener('click', () => handleChoice('clean'));
+    tapDirty.addEventListener('click', () => handleChoice('dirty'));
+
+    /* --------------------------------------------------------------------------
+       END GAME & RESULTS SUMMARY
+       -------------------------------------------------------------------------- */
+    function endGame() {
+      sound.playFanfare();
+      resultsScoreText.textContent = `You scored ${score} out of ${gameSequence.length}!`;
+
+      resultsList.innerHTML = '';
+      gameHistory.forEach((res, index) => {
+        const itemCard = document.createElement('div');
+        itemCard.className = 'result-item-card';
+
+        const imgThumb = createGarmentImage(res.item.id, res.item.isDirty);
+
+        itemCard.innerHTML = `
+          <div class="result-info">
+            <div class="result-thumb">${imgThumb}</div>
+            <div class="result-details">
+              <div class="result-name">${res.item.name}</div>
+              <div class="result-status">Actual: <strong>${res.actualStatus}</strong></div>
+            </div>
+          </div>
+          <div class="result-badge ${res.isCorrect ? 'correct' : 'wrong'}">
+            ${res.isCorrect ? '✓ Correct' : '✕ Wrong'}
+          </div>
+        `;
+        resultsList.appendChild(itemCard);
+      });
+
+      showScreen(endScreen);
+    }
+  </script>
+</body>
+</html>
