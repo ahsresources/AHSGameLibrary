@@ -34,6 +34,9 @@
     overflow:hidden;
     overscroll-behavior:none;
     -webkit-text-size-adjust:100%;
+    user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout:none;
   }
   #app{
     position:fixed; inset:0;
@@ -78,6 +81,14 @@
   }
   #addClockBtn:hover{ filter:brightness(1.05); }
   #addClockBtn:active{ transform: translateY(3px); box-shadow: 0 1px 0 var(--accent-green-dark); }
+  #fullscreenBtn{
+    background:#fff; border:1px solid var(--panel-edge); border-radius:10px;
+    width:40px; height:40px; font-size:18px; cursor:pointer; color:var(--ink);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    padding:0;
+  }
+  #fullscreenBtn:hover{ background:#faf7ee; }
+  #fullscreenBtn:active{ background:#f1ecda; }
   .hint{
     font-size:13px; color:#8a8371; flex:1; text-align:right; min-width:160px;
   }
@@ -178,18 +189,35 @@
   .hand{ cursor: grab; }
   .hand:active{ cursor: grabbing; }
 
-  .digitalReadout{
+  .digitalRow{
     margin-top:14px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .digitalArrow{
+    flex-shrink:0;
+    width:38px; height:38px; border-radius:50%;
+    background:#fff; border:1px solid var(--panel-edge);
+    box-shadow:0 2px 6px rgba(0,0,0,0.18);
+    font-size:20px; font-weight:700; color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; padding:0; font-family: var(--font-ui);
+    line-height:1;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+    touch-action:none;
+  }
+  .digitalArrow:hover{ background:#faf7ee; }
+  .digitalArrow:active{ background:#f1ecda; }
+  .digitalReadout{
     background: #1b1b1b;
     color: #FFDD55;
     font-family: 'Fredoka', monospace;
     font-weight:700;
-    font-size: 26px;
+    font-size: 39px;
     letter-spacing: 2px;
     text-align:center;
-    border-radius: 10px;
-    padding: 6px 18px;
-    border: 3px solid #0d0d0d;
+    border-radius: 12px;
+    padding: 8px 24px;
+    border: 4px solid #0d0d0d;
   }
 
   .toggleRow{
@@ -235,7 +263,8 @@
   <div id="toolbar">
     <h1><span class="dot"></span>Clock Workshop</h1>
     <button id="addClockBtn">+ Add clock</button>
-    <div class="hint">Drag a hand to set the time. Drag the clockface to move a clock. Pinch, scroll, or use the +/- buttons to zoom the canvas.</div>
+    <button id="fullscreenBtn" title="Full screen">⛶</button>
+    <div class="hint">Drag the hands or click the left and right arrows to set the time. Tap the gear icon for more settings.</div>
   </div>
 
   <div id="workspace">
@@ -260,6 +289,30 @@
   const zoomPercentEl = document.getElementById('zoomPercent');
   let clockCount = 0;
   let topZ = 1;
+
+  // ---------------- full screen ----------------
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  function getFsElement(){
+    return document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  }
+  fullscreenBtn.addEventListener('click', () => {
+    const root = document.documentElement;
+    if (!getFsElement()){
+      const req = root.requestFullscreen || root.webkitRequestFullscreen || root.msRequestFullscreen;
+      if (req) req.call(root);
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) exit.call(document);
+    }
+  });
+  function syncFullscreenBtn(){
+    const active = !!getFsElement();
+    fullscreenBtn.textContent = active ? '⤡' : '⛶';
+    fullscreenBtn.title = active ? 'Exit full screen' : 'Full screen';
+  }
+  ['fullscreenchange','webkitfullscreenchange','MSFullscreenChange'].forEach(evt => {
+    document.addEventListener(evt, syncFullscreenBtn);
+  });
 
   const CX = 150, CY = 150;
 
@@ -502,7 +555,11 @@
           </div>
         </div>
       </div>
-      <div class="digitalReadout">12:00</div>
+      <div class="digitalRow">
+        <button class="digitalArrow" data-dir="-1" title="Back one minute">‹</button>
+        <div class="digitalReadout">12:00</div>
+        <button class="digitalArrow" data-dir="1" title="Forward one minute">›</button>
+      </div>
     `;
 
     canvas.appendChild(card);
@@ -513,6 +570,8 @@
     const hourHandShape = hourHandG.querySelector('.handShape');
     const minuteHandShape = minuteHandG.querySelector('.handShape');
     const digitalEl = card.querySelector('.digitalReadout');
+    const digitalRow = card.querySelector('.digitalRow');
+    const digitalArrows = card.querySelectorAll('.digitalArrow');
     const minuteNumberEls = card.querySelectorAll('.minuteNumbers text');
     const removeBtn = card.querySelector('.removeBtn');
     const gearBtn = card.querySelector('.gearBtn');
@@ -537,7 +596,7 @@
       const mm = String(state.minuteIndex).padStart(2,'0');
       digitalEl.textContent = `${displayHour}:${mm}`;
 
-      digitalEl.style.display = state.showDigital ? 'block' : 'none';
+      digitalRow.style.display = state.showDigital ? 'flex' : 'none';
 
       const step = state.minuteMode === 'off' ? null : parseInt(state.minuteMode, 10);
       minuteNumberEls.forEach(el => {
@@ -563,6 +622,38 @@
     switches.digital.addEventListener('click', () => { state.showDigital = !state.showDigital; render(); });
     switches.colorHands.addEventListener('click', () => { state.colorHands = !state.colorHands; render(); });
     switches.snapFive.addEventListener('click', () => { state.snapFive = !state.snapFive; render(); });
+
+    function stepMinute(delta){
+      const oldIdx = state.minuteIndex;
+      if (state.geared){
+        if (delta > 0 && oldIdx === 59) state.hourIndex = (state.hourIndex + 1) % 12;
+        else if (delta < 0 && oldIdx === 0) state.hourIndex = (state.hourIndex - 1 + 12) % 12;
+      }
+      state.minuteIndex = (oldIdx + delta + 60) % 60;
+      render();
+    }
+
+    let holdTimeout = null, holdInterval = null;
+    function stopHold(){
+      clearTimeout(holdTimeout); holdTimeout = null;
+      clearInterval(holdInterval); holdInterval = null;
+    }
+    digitalArrows.forEach(btn => {
+      const dir = parseInt(btn.getAttribute('data-dir'), 10);
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        stopHold();
+        stepMinute(dir);
+        holdTimeout = setTimeout(() => {
+          holdInterval = setInterval(() => stepMinute(dir), 100);
+        }, 400);
+        btn.setPointerCapture(e.pointerId);
+      });
+      btn.addEventListener('pointerup', stopHold);
+      btn.addEventListener('pointercancel', stopHold);
+      btn.addEventListener('pointerleave', stopHold);
+      btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
     minuteModeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         state.minuteMode = btn.getAttribute('data-value');
