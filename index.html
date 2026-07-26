@@ -279,7 +279,44 @@
         }
         #sort-select:focus { border-color: var(--primary); }
 
-        .result-count { font-size: 0.82rem; color: var(--text-light); margin-bottom: 16px; }
+        .browse-results-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .result-count { font-size: 0.82rem; color: var(--text-light); }
+        .active-filter-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .filter-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 500;
+            padding: 4px 6px 4px 10px;
+            border-radius: 20px;
+            line-height: 1.4;
+        }
+        .filter-tag-remove {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            color: var(--primary);
+            font-size: 0.95rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0;
+        }
+        .filter-tag-remove:hover { background: var(--primary); color: white; }
 
         /* ── ABOUT PAGE ── */
         .about-wrap { max-width: 900px; margin: 0 auto; padding: 40px 24px 60px; }
@@ -858,7 +895,7 @@
     <!-- Mobile search — always in DOM, shown via CSS -->
     <div class="mobile-search-wrap">
         <svg class="mobile-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" id="mobile-search" placeholder="Search…" autocomplete="off">
+        <input type="text" id="mobile-search" placeholder="Search ELOs or keywords…" autocomplete="off">
     </div>
 </header>
 
@@ -1029,7 +1066,10 @@
                     </button>
                 </div>
             </div>
-            <div class="result-count" id="browse-count"></div>
+            <div class="browse-results-row">
+                <div class="result-count" id="browse-count"></div>
+                <div class="active-filter-tags" id="active-filter-tags"></div>
+            </div>
             <div class="game-grid" id="browse-grid"></div>
         </div>
     </div>
@@ -1491,8 +1531,69 @@ function applyFilters() {
     else list.sort((a, b) => a.title.localeCompare(b.title));
 
     document.getElementById('browse-count').textContent = `${list.length} game${list.length !== 1 ? 's' : ''}`;
+    renderActiveFilterTags(category, activeTopics, checkedDevices, dateFrom, dateTo);
     renderGrid('browse-grid', list);
 }
+
+/* ── ACTIVE FILTER TAGS ── */
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
+const DEVICE_LABELS = { desktop: 'Desktop', tablet: 'Tablet', mobile: 'Mobile' };
+
+function renderActiveFilterTags(category, activeTopics, checkedDevices, dateFrom, dateTo) {
+    const container = document.getElementById('active-filter-tags');
+    if (!container) return;
+
+    const tags = [];
+    if (category) tags.push({ type: 'category', value: category, label: category });
+    activeTopics.forEach(t => tags.push({ type: 'topic', value: t, label: t }));
+    checkedDevices.forEach(d => tags.push({ type: 'device', value: d, label: DEVICE_LABELS[d] || d }));
+    if (dateFrom) tags.push({ type: 'dateFrom', value: dateFrom, label: `From ${dateFrom}` });
+    if (dateTo)   tags.push({ type: 'dateTo', value: dateTo, label: `To ${dateTo}` });
+
+    if (!tags.length) { container.innerHTML = ''; return; }
+
+    container.innerHTML = tags.map(t => `
+        <span class="filter-tag">
+            ${escapeHtml(t.label)}
+            <button type="button" class="filter-tag-remove" data-type="${t.type}" data-value="${escapeHtml(t.value)}" aria-label="Remove ${escapeHtml(t.label)} filter">×</button>
+        </span>
+    `).join('');
+}
+
+function removeFilter(type, value) {
+    if (type === 'category') {
+        document.querySelectorAll('input[name="cat"]')[0].checked = true;
+        document.querySelectorAll('input[name="mcat"]')[0].checked = true;
+    } else if (type === 'topic') {
+        const el = document.querySelector(`#body-topic input[value="${CSS.escape(value)}"]`);
+        if (el) el.checked = false;
+        const mel = document.querySelector(`#body-mtopic input[value="${CSS.escape(value)}"]`);
+        if (mel) mel.checked = false;
+    } else if (type === 'device') {
+        const el = document.querySelector(`#body-device input[value="${CSS.escape(value)}"]`);
+        if (el) el.checked = false;
+        const mel = document.querySelector(`input[name="mdevice"][value="${CSS.escape(value)}"]`);
+        if (mel) mel.checked = false;
+    } else if (type === 'dateFrom') {
+        document.getElementById('date-from').value = '';
+        document.getElementById('mdate-from').value = '';
+    } else if (type === 'dateTo') {
+        document.getElementById('date-to').value = '';
+        document.getElementById('mdate-to').value = '';
+    }
+    applyFilters();
+}
+
+document.getElementById('active-filter-tags').addEventListener('click', function(e) {
+    const btn = e.target.closest('.filter-tag-remove');
+    if (!btn) return;
+    removeFilter(btn.dataset.type, btn.dataset.value);
+});
 
 function clearFilters() {
     document.querySelectorAll('input[name="cat"]')[0].checked = true;
