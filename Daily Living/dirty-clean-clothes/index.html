@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Clean or Dirty?</title>
   
   <!-- Google Fonts: Ubuntu -->
@@ -58,6 +58,7 @@
     html, body {
       width: 100%;
       height: 100%;
+      height: -webkit-fill-available;
       height: 100dvh;
       overflow: hidden;
       font-family: 'Ubuntu', sans-serif;
@@ -73,7 +74,7 @@
       max-width: 900px;
       height: 100%;
       max-height: 900px;
-      padding: 1rem;
+      padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
       display: flex;
       flex-direction: column;
       position: relative;
@@ -108,6 +109,9 @@
       align-items: center;
       justify-content: space-between;
       padding: 2rem 1.5rem;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
       transition: opacity 0.3s ease, transform 0.3s ease;
       z-index: 10;
     }
@@ -183,6 +187,31 @@
       box-shadow: var(--shadow-sm);
       width: 100%;
       max-width: 420px;
+    }
+
+    /* Loading Screen */
+    .loading-bar-track {
+      width: 100%;
+      max-width: 320px;
+      height: 16px;
+      background: var(--white);
+      border-radius: 50px;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .loading-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(135deg, var(--primary-mid) 0%, var(--primary-light) 100%);
+      border-radius: 50px;
+      transition: width 0.2s ease;
+    }
+
+    .loading-percent {
+      font-weight: 700;
+      color: var(--primary-teal);
+      font-size: 1rem;
     }
 
     .setting-card label {
@@ -262,6 +291,7 @@
 
     .play-area {
       flex: 1;
+      min-height: 0;
       width: 100%;
       display: grid;
       grid-template-columns: 1fr 1.2fr 1fr;
@@ -601,6 +631,50 @@
         font-size: 1rem;
       }
     }
+
+    /* Short viewports: landscape phones, split-view iPad, small tablets */
+    @media (max-height: 700px) {
+      .screen {
+        padding: 1rem 1.25rem;
+      }
+      #game-screen {
+        padding: 0.5rem;
+      }
+      .game-logo-box {
+        padding: 1rem;
+      }
+      .game-logo-box svg {
+        width: 56px;
+        height: 56px;
+      }
+      .title-group h1 {
+        font-size: 1.6rem;
+      }
+      .title-group p {
+        font-size: 0.9rem;
+      }
+      .basket-icon {
+        width: 56px;
+        height: 56px;
+        margin-bottom: 0.25rem;
+      }
+      .basket-zone {
+        max-height: 220px;
+        padding: 0.5rem;
+      }
+      .garment-card {
+        max-width: 170px;
+        padding: 0.5rem;
+      }
+      .btn-icon {
+        width: 28px;
+        height: 28px;
+      }
+      .btn-action {
+        padding: 0.6rem 0.8rem;
+        font-size: 1rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -612,8 +686,34 @@
       🔊
     </button>
 
+    <!-- LOADING SCREEN -->
+    <section id="loading-screen" class="screen">
+      <div class="game-logo-box">
+        <svg width="80" height="80" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="#e0f7fa"/>
+          <!-- Basket outline icon -->
+          <path d="M 25,40 L 75,40 L 70,80 L 30,80 Z" fill="none" stroke="#00838f" stroke-width="6" stroke-linejoin="round"/>
+          <path d="M 20,40 L 80,40" stroke="#00838f" stroke-width="6" stroke-linecap="round"/>
+          <path d="M 35,25 C 35,15 65,15 65,25" fill="none" stroke="#00838f" stroke-width="6"/>
+          <!-- Sparkles -->
+          <path d="M 25,20 L 28,25 L 33,28 L 28,31 L 25,36 L 22,31 L 17,28 L 22,25 Z" fill="#00acc1"/>
+          <path d="M 75,25 L 77,29 L 81,31 L 77,33 L 75,37 L 73,33 L 69,31 L 73,29 Z" fill="#7cb342"/>
+        </svg>
+      </div>
+
+      <div class="title-group">
+        <h1>Clean or Dirty?</h1>
+        <p>Loading the laundry basket...</p>
+      </div>
+
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loading-bar-fill"></div>
+      </div>
+      <div class="loading-percent" id="loading-percent">0%</div>
+    </section>
+
     <!-- START SCREEN -->
-    <section id="start-screen" class="screen">
+    <section id="start-screen" class="screen hidden">
       <div class="game-logo-box">
         <svg width="80" height="80" viewBox="0 0 100 100">
           <circle cx="50" cy="50" r="45" fill="#e0f7fa"/>
@@ -850,9 +950,13 @@
     let gameHistory = [];
 
     // DOM Elements
+    const loadingScreen = document.getElementById('loading-screen');
     const startScreen = document.getElementById('start-screen');
     const gameScreen = document.getElementById('game-screen');
     const endScreen = document.getElementById('end-screen');
+
+    const loadingBarFill = document.getElementById('loading-bar-fill');
+    const loadingPercent = document.getElementById('loading-percent');
 
     const countSelector = document.getElementById('count-selector');
     const startBtn = document.getElementById('start-btn');
@@ -900,7 +1004,7 @@
     });
 
     function showScreen(screenToShow) {
-      [startScreen, gameScreen, endScreen].forEach(s => s.classList.add('hidden'));
+      [loadingScreen, startScreen, gameScreen, endScreen].forEach(s => s.classList.add('hidden'));
       screenToShow.classList.remove('hidden');
     }
 
@@ -1116,6 +1220,56 @@
 
       showScreen(endScreen);
     }
+    /* --------------------------------------------------------------------------
+       ASSET PRELOADING
+       -------------------------------------------------------------------------- */
+    function getAllAssetUrls() {
+      const urls = [];
+      GARMENT_TYPES.forEach((garment) => {
+        urls.push(`assets/clean/${garment.id}.${garment.cleanExt}`);
+        urls.push(`assets/dirty/${garment.id}.${garment.dirtyExt}`);
+      });
+      urls.push('assets/buttons/clean.png');
+      urls.push('assets/buttons/dirty.png');
+      return urls;
+    }
+
+    function preloadImage(url) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve();
+        img.onerror = () => resolve(); // don't block loading on a missing/broken file
+        img.src = url;
+      });
+    }
+
+    function preloadAssets() {
+      const urls = getAllAssetUrls();
+      const total = urls.length;
+      let loaded = 0;
+
+      showScreen(loadingScreen);
+      updateLoadingProgress(0, total);
+
+      const loadPromises = urls.map((url) =>
+        preloadImage(url).then(() => {
+          loaded++;
+          updateLoadingProgress(loaded, total);
+        })
+      );
+
+      Promise.all(loadPromises).then(() => {
+        showScreen(startScreen);
+      });
+    }
+
+    function updateLoadingProgress(loaded, total) {
+      const percent = total === 0 ? 100 : Math.round((loaded / total) * 100);
+      loadingBarFill.style.width = `${percent}%`;
+      loadingPercent.textContent = `${percent}%`;
+    }
+
+    preloadAssets();
   </script>
 </body>
 </html>
