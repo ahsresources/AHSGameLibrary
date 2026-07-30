@@ -20,6 +20,16 @@
     "uploadDate": "2026-07-30"
   },
   {
+    "id": "dirty-clean-clothes",
+    "title": "Dirty Clean Clothes",
+    "description": "Sort between dirty and clean clothes.",
+    "creatorName": "Teacher Ketti",
+    "category": "Daily Living",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["dirty", "clean", "laundry", "self-care", "DL.HL.9.1"],
+    "uploadDate": "2026-07-30"
+  },
+  {
     "id": "kitchen-catch",
     "title": "Kitchen Catch!",
     "description": "Tap the correct kitchen equipment.",
