@@ -1,4 +1,24 @@
-[    
+[
+  {
+    "id": "look-book",
+    "title": "Look Book",
+    "description": "Learn about male and female clothing by dressing up models.",
+    "creatorName": "Teacher Carmina",
+    "category": "Daily Living",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["gender", "DL.HL.4.3"],
+    "uploadDate": "2026-07-30"
+  },
+  {
+    "id": "foxtrot-climb",
+    "title": "Foxtrot Climb",
+    "description": "Practice typing letters in this fun jumping game.",
+    "creatorName": "Teacher Carmina",
+    "category": "General",
+    "compatibility": ["desktop"],
+    "tags": ["ICT", "keyboard", "typing"],
+    "uploadDate": "2026-07-30"
+  },
   {
     "id": "kitchen-catch",
     "title": "Kitchen Catch!",
