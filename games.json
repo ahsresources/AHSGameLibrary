@@ -32,7 +32,7 @@
     {
     "id": "traffic-light-crossing",
     "title": "Traffic Light Crossing",
-    "description": "Cross the road using the correct traffic light crossing.",
+    "description": "Cross the road using when the green man appears!",
     "creatorName": "Teacher Ketti",
     "category": "Daily Living",
     "compatibility": ["desktop", "tablet", "mobile"],
