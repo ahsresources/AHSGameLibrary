@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fraction Games</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #F3F5FA;
+            --paper: #FFFFFF;
+            --ink: #1E2233;
+            --ink-soft: #6B7280;
+
+            --blue: #3B82F6;
+            --blue-deep: #2563EB;
+            --blue-bg: #EAF2FE;
+
+            --amber: #F2A93B;
+            --amber-deep: #DB8C11;
+            --amber-bg: #FCF1DE;
+
+            --indigo: #6366F1;
+            --indigo-deep: #4F46E5;
+            --indigo-bg: #ECEDFD;
+
+            --teal: #14B8A6;
+            --teal-deep: #0D9488;
+            --teal-bg: #E1F8F5;
+
+            --green: #22C55E;
+            --green-deep: #16A34A;
+            --green-bg: #E7FAEE;
+
+            --red: #EF4444;
+            --red-deep: #DC2626;
+            --red-bg: #FDEBEB;
+
+            --rose: #E11D48;
+            --rose-deep: #BE123C;
+            --rose-bg: #FDE7EC;
+
+            --border: #E5E8F0;
+            --shadow-sm: 0 1px 2px rgba(30, 34, 51, 0.06);
+            --shadow-md: 0 8px 24px -8px rgba(30, 34, 51, 0.18);
+            --radius: 18px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background: var(--bg);
+            background-image:
+                radial-gradient(circle at 6% 10%, rgba(59, 130, 246, 0.10) 0%, rgba(59, 130, 246, 0) 40%),
+                radial-gradient(circle at 94% 90%, rgba(99, 102, 241, 0.10) 0%, rgba(99, 102, 241, 0) 42%),
+                var(--bg);
+            color: var(--ink);
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            height: 100%;
+            max-height: 680px;
+            background: var(--paper);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* Top Bar */
+        header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mode-title {
+            font-family: 'Sora', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--indigo-deep);
+            background: var(--indigo-bg);
+            padding: 6px 14px;
+            border-radius: 10px;
+            letter-spacing: 0.1px;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+        }
+
+        .stat-badge {
+            background: var(--bg);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--ink-soft);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-badge span {
+            color: var(--ink);
+        }
+
+        .sound-toggle {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .sound-toggle:hover {
+            border-color: var(--blue);
+        }
+
+        .sound-toggle svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--ink-soft);
+            transition: fill 0.15s ease, opacity 0.15s ease;
+        }
+
+        .sound-toggle.muted svg {
+            opacity: 0.5;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: var(--bg);
+            height: 8px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--blue), var(--indigo));
+            border-radius: 6px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Menu View */
+        .menu-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            text-align: center;
+            gap: 14px;
+            height: 100%;
+        }
+
+        .menu-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: var(--indigo-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-icon svg {
+            width: 28px;
+            height: 28px;
+            fill: var(--indigo-deep);
+        }
+
+        .menu-view h1 {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.9rem;
+            font-weight: 800;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+        }
+
+        .menu-view p {
+            color: var(--ink-soft);
+            font-size: 0.98rem;
+            font-weight: 500;
+            max-width: 480px;
+        }
+
+        .mode-cards {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .card-btn {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-start;
+            text-align: left;
+            gap: 12px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card-btn:hover {
+            border-color: var(--card-border, var(--blue));
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .card-btn:active {
+            transform: translateY(0);
+        }
+
+        .card-btn.c-blue { --card-border: var(--blue); --card-bg: var(--blue-bg); }
+        .card-btn.c-amber { --card-border: var(--amber-deep); --card-bg: var(--amber-bg); }
+        .card-btn.c-indigo { --card-border: var(--indigo); --card-bg: var(--indigo-bg); }
+        .card-btn.c-teal { --card-border: var(--teal-deep); --card-bg: var(--teal-bg); }
+        .card-btn.c-rose { --card-border: var(--rose); --card-bg: var(--rose-bg); }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: var(--card-bg, var(--blue-bg));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .card-btn svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--card-border, var(--blue));
+        }
+
+        .card-btn h3 {
+            font-family: 'Sora', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .card-btn p {
+            font-size: 0.76rem;
+            font-weight: 500;
+            color: var(--ink-soft);
+        }
+
+        /* Game Area */
+        .game-view {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            align-items: center;
+            justify-content: space-between;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .instruction {
+            font-size: 1rem;
+            font-weight: 700;
+            text-align: center;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-shrink: 0;
+            min-height: 40px;
+        }
+
+        .interactive-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        /* Shape Grid */
+        .shape-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .shape-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.15s ease;
+        }
+
+        .shape-card:hover {
+            border-color: var(--blue);
+            background: var(--paper);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Mode 3 Make Whole Styles */
+        .make-whole-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            width: 100%;
+        }
+
+        .make-whole-shape {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .make-whole-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+            max-width: 260px;
+        }
+
+        .target-fraction-display {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+        }
+
+        .fraction-ui {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            vertical-align: middle;
+            font-size: 1.3rem;
+            font-weight: 700;
+            font-family: 'Sora', sans-serif;
+            padding: 0 4px;
+            color: var(--ink);
+        }
+
+        .fraction-ui .num {
+            border-bottom: 2px solid var(--ink);
+            padding-bottom: 1px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .fraction-ui .den {
+            padding-top: 1px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .options-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .fraction-opt-btn {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 18px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .fraction-opt-btn:hover {
+            border-color: var(--blue);
+            background: var(--paper);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Mode 4 Input & Keypad Styles */
+        .identify-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 26px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .identify-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .fraction-input-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .fraction-input-group input {
+            width: 56px;
+            height: 48px;
+            font-size: 1.25rem;
+            font-family: 'Sora', sans-serif;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            outline: none;
+            font-weight: 700;
+            color: var(--ink);
+            transition: border-color 0.2s;
+            background: var(--bg);
+            cursor: pointer;
+        }
+
+        .fraction-input-group input.active-field {
+            border-color: var(--blue);
+            background: var(--paper);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+        }
+
+        .fraction-input-group .divider {
+            width: 54px;
+            height: 3px;
+            background: var(--ink);
+            border-radius: 2px;
+        }
+
+        /* On-Screen Number Pad */
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 14px;
+            width: 170px;
+            flex-shrink: 0;
+            border: 1px solid var(--border);
+        }
+
+        .numpad-btn {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            height: 42px;
+            font-family: 'Sora', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.1s ease;
+        }
+
+        .numpad-btn:active {
+            transform: translateY(1px);
+            box-shadow: none;
+        }
+
+        .numpad-btn.action {
+            background: var(--red-bg);
+            border-color: var(--red);
+            color: var(--red-deep);
+            font-size: 0.9rem;
+        }
+
+        /* Numerator/Denominator mode: fraction stacked above a row of answer buttons */
+        .numden-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 22px;
+            width: 100%;
+        }
+
+        /* SVG Styling */
+        svg .slice {
+            stroke: #ffffff;
+            stroke-width: 2.5px;
+            transition: fill 0.4s ease;
+        }
+
+        svg .slice-shaded {
+            fill: var(--blue);
+        }
+
+        svg .slice-added {
+            fill: var(--amber) !important;
+        }
+
+        svg .slice-empty {
+            fill: #E5E8F0;
+        }
+
+        /* Action Controls */
+        .controls {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Sora', sans-serif;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background: var(--blue-deep);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--ink-soft);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+            color: var(--ink);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary svg {
+            fill: var(--ink-soft);
+        }
+
+        /* Success Screen View */
+        .success-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            text-align: center;
+            gap: 14px;
+            position: relative;
+        }
+
+        .success-icon {
+            width: 68px;
+            height: 68px;
+            background: var(--green-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-icon svg {
+            width: 38px;
+            height: 38px;
+            fill: var(--green-deep);
+        }
+
+        .success-view h2 {
+            font-family: 'Sora', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--ink);
+        }
+
+        .success-view p {
+            color: var(--ink-soft);
+            font-size: 0.98rem;
+            font-weight: 500;
+        }
+
+        .confetti-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            top: -16px;
+            width: 7px;
+            height: 11px;
+            opacity: 0.9;
+            animation-name: confetti-fall;
+            animation-timing-function: ease-in;
+            animation-iteration-count: 1;
+        }
+
+        @keyframes confetti-fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(380px) rotate(360deg); opacity: 0; }
+        }
+
+        /* Feedback Toast */
+        .feedback {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            padding: 10px 22px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+        }
+
+        .feedback.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .feedback.correct {
+            background: var(--green-bg);
+            color: var(--green-deep);
+            border: 1px solid var(--green);
+        }
+
+        .feedback.incorrect {
+            background: var(--red-bg);
+            color: var(--red-deep);
+            border: 1px solid var(--red);
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 520px) {
+            .container {
+                padding: 16px;
+            }
+
+            .mode-cards {
+                gap: 8px;
+            }
+
+            .card-btn {
+                padding: 10px 14px;
+            }
+
+            .card-icon {
+                width: 34px;
+                height: 34px;
+            }
+
+            .card-btn svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            .menu-view h1 {
+                font-size: 1.5rem;
+            }
+
+            .shape-grid {
+                gap: 8px;
+            }
+
+            .shape-card {
+                padding: 8px;
+            }
+
+            .identify-container {
+                gap: 12px;
+            }
+
+            .make-whole-container {
+                flex-direction: column;
+                gap: 14px;
+            }
+
+            .numpad {
+                width: 145px;
+            }
+
+            .numpad-btn {
+                height: 38px;
+                font-size: 1.02rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- Top Bar -->
+        <header id="header" style="display: none;">
+            <div class="header-top">
+                <div class="mode-title" id="mode-title">Find 1 Whole</div>
+                <div class="stats-bar">
+                    <div class="stat-badge">Question <span id="trial-val">1/5</span></div>
+                    <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" aria-label="Toggle sound">
+                        <svg id="sound-icon" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </header>
+
+        <!-- View 1: Main Menu -->
+        <div class="menu-view" id="menu-view">
+            <div class="menu-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2a8 8 0 018 8h-8V4z"/></svg>
+            </div>
+            <h1>Fraction Games</h1>
+            <p>Choose a mode and sharpen your fraction skills.</p>
+            <div class="mode-cards">
+                <div class="card-btn c-blue" onclick="startGame('findWhole')">
+                    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/></svg></div>
+                    <div>
+                        <h3>Find 1 Whole</h3>
+                        <p>Tap the shape that shows a whole.</p>
+                    </div>
+                </div>
+                <div class="card-btn c-amber" onclick="startGame('unitFraction')">
+                    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+                    <div>
+                        <h3>Find 1 Part</h3>
+                        <p>Tap the shape that matches the unit fraction.</p>
+                    </div>
+                </div>
+                <div class="card-btn c-indigo" onclick="startGame('makeWhole')">
+                    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.68.78 4.95 2.05L12 13 7.05 8.05C8.32 6.78 10.07 6 12 6z"/></svg></div>
+                    <div>
+                        <h3>Make a Whole</h3>
+                        <p>Pick the missing piece to complete the shape.</p>
+                    </div>
+                </div>
+                <div class="card-btn c-teal" onclick="startGame('identify')">
+                    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 8h-4v4h-2v-4H7V9h4V5h2v4h4v2z"/></svg></div>
+                    <div>
+                        <h3>Name the Fraction</h3>
+                        <p>Type the top and bottom numbers.</p>
+                    </div>
+                </div>
+                <div class="card-btn c-rose" onclick="startGame('findNumDen')">
+                    <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-1.7 1.17-2.42l1.24-1.26c.37-.36.59-.86.59-1.32 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg></div>
+                    <div>
+                        <h3>Name Parts of a Fraction</h3>
+                        <p>Tap the numerator or denominator.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- View 2: Gameplay -->
+        <div class="game-view" id="game-view">
+            <div class="instruction" id="instruction-text">Instruction goes here</div>
+
+            <div class="interactive-area" id="interactive-area">
+                <!-- Dynamic Content Injected Here -->
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-secondary" onclick="showMenu()">
+                    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                    Main Menu
+                </button>
+                <button class="btn btn-primary" id="action-btn" style="display: none;" onclick="checkAnswer()">Check Answer</button>
+            </div>
+        </div>
+
+        <!-- View 3: Success Screen -->
+        <div class="success-view" id="success-view">
+            <div class="confetti-layer" id="confetti-layer"></div>
+            <div class="success-icon">
+                <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+            </div>
+            <h2>Nice work — set complete!</h2>
+            <p>You answered all 5 questions.</p>
+            <button class="btn btn-primary" style="padding: 12px 28px; margin-top: 8px;" onclick="showMenu()">Play Again</button>
+        </div>
+
+        <!-- Toast Feedback -->
+        <div class="feedback" id="feedback">Correct!</div>
+    </div>
+
+    <script>
+        // Game Configuration
+        const TOTAL_TRIALS = 5;
+
+        // Game State
+        let currentMode = '';
+        let currentTrial = 1;
+        let currentProblemData = {};
+        let previousProblemKey = ''; // Key to prevent consecutive identical questions
+        let isProcessing = false;
+        let activeInputField = 'num'; // Track active input field for keypad ('num' or 'den')
+
+        // --- Sound ---
+        let soundEnabled = true;
+        let audioCtx = null;
+
+        const SOUND_ON_PATH = 'M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z';
+        const SOUND_OFF_PATH = 'M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.8L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z';
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playTone(freq, startTime, duration, volume = 0.14) {
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0, startTime);
+            gain.gain.linearRampToValueAtTime(volume, startTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(startTime);
+            osc.stop(startTime + duration + 0.05);
+        }
+
+        function playCorrectSound() {
+            if (!soundEnabled) return;
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            playTone(523.25, now, 0.16);        // C5
+            playTone(659.25, now + 0.09, 0.22); // E5
+        }
+
+        function playCompleteSound() {
+            if (!soundEnabled) return;
+            const ctx = getAudioContext();
+            const now = ctx.currentTime;
+            playTone(523.25, now, 0.16);         // C5
+            playTone(659.25, now + 0.12, 0.16);  // E5
+            playTone(783.99, now + 0.24, 0.3);   // G5
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const btn = document.getElementById('sound-toggle');
+            const icon = document.getElementById('sound-icon');
+            btn.classList.toggle('muted', !soundEnabled);
+            icon.querySelector('path').setAttribute('d', soundEnabled ? SOUND_ON_PATH : SOUND_OFF_PATH);
+
+            if (soundEnabled) {
+                const ctx = getAudioContext();
+                playTone(660, ctx.currentTime, 0.12, 0.1);
+            }
+        }
+
+        function spawnConfetti() {
+            const layer = document.getElementById('confetti-layer');
+            if (!layer) return;
+            layer.innerHTML = '';
+            const colors = ['var(--blue)', 'var(--indigo)', 'var(--amber)', 'var(--teal)', 'var(--green)'];
+            for (let i = 0; i < 20; i++) {
+                const piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = `${Math.random() * 100}%`;
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDuration = `${1.3 + Math.random() * 1.1}s`;
+                piece.style.animationDelay = `${Math.random() * 0.4}s`;
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                layer.appendChild(piece);
+            }
+        }
+
+        // Dynamic Sizing Engine for SVGs based on screen size
+        function getSVGSize(type, large = false) {
+            const isSmallScreen = window.innerWidth <= 520 || window.innerHeight <= 600;
+            if (type === 'pie') {
+                if (large) return isSmallScreen ? 60 : 88;
+                return isSmallScreen ? 42 : 52;
+            } else {
+                if (large) return isSmallScreen ? { w: 140, h: 46 } : { w: 175, h: 58 };
+                return isSmallScreen ? { w: 100, h: 36 } : { w: 120, h: 42 };
+            }
+        }
+
+        // Utilities
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function shuffleArray(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // SVG Drawing Engines
+        function createPieSVG(numerator, denominator, radius = 52, id = '') {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            const size = radius * 2 + 8;
+            svg.setAttribute("width", size);
+            svg.setAttribute("height", size);
+            svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+            if (id) svg.setAttribute("id", id);
+
+            const cx = size / 2;
+            const cy = size / 2;
+            const angleStep = (2 * Math.PI) / denominator;
+
+            for (let i = 0; i < denominator; i++) {
+                const startAngle = i * angleStep - Math.PI / 2;
+                const endAngle = (i + 1) * angleStep - Math.PI / 2;
+
+                const x1 = cx + radius * Math.cos(startAngle);
+                const y1 = cy + radius * Math.sin(startAngle);
+                const x2 = cx + radius * Math.cos(endAngle);
+                const y2 = cy + radius * Math.sin(endAngle);
+
+                const largeArc = angleStep > Math.PI ? 1 : 0;
+
+                const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                path.setAttribute("d", pathData);
+                path.setAttribute("class", `slice ${i < numerator ? 'slice-shaded' : 'slice-empty'}`);
+                path.setAttribute("data-slice-index", i);
+                svg.appendChild(path);
+            }
+
+            return svg;
+        }
+
+        function createBarSVG(numerator, denominator, width = 120, height = 42, id = '') {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.setAttribute("width", width + 4);
+            svg.setAttribute("height", height + 4);
+            svg.setAttribute("viewBox", `0 0 ${width + 4} ${height + 4}`);
+            if (id) svg.setAttribute("id", id);
+
+            const cellWidth = width / denominator;
+
+            for (let i = 0; i < denominator; i++) {
+                const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+                rect.setAttribute("x", 2 + i * cellWidth);
+                rect.setAttribute("y", 2);
+                rect.setAttribute("width", cellWidth);
+                rect.setAttribute("height", height);
+                rect.setAttribute("class", `slice ${i < numerator ? 'slice-shaded' : 'slice-empty'}`);
+                rect.setAttribute("rx", i === 0 ? "4" : i === denominator - 1 ? "4" : "0");
+                rect.setAttribute("data-slice-index", i);
+                svg.appendChild(rect);
+            }
+
+            return svg;
+        }
+
+        function renderShape(numerator, denominator, shapeType = 'pie', id = '', large = false) {
+            const size = getSVGSize(shapeType, large);
+            return shapeType === 'pie'
+                ? createPieSVG(numerator, denominator, size, id)
+                : createBarSVG(numerator, denominator, size.w, size.h, id);
+        }
+
+        // App Navigation
+        function startGame(mode) {
+            currentMode = mode;
+            currentTrial = 1;
+            previousProblemKey = ''; // Reset question memory on new game
+
+            document.getElementById('menu-view').style.display = 'none';
+            document.getElementById('success-view').style.display = 'none';
+            document.getElementById('game-view').style.display = 'flex';
+            document.getElementById('header').style.display = 'flex';
+
+            const titles = {
+                'findWhole': 'Find 1 Whole',
+                'unitFraction': 'Find 1 Part',
+                'makeWhole': 'Make a Whole',
+                'identify': 'Name the Fraction',
+                'findNumDen': 'Numerator or Denominator'
+            };
+            document.getElementById('mode-title').innerText = titles[mode];
+
+            updateStats();
+            nextProblem();
+        }
+
+        function showMenu() {
+            document.getElementById('menu-view').style.display = 'flex';
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('success-view').style.display = 'none';
+            document.getElementById('header').style.display = 'none';
+            hideFeedback();
+        }
+
+        function showSuccessScreen() {
+            document.getElementById('game-view').style.display = 'none';
+            document.getElementById('header').style.display = 'none';
+            document.getElementById('success-view').style.display = 'flex';
+            spawnConfetti();
+            playCompleteSound();
+            hideFeedback();
+        }
+
+        function updateStats() {
+            document.getElementById('trial-val').innerText = `${currentTrial}/${TOTAL_TRIALS}`;
+
+            const progressPercent = ((currentTrial - 1) / TOTAL_TRIALS) * 100;
+            document.getElementById('progress-bar').style.width = `${progressPercent}%`;
+        }
+
+        function advanceTrial() {
+            if (currentTrial < TOTAL_TRIALS) {
+                currentTrial++;
+                updateStats();
+                nextProblem();
+            } else {
+                document.getElementById('progress-bar').style.width = '100%';
+                setTimeout(showSuccessScreen, 500);
+            }
+        }
+
+        function showFeedback(isCorrect, text) {
+            const fb = document.getElementById('feedback');
+            fb.innerText = text || (isCorrect ? 'Correct!' : 'Not quite — try again.');
+            fb.className = `feedback show ${isCorrect ? 'correct' : 'incorrect'}`;
+
+            if (isCorrect) {
+                playCorrectSound();
+            } else {
+                setTimeout(hideFeedback, 1500);
+            }
+        }
+
+        function hideFeedback() {
+            const fb = document.getElementById('feedback');
+            fb.className = 'feedback';
+        }
+
+        // Logic Generators
+        function nextProblem() {
+            isProcessing = false;
+            hideFeedback();
+            const container = document.getElementById('interactive-area');
+            const actionBtn = document.getElementById('action-btn');
+            container.innerHTML = '';
+            actionBtn.style.display = 'none';
+
+            if (currentMode === 'findWhole') {
+                setupFindWhole(container);
+            } else if (currentMode === 'unitFraction') {
+                setupUnitFraction(container);
+            } else if (currentMode === 'makeWhole') {
+                setupMakeWhole(container);
+            } else if (currentMode === 'identify') {
+                setupIdentify(container);
+            } else if (currentMode === 'findNumDen') {
+                setupFindNumDen(container);
+            }
+        }
+
+        /* --- Mode 1: Find the Whole --- */
+        function setupFindWhole(container) {
+            document.getElementById('instruction-text').innerText = 'Tap the shape that is 1 Whole.';
+
+            let den;
+            let problemKey;
+            do {
+                den = getRandomInt(2, 6);
+                problemKey = `findWhole_${den}`;
+            } while (problemKey === previousProblemKey);
+            previousProblemKey = problemKey;
+
+            const shapeType = Math.random() > 0.5 ? 'pie' : 'bar';
+            let options = [{ num: den, den: den, isCorrect: true }];
+
+            while (options.length < 4) {
+                let randomNum = getRandomInt(1, den - 1);
+                options.push({ num: randomNum, den: den, isCorrect: false });
+            }
+
+            options = shuffleArray(options);
+
+            const grid = document.createElement('div');
+            grid.className = 'shape-grid';
+
+            options.forEach((opt) => {
+                const card = document.createElement('div');
+                card.className = 'shape-card';
+                card.appendChild(renderShape(opt.num, opt.den, shapeType));
+
+                card.onclick = () => {
+                    if (isProcessing) return;
+                    if (opt.isCorrect) {
+                        isProcessing = true;
+                        showFeedback(true);
+                        card.style.borderColor = 'var(--green)';
+                        setTimeout(advanceTrial, 1200);
+                    } else {
+                        showFeedback(false, 'That is not fully colored. Try again!');
+                        card.style.borderColor = 'var(--red)';
+                        setTimeout(() => { card.style.borderColor = 'var(--border)'; }, 1000);
+                    }
+                };
+
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        /* --- Mode 2: Find Unit Fractions --- */
+        function setupUnitFraction(container) {
+            let den;
+            let problemKey;
+            do {
+                den = getRandomInt(2, 6);
+                problemKey = `unitFraction_${den}`;
+            } while (problemKey === previousProblemKey);
+            previousProblemKey = problemKey;
+
+            const shapeType = Math.random() > 0.5 ? 'pie' : 'bar';
+
+            const instr = document.getElementById('instruction-text');
+            instr.innerHTML = `Tap the shape showing <div class="fraction-ui" style="margin: 0 4px;"><span class="num">1</span><span class="den">${den}</span></div>`;
+
+            let options = [{ num: 1, den: den, isCorrect: true }];
+
+            while (options.length < 4) {
+                let distDen = getRandomInt(2, 6);
+                let distNum = getRandomInt(1, distDen);
+
+                let exists = options.some(o => o.num === distNum && o.den === distDen);
+                if (!exists) {
+                    options.push({ num: distNum, den: distDen, isCorrect: false });
+                }
+            }
+
+            options = shuffleArray(options);
+
+            const grid = document.createElement('div');
+            grid.className = 'shape-grid';
+
+            options.forEach((opt) => {
+                const card = document.createElement('div');
+                card.className = 'shape-card';
+                card.appendChild(renderShape(opt.num, opt.den, shapeType));
+
+                card.onclick = () => {
+                    if (isProcessing) return;
+                    if (opt.isCorrect) {
+                        isProcessing = true;
+                        showFeedback(true);
+                        card.style.borderColor = 'var(--green)';
+                        setTimeout(advanceTrial, 1200);
+                    } else {
+                        showFeedback(false, 'Not that one. Count the parts!');
+                        card.style.borderColor = 'var(--red)';
+                        setTimeout(() => { card.style.borderColor = 'var(--border)'; }, 1000);
+                    }
+                };
+
+                grid.appendChild(card);
+            });
+
+            container.appendChild(grid);
+        }
+
+        /* --- Mode 3: Make a Whole --- */
+        function setupMakeWhole(container) {
+            document.getElementById('instruction-text').innerText = 'Pick the fraction to complete the whole.';
+
+            let den, num, targetNum, problemKey;
+            do {
+                den = getRandomInt(3, 8);
+                num = getRandomInt(1, den - 1);
+                targetNum = den - num;
+                problemKey = `makeWhole_${num}_${den}`;
+            } while (problemKey === previousProblemKey);
+            previousProblemKey = problemKey;
+
+            currentProblemData = { num, den, targetNum };
+
+            const mainLayout = document.createElement('div');
+            mainLayout.className = 'make-whole-container';
+
+            const shapeWrap = document.createElement('div');
+            shapeWrap.className = 'make-whole-shape';
+            shapeWrap.appendChild(renderShape(num, den, 'pie', 'make-whole-svg', true));
+
+            const rightCol = document.createElement('div');
+            rightCol.className = 'make-whole-right';
+
+            const display = document.createElement('div');
+            display.className = 'target-fraction-display';
+            display.id = 'make-whole-equation';
+            display.innerHTML = `
+                <div class="fraction-ui"><span class="num">${num}</span><span class="den">${den}</span></div>
+                <span>+</span>
+                <span id="missing-target-slot" style="font-size: 1.5rem; color: var(--indigo);">?</span>
+                <span>= 1 Whole</span>
+            `;
+
+            let options = [{ num: targetNum, den: den, correct: true }];
+
+            let candidatePool = [];
+            for (let d = 3; d <= 8; d++) {
+                for (let n = 1; n < d; n++) {
+                    if (!(n === targetNum && d === den)) {
+                        candidatePool.push({ num: n, den: d, correct: false });
+                    }
+                }
+            }
+            candidatePool = shuffleArray(candidatePool);
+
+            for (let item of candidatePool) {
+                if (options.length >= 3) break;
+                if (!options.some(o => o.num === item.num && o.den === item.den)) {
+                    options.push(item);
+                }
+            }
+
+            options = shuffleArray(options);
+
+            const optsRow = document.createElement('div');
+            optsRow.className = 'options-row';
+
+            options.forEach(opt => {
+                const btn = document.createElement('div');
+                btn.className = 'fraction-opt-btn';
+                btn.innerHTML = `<div class="fraction-ui"><span class="num">${opt.num}</span><span class="den">${opt.den}</span></div>`;
+
+                btn.onclick = () => {
+                    if (isProcessing) return;
+                    if (opt.correct) {
+                        isProcessing = true;
+                        showFeedback(true);
+
+                        // Reveal full equation
+                        const targetSlot = document.getElementById('missing-target-slot');
+                        if (targetSlot) {
+                            targetSlot.outerHTML = `<div class="fraction-ui" style="color: var(--indigo);"><span class="num">${targetNum}</span><span class="den">${den}</span></div>`;
+                        }
+
+                        // Recolor remaining slices
+                        const targetSvg = document.getElementById('make-whole-svg');
+                        if (targetSvg) {
+                            const slices = targetSvg.querySelectorAll('.slice');
+                            slices.forEach((slice, idx) => {
+                                if (idx >= num) {
+                                    slice.classList.remove('slice-empty');
+                                    slice.classList.add('slice-added');
+                                }
+                            });
+                        }
+
+                        setTimeout(advanceTrial, 1600);
+                    } else {
+                        showFeedback(false, 'Not enough to make 1 whole!');
+                        btn.style.borderColor = 'var(--red)';
+                        setTimeout(() => { btn.style.borderColor = 'var(--border)'; }, 1000);
+                    }
+                };
+                optsRow.appendChild(btn);
+            });
+
+            rightCol.appendChild(display);
+            rightCol.appendChild(optsRow);
+
+            mainLayout.appendChild(shapeWrap);
+            mainLayout.appendChild(rightCol);
+
+            container.appendChild(mainLayout);
+        }
+
+        /* --- Mode 5: Find Numerator or Denominator --- */
+        function setupFindNumDen(container) {
+            let den, num, askingFor, problemKey;
+            do {
+                den = getRandomInt(2, 9);
+                num = getRandomInt(1, den - 1); // proper fraction: numerator < denominator
+                askingFor = Math.random() > 0.5 ? 'num' : 'den';
+                problemKey = `findNumDen_${num}_${den}_${askingFor}`;
+            } while (problemKey === previousProblemKey);
+            previousProblemKey = problemKey;
+
+            const answer = askingFor === 'num' ? num : den;
+            const otherValue = askingFor === 'num' ? den : num;
+            const diffValue = den - num;
+            currentProblemData = { num, den, askingFor, answer };
+
+            document.getElementById('instruction-text').innerHTML = askingFor === 'num'
+                ? 'What is the <strong>Numerator</strong>?'
+                : 'What is the <strong>Denominator</strong>?';
+
+            const layout = document.createElement('div');
+            layout.className = 'numden-container';
+
+            const fractionDisplay = document.createElement('div');
+            fractionDisplay.className = 'fraction-ui';
+            fractionDisplay.style.fontSize = '2.6rem';
+            fractionDisplay.innerHTML = `<span class="num">${num}</span><span class="den">${den}</span>`;
+
+            layout.appendChild(fractionDisplay);
+
+            // Build 4 unique answer choices: numerator, denominator, their difference, plus one random single digit
+            let optionSet = new Set([answer, otherValue, diffValue].filter(v => v >= 1 && v <= 9));
+            optionSet.add(answer);
+            while (optionSet.size < 4) {
+                optionSet.add(getRandomInt(1, 9));
+            }
+            const options = shuffleArray(Array.from(optionSet)).slice(0, 4);
+
+            const optsRow = document.createElement('div');
+            optsRow.className = 'options-row';
+
+            options.forEach(val => {
+                const btn = document.createElement('div');
+                btn.className = 'fraction-opt-btn';
+                btn.style.fontFamily = "'Sora', sans-serif";
+                btn.style.fontWeight = '700';
+                btn.style.fontSize = '1.3rem';
+                btn.innerText = val;
+
+                btn.onclick = () => {
+                    if (isProcessing) return;
+                    if (val === answer) {
+                        isProcessing = true;
+                        showFeedback(true);
+                        btn.style.borderColor = 'var(--green)';
+                        setTimeout(advanceTrial, 1200);
+                    } else {
+                        showFeedback(false, 'Not quite — check the fraction again!');
+                        btn.style.borderColor = 'var(--red)';
+                        setTimeout(() => { btn.style.borderColor = 'var(--border)'; }, 1000);
+                    }
+                };
+                optsRow.appendChild(btn);
+            });
+
+            layout.appendChild(optsRow);
+
+            container.appendChild(layout);
+        }
+
+        /* --- Mode 4: Name the Fraction (With Number Pad) --- */
+        function setupIdentify(container) {
+            document.getElementById('instruction-text').innerText = 'Type the colored parts (top) and total parts (bottom).';
+            document.getElementById('action-btn').style.display = 'inline-flex';
+
+            let den, num, problemKey;
+            do {
+                den = getRandomInt(2, 8);
+                num = getRandomInt(1, den);
+                problemKey = `identify_${num}_${den}`;
+            } while (problemKey === previousProblemKey);
+            previousProblemKey = problemKey;
+
+            const shapeType = Math.random() > 0.5 ? 'pie' : 'bar';
+
+            currentProblemData = { num, den };
+            activeInputField = 'num';
+
+            const layout = document.createElement('div');
+            layout.className = 'identify-container';
+
+            // Left side: Shape + Input fields
+            const leftSide = document.createElement('div');
+            leftSide.className = 'identify-left';
+
+            const shapeVis = document.createElement('div');
+            shapeVis.appendChild(renderShape(num, den, shapeType));
+
+            const inputGroup = document.createElement('div');
+            inputGroup.className = 'fraction-input-group';
+
+            const numInput = document.createElement('input');
+            numInput.type = 'text';
+            numInput.readOnly = true;
+            numInput.id = 'input-num';
+            numInput.placeholder = '?';
+            numInput.className = 'active-field';
+
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+
+            const denInput = document.createElement('input');
+            denInput.type = 'text';
+            denInput.readOnly = true;
+            denInput.id = 'input-den';
+            denInput.placeholder = '?';
+
+            // Select active input field on click/tap
+            numInput.onclick = () => setActiveField('num');
+            denInput.onclick = () => setActiveField('den');
+
+            inputGroup.appendChild(numInput);
+            inputGroup.appendChild(divider);
+            inputGroup.appendChild(denInput);
+
+            leftSide.appendChild(shapeVis);
+            leftSide.appendChild(inputGroup);
+
+            // Right side: On-Screen Keypad
+            const numpad = document.createElement('div');
+            numpad.className = 'numpad';
+
+            for (let i = 1; i <= 9; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'numpad-btn';
+                btn.innerText = i;
+                btn.onclick = () => handleKeypadInput(i.toString());
+                numpad.appendChild(btn);
+            }
+
+            // Bottom row of keypad: Clear, 0, Backspace
+            const clearBtn = document.createElement('div');
+            clearBtn.className = 'numpad-btn action';
+            clearBtn.innerText = 'C';
+            clearBtn.onclick = () => handleKeypadInput('clear');
+
+            const zeroBtn = document.createElement('div');
+            zeroBtn.className = 'numpad-btn';
+            zeroBtn.innerText = '0';
+            zeroBtn.onclick = () => handleKeypadInput('0');
+
+            const delBtn = document.createElement('div');
+            delBtn.className = 'numpad-btn action';
+            delBtn.innerText = '⌫';
+            delBtn.onclick = () => handleKeypadInput('backspace');
+
+            numpad.appendChild(clearBtn);
+            numpad.appendChild(zeroBtn);
+            numpad.appendChild(delBtn);
+
+            layout.appendChild(leftSide);
+            layout.appendChild(numpad);
+
+            container.appendChild(layout);
+        }
+
+        function setActiveField(field) {
+            activeInputField = field;
+            const numInput = document.getElementById('input-num');
+            const denInput = document.getElementById('input-den');
+
+            if (field === 'num') {
+                numInput.classList.add('active-field');
+                denInput.classList.remove('active-field');
+            } else {
+                denInput.classList.add('active-field');
+                numInput.classList.remove('active-field');
+            }
+        }
+
+        function handleKeypadInput(val) {
+            if (isProcessing) return;
+
+            const targetInput = document.getElementById(`input-${activeInputField}`);
+            if (!targetInput) return;
+
+            if (val === 'clear') {
+                targetInput.value = '';
+            } else if (val === 'backspace') {
+                targetInput.value = targetInput.value.slice(0, -1);
+            } else {
+                if (targetInput.value.length < 2) {
+                    targetInput.value += val;
+                }
+            }
+
+            // Auto switch to denominator after entering top number
+            if (activeInputField === 'num' && targetInput.value.length >= 1 && val !== 'clear' && val !== 'backspace') {
+                setTimeout(() => setActiveField('den'), 150);
+            }
+        }
+
+        function checkAnswer() {
+            if (isProcessing) return;
+
+            if (currentMode === 'identify') {
+                const numInput = document.getElementById('input-num');
+                const denInput = document.getElementById('input-den');
+
+                const userNum = parseInt(numInput.value);
+                const userDen = parseInt(denInput.value);
+
+                if (isNaN(userNum) || isNaN(userDen)) {
+                    showFeedback(false, 'Fill in both top and bottom numbers!');
+                    return;
+                }
+
+                if (userNum === currentProblemData.num && userDen === currentProblemData.den) {
+                    isProcessing = true;
+                    showFeedback(true);
+                    numInput.style.borderColor = 'var(--green)';
+                    denInput.style.borderColor = 'var(--green)';
+                    setTimeout(advanceTrial, 1200);
+                } else {
+                    showFeedback(false, 'Count parts carefully!');
+                    numInput.style.borderColor = 'var(--red)';
+                    denInput.style.borderColor = 'var(--red)';
+
+                    setTimeout(() => {
+                        numInput.style.borderColor = 'var(--border)';
+                        denInput.style.borderColor = 'var(--border)';
+                    }, 1200);
+                }
+            }
+        }
+
+        // Re-scale SVGs dynamically if window is resized
+        window.addEventListener('resize', () => {
+            if (currentMode && document.getElementById('game-view').style.display === 'flex') {
+                const isIdentify = currentMode === 'identify';
+                const savedNumVal = isIdentify ? document.getElementById('input-num')?.value : null;
+                const savedDenVal = isIdentify ? document.getElementById('input-den')?.value : null;
+
+                const container = document.getElementById('interactive-area');
+                container.innerHTML = '';
+
+                if (currentMode === 'findWhole') setupFindWhole(container);
+                else if (currentMode === 'unitFraction') setupUnitFraction(container);
+                else if (currentMode === 'makeWhole') setupMakeWhole(container);
+                else if (currentMode === 'identify') {
+                    setupIdentify(container);
+                    if (savedNumVal) document.getElementById('input-num').value = savedNumVal;
+                    if (savedDenVal) document.getElementById('input-den').value = savedDenVal;
+                } else if (currentMode === 'findNumDen') {
+                    setupFindNumDen(container);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
