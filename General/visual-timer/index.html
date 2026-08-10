@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Timer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.9/Tone.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Work+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #FAF6EE; --surface: #FFFFFF; --surface-alt: #F1EAD9;
+    --text: #2B2620; --muted: #948A79; --accent: #C98A2C; --accent-text: #FFFFFF; --track: #E7DEC9;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%; width: 100%;
+    background: var(--bg);
+    font-family: 'Work Sans', ui-sans-serif, system-ui, sans-serif;
+    color: var(--text);
+    transition: background 0.4s ease, color 0.4s ease;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+  }
+
+  .app {
+    position: relative;
+    height: 100vh; height: 100dvh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2vh 4vw;
+    overflow: hidden;
+  }
+
+  /* ---- top bar ---- */
+  .topbar { width: 100%; max-width: 460px; flex-shrink: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-bottom: 1vh; }
+  .topbar-btn {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--track); color: var(--muted);
+    border-radius: 999px; padding: 8px 14px; cursor: pointer;
+    font-family: inherit; font-size: 12.5px; font-weight: 500; letter-spacing: 0.01em;
+  }
+  .topbar-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .topbar-btn:hover { color: var(--text); }
+
+  /* ---- main content: switches layout by orientation ---- */
+  .app-content {
+    flex: 1 1 auto; min-height: 0; width: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 1.5vh;
+  }
+  body.landscape .app-content { flex-direction: row; justify-content: center; column-gap: 4vw; }
+
+  .time-bar-col { display: flex; flex-direction: column; align-items: center; gap: 1.5vh; flex-shrink: 0; }
+  body.landscape .time-bar-col { align-items: stretch; gap: 1vh; }
+
+  .time-block { display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; }
+  .barroad-group { display: flex; align-items: center; justify-content: center; }
+  .midvisual-group { display: flex; align-items: center; justify-content: center; }
+
+  /* ---- settings sheet sections ---- */
+  .swatches-row { display: flex; gap: 10px; flex-wrap: wrap; padding: 2px 6px 4px; }
+  .swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+  .swatch.active { border-color: var(--text); }
+
+  .settings-section { border-bottom: 1px solid var(--surface-alt); }
+  .settings-section:last-of-type { border-bottom: none; }
+
+  .section-header {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    background: none; border: none; cursor: pointer;
+    padding: 14px 6px; font-family: inherit;
+    font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+  }
+  .section-header:hover { color: var(--text); }
+  .section-header .chevron { width: 16px; height: 16px; flex-shrink: 0; transition: transform 0.2s ease; }
+  .section-header .chevron.rotated { transform: rotate(180deg); }
+
+  .section-content { display: none; padding: 0 0 14px; }
+  .section-content.open { display: block; }
+
+  /* ---- digit readout ---- */
+  .time-row { display: flex; align-items: baseline; justify-content: center; gap: 2px; }
+  .digit-btn {
+    background: none; border: none; color: var(--text); font-family: 'DM Mono', ui-monospace, monospace;
+    font-size: clamp(64px, 30vw, 260px); font-weight: 500; letter-spacing: -0.01em; line-height: 1;
+    cursor: pointer; padding: 0.06em 0.03em; border-radius: 10px;
+  }
+  body.landscape .digit-btn { font-size: clamp(48px, 32vh, 260px); }
+  .digit-btn:disabled { cursor: default; }
+  .digit-btn:not(:disabled):hover { background: var(--surface-alt); }
+  .colon { font-family: 'DM Mono', ui-monospace, monospace; font-size: clamp(64px, 30vw, 260px); color: var(--muted); line-height: 1; }
+  body.landscape .colon { font-size: clamp(48px, 32vh, 260px); }
+  .time-row.pulsing { animation: pulse-light 1.3s ease-in-out infinite; cursor: pointer; }
+  @keyframes pulse-light { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .state-label {
+    font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted);
+    height: 14px;
+  }
+
+  /* ---- visual: bar ---- */
+  .visual { flex-shrink: 0; }
+  .visual-bar, .visual-road { width: min(86vw, 60vh, 480px); }
+  body.landscape .visual-bar, body.landscape .visual-road { width: 100%; }
+  .bar-track { position: relative; width: 100%; height: 32px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .bar-fill { position: absolute; top: 0; right: 0; height: 100%; width: 0%; background: var(--accent); border-radius: 999px; transition: width 0.9s linear, background 0.4s ease; }
+
+  /* ---- visual: road ---- */
+  .road-track {
+    position: relative; width: 100%; height: 46px; background: var(--surface-alt);
+    border-radius: 14px; overflow: hidden;
+  }
+  .road-dashes {
+    position: absolute; left: 12px; right: 40px; top: 50%; height: 3px; transform: translateY(-50%);
+    background-image: repeating-linear-gradient(90deg, var(--track) 0 16px, transparent 16px 30px);
+    border-radius: 2px;
+  }
+  .road-flag { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 18px; }
+  .road-car {
+    position: absolute; top: 50%; left: 21px; font-size: 22px;
+    transform: translate(-50%, -50%) scaleX(-1); transition: left 0.9s linear;
+  }
+
+  /* ---- visual: candle ---- */
+  .visual-candle {
+    height: min(34vh, 22vw, 220px); width: min(18vw, 12vh, 90px);
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  }
+  body.landscape .visual-candle { height: min(44vh, 16vw, 260px); width: min(14vw, 11vh, 100px); }
+  .candle-stage { position: relative; flex: 1; width: 62%; }
+  .candle-flame {
+    position: absolute; left: 50%; bottom: 0%; z-index: 2;
+    font-size: clamp(16px, 4vh, 30px); line-height: 1;
+    transform: translate(-50%, 15%); transform-origin: bottom center;
+    transition: bottom 0.9s linear, opacity 0.3s ease;
+    animation: flicker 1.6s ease-in-out infinite;
+  }
+  @keyframes flicker {
+    0%, 100% { transform: translate(-50%, 15%) scale(1) rotate(-3deg); }
+    35% { transform: translate(-50%, 15%) scale(1.06) rotate(2deg); }
+    65% { transform: translate(-50%, 15%) scale(0.95) rotate(4deg); }
+  }
+  .candle-wax-wrap {
+    position: absolute; inset: 0; z-index: 1;
+    background: var(--surface-alt); border-radius: 7px 7px 0 0; overflow: hidden;
+  }
+  .candle-wax { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; background: var(--accent); transition: height 0.9s linear, background 0.4s ease; }
+  .candle-holder { width: 92%; height: 9%; min-height: 8px; background: var(--muted); border-radius: 0 0 6px 6px; flex-shrink: 0; }
+
+  /* ---- visual: hourglass ---- */
+  .visual-hourglass { display: flex; align-items: center; justify-content: center; }
+  .visual-hourglass svg { height: min(34vh, 24vw, 220px); width: auto; display: block; overflow: visible; }
+  body.landscape .visual-hourglass svg { height: min(44vh, 20vw, 260px); }
+  .hourglass-outline { fill: none; stroke: var(--muted); stroke-width: 3; stroke-linejoin: round; }
+  .hourglass-cap { fill: var(--track); }
+  .hourglass-sand { fill: var(--accent); transition: y 0.9s linear, height 0.9s linear, fill 0.4s ease; }
+  .hourglass-thread { stroke: var(--accent); stroke-width: 1.4; opacity: 0.45; transition: stroke 0.4s ease; }
+  .grain { fill: var(--accent); opacity: 0; transition: fill 0.4s ease; }
+  .hourglass-particles.flowing .grain { animation: grain-fall 0.85s linear infinite; }
+  @keyframes grain-fall {
+    0% { transform: translateY(0); opacity: 0; }
+    10% { opacity: 1; }
+    78% { opacity: 1; }
+    100% { transform: translateY(82px); opacity: 0; }
+  }
+
+  /* ---- controls ---- */
+  .controls { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .ctrl-btn {
+    width: 76px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    font-family: inherit; font-size: 10.5px; font-weight: 600; letter-spacing: 0.03em;
+    padding: 10px 6px; border-radius: 14px; border: 1px solid var(--track);
+    background: var(--surface); color: var(--text); cursor: pointer;
+  }
+  .ctrl-btn svg { width: 16px; height: 16px; display: block; flex-shrink: 0; }
+  .ctrl-btn:disabled { opacity: 0.35; cursor: default; }
+  .ctrl-btn:not(:disabled):hover { filter: brightness(1.04); }
+  .ctrl-btn:active { filter: brightness(0.96); }
+  body.landscape .controls { flex-direction: column; gap: 8px; }
+
+  /* ---- keypad / sheet backdrop ---- */
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.42); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 40; }
+  .backdrop.open { display: flex; }
+  .backdrop.sheet-mode { align-items: flex-end; }
+
+  .keypad { background: var(--surface); border-radius: 26px; padding: 22px; width: min(86vw, 300px); box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+  .keypad-preview { text-align: center; font-family: 'DM Mono', monospace; font-size: 34px; color: var(--accent); margin-bottom: 16px; }
+  .keypad-preview span { color: var(--muted); font-size: 14px; margin-left: 8px; font-family: 'Work Sans', sans-serif; }
+  .keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .key { font-family: inherit; font-size: 20px; font-weight: 500; background: var(--surface-alt); color: var(--text); border: none; border-radius: 14px; padding: 16px 0; cursor: pointer; }
+  .key:hover { background: var(--track); }
+  .key.action { font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--muted); }
+  .key.confirm { background: var(--accent); color: var(--accent-text); }
+
+  .sheet { background: var(--surface); border-radius: 26px 26px 0 0; padding: 22px 20px 28px; width: 100%; max-width: 420px; box-shadow: 0 -10px 50px rgba(0,0,0,0.3); }
+  .option-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 6px; border-bottom: 1px solid var(--surface-alt); cursor: pointer; }
+  .option-row:last-child { border-bottom: none; }
+  .option-name { font-size: 15px; }
+  .option-right { display: flex; align-items: center; gap: 10px; }
+  .play-icon { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--track); background: transparent; color: var(--muted); display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+  .play-icon:hover { color: var(--text); border-color: var(--muted); }
+  .radio { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--track); display: flex; align-items: center; justify-content: center; }
+  .radio.checked { border-color: var(--accent); }
+  .radio.checked::after { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--accent); }
+  .sheet-close { margin-top: 16px; width: 100%; text-align: center; background: var(--surface-alt); border: none; color: var(--text); font-family: inherit; font-size: 14px; font-weight: 500; padding: 13px; border-radius: 14px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <button class="topbar-btn" id="settingsBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>Settings</span>
+    </button>
+    <button class="topbar-btn" id="fullscreenBtn" aria-label="Toggle full screen">
+      <svg id="fullscreenIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path></svg>
+      <span id="fullscreenLabel">Full Screen</span>
+    </button>
+  </div>
+
+  <div class="app-content" id="appContent">
+    <div class="time-bar-col">
+      <div class="time-block">
+        <div class="time-row" id="timeRow">
+          <button class="digit-btn" id="minBtn"></button>
+          <span class="colon">:</span>
+          <button class="digit-btn" id="secBtn"></button>
+        </div>
+        <div class="state-label" id="stateLabel"></div>
+      </div>
+
+      <div class="barroad-group">
+        <div class="visual visual-bar" id="visualBar">
+          <div class="bar-track"><div class="bar-fill" id="barFill"></div></div>
+        </div>
+
+        <div class="visual visual-road" id="visualRoad" style="display:none;">
+          <div class="road-track">
+            <div class="road-dashes"></div>
+            <div class="road-flag">🏁</div>
+            <div class="road-car" id="roadCar">🚗</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="midvisual-group">
+      <div class="visual visual-candle" id="visualCandle" style="display:none;">
+        <div class="candle-stage">
+          <div class="candle-flame" id="candleFlame">🔥</div>
+          <div class="candle-wax-wrap"><div class="candle-wax" id="candleWax"></div></div>
+        </div>
+        <div class="candle-holder"></div>
+      </div>
+
+      <div class="visual visual-hourglass" id="visualHourglass" style="display:none;">
+        <svg viewBox="0 0 160 220">
+          <defs>
+            <clipPath id="topClip"><polygon points="20,20 140,20 80,110"/></clipPath>
+            <clipPath id="bottomClip"><polygon points="20,200 140,200 80,110"/></clipPath>
+          </defs>
+          <rect x="8" y="8" width="144" height="12" rx="5" class="hourglass-cap"></rect>
+          <rect x="8" y="200" width="144" height="12" rx="5" class="hourglass-cap"></rect>
+          <rect id="hgTopSand" class="hourglass-sand" x="15" y="20" width="130" height="0" clip-path="url(#topClip)"></rect>
+          <rect id="hgBottomSand" class="hourglass-sand" x="15" y="110" width="130" height="0" clip-path="url(#bottomClip)"></rect>
+          <line x1="80" y1="108" x2="80" y2="196" class="hourglass-thread"></line>
+          <g id="sandParticles" class="hourglass-particles">
+            <circle class="grain" cx="79" cy="112" r="1.7" style="animation-delay:0s"></circle>
+            <circle class="grain" cx="81" cy="112" r="1.4" style="animation-delay:0.17s"></circle>
+            <circle class="grain" cx="80" cy="112" r="1.9" style="animation-delay:0.34s"></circle>
+            <circle class="grain" cx="78.5" cy="112" r="1.3" style="animation-delay:0.51s"></circle>
+            <circle class="grain" cx="81.5" cy="112" r="1.5" style="animation-delay:0.68s"></circle>
+          </g>
+          <polygon points="20,20 140,20 80,110" class="hourglass-outline"></polygon>
+          <polygon points="20,200 140,200 80,110" class="hourglass-outline"></polygon>
+        </svg>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" id="playBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Play
+      </button>
+      <button class="ctrl-btn" id="pauseBtn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+        Pause
+      </button>
+      <button class="ctrl-btn" id="resetBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="backdrop" id="keypadBackdrop">
+  <div class="keypad" id="keypad">
+    <div class="keypad-preview"><span id="keypadValue">—</span><span id="keypadUnit"></span></div>
+    <div class="keypad-grid" id="keypadGrid"></div>
+  </div>
+</div>
+
+<div class="backdrop sheet-mode" id="settingsBackdrop">
+  <div class="sheet">
+    <div class="settings-section">
+      <button class="section-header" data-target="themeContent">
+        <span>Theme</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-content" id="themeContent">
+        <div class="swatches-row" id="themes"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button class="section-header" data-target="visualContent">
+        <span>Visual style</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-content" id="visualContent">
+        <div id="visualList"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button class="section-header" data-target="soundContent">
+        <span>Alarm sound</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-content" id="soundContent">
+        <div id="soundList"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <button class="section-header" data-target="bgMusicContent">
+        <span>Background music</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="section-content" id="bgMusicContent">
+        <div id="bgMusicList"></div>
+      </div>
+    </div>
+    <button class="sheet-close" id="settingsClose">Done</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const THEMES = [
+    { id: 'paper', name: 'Paper', bg: '#FAF6EE', surface: '#FFFFFF', surfaceAlt: '#F1EAD9', text: '#2B2620', muted: '#948A79', accent: '#C98A2C', accentText: '#FFFFFF', track: '#E7DEC9' },
+    { id: 'ink', name: 'Ink', bg: '#0E141F', surface: '#171F2C', surfaceAlt: '#1E2836', text: '#E9EEF5', muted: '#7A8698', accent: '#54D6C6', accentText: '#0E141F', track: '#233042' },
+    { id: 'clay', name: 'Clay', bg: '#231916', surface: '#2E2119', surfaceAlt: '#3A2A20', text: '#F5E9DE', muted: '#AD9481', accent: '#EA7A3C', accentText: '#231916', track: '#402C21' },
+    { id: 'moss', name: 'Moss', bg: '#0E1A13', surface: '#15231A', surfaceAlt: '#1C2E22', text: '#E6F0E6', muted: '#84A08E', accent: '#7FD9A0', accentText: '#0E1A13', track: '#243B2C' },
+    { id: 'bloom', name: 'Bloom', bg: '#FBF1F5', surface: '#FFFFFF', surfaceAlt: '#F6E4EE', text: '#3A2432', muted: '#A0839B', accent: '#B4529A', accentText: '#FFFFFF', track: '#F0D6E4' },
+  ];
+  const SOUNDS = [
+    { id: 'beep', name: 'Classic Beep' },
+    { id: 'chime', name: 'Gentle Chime' },
+    { id: 'alarm', name: 'Digital Alarm' },
+    { id: 'marimba', name: 'Soft Marimba' },
+  ];
+  const VISUALS = [
+    { id: 'bar', name: 'Bar' },
+    { id: 'road', name: 'Road' },
+    { id: 'candle', name: 'Candle' },
+    { id: 'hourglass', name: 'Hourglass' },
+  ];
+  const BG_TRACKS = [
+    { id: 'none', name: 'None', file: null },
+    { id: 'lofi', name: 'Lo-Fi', file: 'bgrd music/Lo-Fi.mp3' },
+    { id: 'acoustic', name: 'Acoustic', file: 'bgrd music/Acoustic.mp3' },
+    { id: 'upbeat', name: 'Upbeat', file: 'bgrd music/Upbeat.mp3' },
+    { id: 'jazz', name: 'Jazz', file: 'bgrd music/Jazz.mp3' },
+  ];
+  const BG_VOLUME = 0.5;
+  const BG_FADE_MS = 1200;
+  const BG_TAPER_SECONDS = 5;
+
+  const pad = (n) => String(Math.max(0, n)).padStart(2, '0');
+
+  function playSoundKind(kind) {
+    const now = Tone.now();
+    const cleanupIn = (synth, ms) => setTimeout(() => { try { synth.dispose(); } catch (e) {} }, ms);
+    if (kind === 'beep') {
+      const s = new Tone.Synth({ oscillator: { type: 'square' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0, release: 0.05 } }).toDestination();
+      s.volume.value = -10;
+      s.triggerAttackRelease('A5', 0.1, now);
+      s.triggerAttackRelease('A5', 0.1, now + 0.22);
+      cleanupIn(s, 1200);
+    } else if (kind === 'chime') {
+      const s = new Tone.PolySynth(Tone.Synth, { oscillator: { type: 'sine' }, envelope: { attack: 0.01, decay: 0.3, sustain: 0.2, release: 1 } }).toDestination();
+      s.volume.value = -12;
+      s.triggerAttackRelease(['C5', 'E5', 'G5'], 0.7, now);
+      cleanupIn(s, 2200);
+    } else if (kind === 'alarm') {
+      const s = new Tone.Synth({ oscillator: { type: 'sawtooth' }, envelope: { attack: 0.001, decay: 0.05, sustain: 0.15, release: 0.05 } }).toDestination();
+      s.volume.value = -14;
+      s.triggerAttackRelease('E5', 0.12, now);
+      s.triggerAttackRelease('B4', 0.12, now + 0.16);
+      s.triggerAttackRelease('E5', 0.12, now + 0.32);
+      s.triggerAttackRelease('B4', 0.12, now + 0.48);
+      cleanupIn(s, 1400);
+    } else if (kind === 'marimba') {
+      const s = new Tone.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.01, decay: 0.4, sustain: 0, release: 0.3 } }).toDestination();
+      s.volume.value = -10;
+      s.triggerAttackRelease('G5', 0.3, now);
+      s.triggerAttackRelease('E5', 0.3, now + 0.26);
+      s.triggerAttackRelease('C5', 0.4, now + 0.52);
+      cleanupIn(s, 1600);
+    }
+  }
+
+  const state = {
+    themeId: 'paper',
+    soundId: 'chime',
+    visual: 'bar',
+    bgMusicId: 'none',
+    minutes: 5,
+    seconds: 0,
+    remaining: 300,
+    isRunning: false,
+    isFinished: false,
+    editingField: null,
+    buffer: '',
+  };
+
+  let tickHandle = null;
+  let alarmInterval = null;
+
+  function duration() { return state.minutes * 60 + state.seconds; }
+  function canEdit() { return !state.isRunning && !state.isFinished && state.remaining === duration(); }
+
+  function applyTheme() {
+    const t = THEMES.find((x) => x.id === state.themeId);
+    const root = document.documentElement.style;
+    root.setProperty('--bg', t.bg);
+    root.setProperty('--surface', t.surface);
+    root.setProperty('--surface-alt', t.surfaceAlt);
+    root.setProperty('--text', t.text);
+    root.setProperty('--muted', t.muted);
+    root.setProperty('--accent', t.accent);
+    root.setProperty('--accent-text', t.accentText);
+    root.setProperty('--track', t.track);
+  }
+
+  // ---------- build static bits ----------
+  const themesEl = document.getElementById('themes');
+  THEMES.forEach((t) => {
+    const b = document.createElement('button');
+    b.className = 'swatch';
+    b.style.background = t.accent;
+    b.title = t.name;
+    b.addEventListener('click', () => { state.themeId = t.id; applyTheme(); renderThemeSwatches(); });
+    b.dataset.id = t.id;
+    themesEl.appendChild(b);
+  });
+  function renderThemeSwatches() {
+    [...themesEl.children].forEach((el) => el.classList.toggle('active', el.dataset.id === state.themeId));
+  }
+
+  const visualListEl = document.getElementById('visualList');
+  VISUALS.forEach((v) => {
+    const row = document.createElement('div');
+    row.className = 'option-row';
+    row.innerHTML = `<span class="option-name">${v.name}</span>
+      <span class="option-right">
+        <span class="radio"></span>
+      </span>`;
+    row.addEventListener('click', () => { state.visual = v.id; renderVisualList(); renderVisual(); });
+    row.dataset.id = v.id;
+    visualListEl.appendChild(row);
+  });
+  function renderVisualList() {
+    [...visualListEl.children].forEach((row) => {
+      row.querySelector('.radio').classList.toggle('checked', row.dataset.id === state.visual);
+    });
+  }
+
+  const soundListEl = document.getElementById('soundList');
+  SOUNDS.forEach((s) => {
+    const row = document.createElement('div');
+    row.className = 'option-row';
+    row.innerHTML = `<span class="option-name">${s.name}</span>
+      <span class="option-right">
+        <button class="play-icon" aria-label="Preview ${s.name}">&#9658;</button>
+        <span class="radio"></span>
+      </span>`;
+    row.addEventListener('click', () => { state.soundId = s.id; renderSoundList(); });
+    row.querySelector('.play-icon').addEventListener('click', (e) => {
+      e.stopPropagation();
+      Tone.start().catch(() => {});
+      playSoundKind(s.id);
+    });
+    row.dataset.id = s.id;
+    soundListEl.appendChild(row);
+  });
+  function renderSoundList() {
+    [...soundListEl.children].forEach((row) => {
+      row.querySelector('.radio').classList.toggle('checked', row.dataset.id === state.soundId);
+    });
+  }
+
+  let previewAudio = null;
+  let previewingId = null;
+  function stopPreview() {
+    if (previewAudio) { previewAudio.pause(); }
+    previewingId = null;
+    renderBgMusicList();
+  }
+
+  const bgMusicListEl = document.getElementById('bgMusicList');
+  BG_TRACKS.forEach((m) => {
+    const row = document.createElement('div');
+    row.className = 'option-row';
+    row.innerHTML = `<span class="option-name">${m.name}</span>
+      <span class="option-right">
+        ${m.file ? '<button class="play-icon" aria-label="Preview ' + m.name + '">&#9658;</button>' : ''}
+        <span class="radio"></span>
+      </span>`;
+    row.addEventListener('click', () => {
+      state.bgMusicId = m.id;
+      renderBgMusicList();
+      syncBgMusicToSelection();
+    });
+    if (m.file) {
+      row.querySelector('.play-icon').addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (previewingId === m.id) { stopPreview(); return; }
+        if (!previewAudio) previewAudio = new Audio();
+        previewAudio.pause();
+        previewAudio.src = m.file;
+        previewAudio.currentTime = 0;
+        previewAudio.volume = BG_VOLUME;
+        previewAudio.loop = false;
+        previewAudio.play().catch(() => {});
+        previewingId = m.id;
+        previewAudio.onended = () => { previewingId = null; renderBgMusicList(); };
+        renderBgMusicList();
+      });
+    }
+    row.dataset.id = m.id;
+    bgMusicListEl.appendChild(row);
+  });
+  function renderBgMusicList() {
+    [...bgMusicListEl.children].forEach((row) => {
+      row.querySelector('.radio').classList.toggle('checked', row.dataset.id === state.bgMusicId);
+      const btn = row.querySelector('.play-icon');
+      if (btn) btn.innerHTML = previewingId === row.dataset.id ? '&#10074;&#10074;' : '&#9658;';
+    });
+  }
+
+  // keypad grid: 1-9, clear, 0, confirm
+  const keypadGrid = document.getElementById('keypadGrid');
+  [1,2,3,4,5,6,7,8,9].forEach((d) => {
+    const b = document.createElement('button');
+    b.className = 'key'; b.textContent = d;
+    b.addEventListener('click', () => tapDigit(d));
+    keypadGrid.appendChild(b);
+  });
+  const clearBtn = document.createElement('button');
+  clearBtn.className = 'key action'; clearBtn.textContent = 'Clear';
+  clearBtn.addEventListener('click', () => { state.buffer = ''; renderKeypad(); });
+  keypadGrid.appendChild(clearBtn);
+  const zeroBtn = document.createElement('button');
+  zeroBtn.className = 'key'; zeroBtn.textContent = '0';
+  zeroBtn.addEventListener('click', () => tapDigit(0));
+  keypadGrid.appendChild(zeroBtn);
+  const confirmBtn = document.createElement('button');
+  confirmBtn.className = 'key confirm'; confirmBtn.innerHTML = '&#10003;';
+  confirmBtn.addEventListener('click', commitBuffer);
+  keypadGrid.appendChild(confirmBtn);
+
+  function tapDigit(d) {
+    state.buffer = state.buffer.length >= 2 ? String(d) : state.buffer + String(d);
+    renderKeypad();
+  }
+  function renderKeypad() {
+    document.getElementById('keypadValue').textContent = state.buffer === '' ? '—' : pad(parseInt(state.buffer, 10));
+    document.getElementById('keypadUnit').textContent = state.editingField === 'minutes' ? 'min' : 'sec';
+  }
+  function openKeypad(field) {
+    if (!canEdit()) return;
+    state.editingField = field;
+    state.buffer = '';
+    renderKeypad();
+    document.getElementById('keypadBackdrop').classList.add('open');
+  }
+  function commitBuffer() {
+    if (state.buffer !== '') {
+      const val = parseInt(state.buffer, 10);
+      if (state.editingField === 'minutes') state.minutes = Math.min(99, val);
+      if (state.editingField === 'seconds') state.seconds = Math.min(59, val);
+      state.remaining = duration();
+    }
+    state.editingField = null;
+    state.buffer = '';
+    document.getElementById('keypadBackdrop').classList.remove('open');
+    render();
+  }
+  document.getElementById('keypadBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'keypadBackdrop') commitBuffer();
+  });
+  document.getElementById('keypad').addEventListener('click', (e) => e.stopPropagation());
+
+  document.getElementById('minBtn').addEventListener('click', () => { if (state.isFinished) { handleDismiss(); } else { openKeypad('minutes'); } });
+  document.getElementById('secBtn').addEventListener('click', () => { if (state.isFinished) { handleDismiss(); } else { openKeypad('seconds'); } });
+
+  // settings sheet
+  const settingsBackdrop = document.getElementById('settingsBackdrop');
+  document.getElementById('settingsBtn').addEventListener('click', () => settingsBackdrop.classList.add('open'));
+  document.getElementById('settingsClose').addEventListener('click', () => { settingsBackdrop.classList.remove('open'); stopPreview(); });
+  settingsBackdrop.addEventListener('click', (e) => { if (e.target === settingsBackdrop) { settingsBackdrop.classList.remove('open'); stopPreview(); } });
+
+  // full screen toggle
+  const fullscreenIconExpand = '<path d="M8 3H5a2 2 0 0 0-2 2v3"></path><path d="M21 8V5a2 2 0 0 0-2-2h-3"></path><path d="M3 16v3a2 2 0 0 0 2 2h3"></path><path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>';
+  const fullscreenIconCollapse = '<path d="M9 3v3a2 2 0 0 1-2 2H4"></path><path d="M15 3v3a2 2 0 0 0 2 2h3"></path><path d="M9 21v-3a2 2 0 0 0-2-2H4"></path><path d="M15 21v-3a2 2 0 0 1 2-2h3"></path>';
+  function isFullscreen() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function updateFullscreenButton() {
+    const active = isFullscreen();
+    document.getElementById('fullscreenIcon').innerHTML = active ? fullscreenIconCollapse : fullscreenIconExpand;
+    document.getElementById('fullscreenLabel').textContent = active ? 'Exit Full Screen' : 'Full Screen';
+  }
+  function toggleFullscreen() {
+    if (!isFullscreen()) {
+      const el = document.documentElement;
+      const req = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (req) req.call(el).catch(() => {});
+    } else {
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if (exit) exit.call(document).catch(() => {});
+    }
+  }
+  document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+  document.addEventListener('fullscreenchange', updateFullscreenButton);
+  document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+
+  document.querySelectorAll('.section-header').forEach((header) => {
+    const content = document.getElementById(header.dataset.target);
+    const chevron = header.querySelector('.chevron');
+    header.addEventListener('click', () => {
+      const isOpen = content.classList.toggle('open');
+      chevron.classList.toggle('rotated', isOpen);
+    });
+  });
+
+  // ---------- background music ----------
+  let bgAudio = null;
+  let bgFadeInterval = null;
+  let bgCurrentTrackId = null;
+
+  function fadeBgTo(targetVolume, durationMs, thenPause) {
+    if (!bgAudio) return;
+    clearInterval(bgFadeInterval);
+    const startVolume = bgAudio.volume;
+    const steps = Math.max(4, Math.round(durationMs / 60));
+    let i = 0;
+    bgFadeInterval = setInterval(() => {
+      i++;
+      const t = i / steps;
+      bgAudio.volume = Math.max(0, Math.min(1, startVolume + (targetVolume - startVolume) * t));
+      if (i >= steps) {
+        clearInterval(bgFadeInterval);
+        bgAudio.volume = targetVolume;
+        if (thenPause) bgAudio.pause();
+      }
+    }, durationMs / steps);
+  }
+
+  function currentBgTrack() { return BG_TRACKS.find((m) => m.id === state.bgMusicId); }
+
+  function startBgMusic() {
+    const track = currentBgTrack();
+    if (!track || !track.file) return;
+    if (!bgAudio) bgAudio = new Audio();
+    bgAudio.loop = true;
+    if (bgCurrentTrackId !== track.id) {
+      bgAudio.src = track.file;
+      bgAudio.currentTime = 0;
+      bgCurrentTrackId = track.id;
+    }
+    bgAudio.volume = 0;
+    bgAudio.play().catch(() => {});
+    fadeBgTo(BG_VOLUME, BG_FADE_MS, false);
+  }
+
+  function pauseBgMusic() {
+    if (!bgAudio || bgAudio.paused) return;
+    fadeBgTo(0, 500, true);
+  }
+
+  function stopBgMusic() {
+    clearInterval(bgFadeInterval);
+    if (bgAudio) {
+      bgAudio.pause();
+      bgAudio.currentTime = 0;
+      bgAudio.volume = BG_VOLUME;
+    }
+  }
+
+  function syncBgMusicToSelection() {
+    if (!state.isRunning) return;
+    const track = currentBgTrack();
+    if (!track || !track.file) { stopBgMusic(); return; }
+    startBgMusic();
+  }
+
+  function taperBgMusic() {
+    if (!bgAudio || bgAudio.paused) return;
+    if (state.remaining <= BG_TAPER_SECONDS && state.remaining > 0) {
+      const target = BG_VOLUME * (state.remaining / BG_TAPER_SECONDS);
+      fadeBgTo(target, 900, false);
+    }
+  }
+
+  // ---------- controls ----------
+  function startAlarmLoop() {
+    stopAlarmLoop();
+    playSoundKind(state.soundId);
+    alarmInterval = setInterval(() => playSoundKind(state.soundId), 1700);
+  }
+  function stopAlarmLoop() {
+    if (alarmInterval) clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+
+  function tick() {
+    state.remaining -= 1;
+    if (state.remaining <= 0) {
+      state.remaining = 0;
+      clearInterval(tickHandle); tickHandle = null;
+      state.isRunning = false;
+      state.isFinished = true;
+      startAlarmLoop();
+      stopBgMusic();
+    } else {
+      taperBgMusic();
+    }
+    render();
+  }
+
+  async function handlePlay() {
+    if (duration() <= 0 || state.isRunning || state.isFinished) return;
+    try { await Tone.start(); } catch (e) {}
+    state.isRunning = true;
+    tickHandle = setInterval(tick, 1000);
+    startBgMusic();
+    render();
+  }
+  function handlePause() {
+    if (!state.isRunning) return;
+    state.isRunning = false;
+    clearInterval(tickHandle); tickHandle = null;
+    pauseBgMusic();
+    render();
+  }
+  function handleReset() {
+    clearInterval(tickHandle); tickHandle = null;
+    stopAlarmLoop();
+    stopBgMusic();
+    state.isRunning = false;
+    state.isFinished = false;
+    state.remaining = duration();
+    render();
+  }
+  function handleDismiss() {
+    stopAlarmLoop();
+    stopBgMusic();
+    state.isFinished = false;
+    state.remaining = duration();
+    render();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', handlePlay);
+  document.getElementById('pauseBtn').addEventListener('click', handlePause);
+  document.getElementById('resetBtn').addEventListener('click', handleReset);
+
+  // ---------- render ----------
+  function renderVisual() {
+    document.getElementById('visualBar').style.display = state.visual === 'bar' ? '' : 'none';
+    document.getElementById('visualRoad').style.display = state.visual === 'road' ? '' : 'none';
+    document.getElementById('visualCandle').style.display = state.visual === 'candle' ? '' : 'none';
+    document.getElementById('visualHourglass').style.display = state.visual === 'hourglass' ? '' : 'none';
+    alignFullscreenButton();
+  }
+
+  function render() {
+    const total = duration();
+    const remainFraction = total > 0 ? state.remaining / total : 0;
+    const elapsedFraction = 1 - remainFraction;
+
+    const editingMin = state.editingField === 'minutes' && state.buffer !== '';
+    const editingSec = state.editingField === 'seconds' && state.buffer !== '';
+    document.getElementById('minBtn').textContent = editingMin ? pad(parseInt(state.buffer, 10)) : pad(Math.floor(state.remaining / 60));
+    document.getElementById('secBtn').textContent = editingSec ? pad(parseInt(state.buffer, 10)) : pad(state.remaining % 60);
+    const clickable = canEdit() || state.isFinished;
+    document.getElementById('minBtn').disabled = !clickable;
+    document.getElementById('secBtn').disabled = !clickable;
+
+    let label = 'tap to set';
+    if (state.isRunning) label = '';
+    else if (state.isFinished) label = 'tap to dismiss';
+    else if (state.remaining !== total) label = 'paused';
+    document.getElementById('stateLabel').textContent = label;
+
+    document.getElementById('timeRow').classList.toggle('pulsing', state.isFinished);
+
+    // bar (fills as time elapses)
+    document.getElementById('barFill').style.width = (state.isFinished ? 0 : remainFraction * 100) + '%';
+
+    // road: car starts fully visible at the left, ends touching the flag (not past it)
+    const carT = state.isFinished ? 1 : elapsedFraction;
+    const carStartPx = 21, carEndReservePx = 41;
+    document.getElementById('roadCar').style.left = `calc(${carStartPx}px + (100% - ${carStartPx + carEndReservePx}px) * ${carT})`;
+
+    // candle: wax burns down as time is used up, flame rides the shrinking wax surface
+    const waxPct = state.isFinished ? 0 : remainFraction * 100;
+    document.getElementById('candleWax').style.height = waxPct + '%';
+    document.getElementById('candleFlame').style.bottom = waxPct + '%';
+    document.getElementById('candleFlame').textContent = state.isFinished ? '💨' : '🔥';
+    document.getElementById('candleFlame').style.opacity = state.isFinished ? '0.5' : '1';
+
+    // hourglass: sand transfers from top bulb to bottom bulb as time elapses, with falling grains.
+    // Both chambers taper toward the neck, so a constant flow rate raises/drops the sand
+    // surface slowly while it's near the wide end and faster as it nears the narrow neck —
+    // modeled with a sqrt curve rather than a straight line.
+    const hgT = state.isFinished ? 1 : elapsedFraction;
+    const apex = 110, bottomRim = 200;
+    const topFillStart = 36;      // sand sits a bit below the rim when full, like a real hourglass
+    const bottomFillEnd = 122;    // sand never quite reaches the neck, leaving room to see it drip in
+    const topMaxHeight = apex - topFillStart;
+    const bottomMaxHeight = bottomRim - bottomFillEnd;
+
+    const topSurfaceY = apex - topMaxHeight * Math.sqrt(1 - hgT);
+    document.getElementById('hgTopSand').setAttribute('y', topSurfaceY);
+    document.getElementById('hgTopSand').setAttribute('height', Math.max(0, apex - topSurfaceY));
+
+    const bottomSurfaceY = bottomRim - bottomMaxHeight * (1 - Math.sqrt(1 - hgT));
+    document.getElementById('hgBottomSand').setAttribute('y', bottomSurfaceY);
+    document.getElementById('hgBottomSand').setAttribute('height', Math.max(0, bottomRim - bottomSurfaceY));
+    document.getElementById('sandParticles').classList.toggle('flowing', state.isRunning && !state.isFinished);
+
+    // controls: fixed position, only enabled state changes
+    document.getElementById('playBtn').disabled = state.isRunning || state.isFinished || total <= 0;
+    document.getElementById('pauseBtn').disabled = !state.isRunning;
+    document.getElementById('playBtn').classList.remove('primary');
+    document.getElementById('pauseBtn').classList.remove('primary');
+
+    renderThemeSwatches();
+    renderVisualList();
+    renderSoundList();
+    renderBgMusicList();
+  }
+
+  // ---------- orientation detection ----------
+  function applyOrientation() {
+    const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+    document.body.classList.toggle('landscape', isLandscape);
+    document.body.classList.toggle('portrait', !isLandscape);
+    alignFullscreenButton();
+  }
+
+  // in landscape, line up the Full Screen button's right edge with the Play button's right edge
+  function alignFullscreenButton() {
+    const fsBtn = document.getElementById('fullscreenBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    if (!document.body.classList.contains('landscape')) {
+      fsBtn.style.position = '';
+      fsBtn.style.top = '';
+      fsBtn.style.right = '';
+      settingsBtn.style.position = '';
+      settingsBtn.style.top = '';
+      settingsBtn.style.right = '';
+      return;
+    }
+    requestAnimationFrame(() => {
+      const appEl = document.querySelector('.app');
+      const appRect = appEl.getBoundingClientRect();
+      const playRect = document.getElementById('playBtn').getBoundingClientRect();
+      const topbarRect = document.querySelector('.topbar').getBoundingClientRect();
+      const fsWidth = fsBtn.getBoundingClientRect().width;
+      const top = (topbarRect.top - appRect.top) + 'px';
+      const fsRight = appRect.right - playRect.right;
+
+      fsBtn.style.position = 'absolute';
+      fsBtn.style.top = top;
+      fsBtn.style.right = fsRight + 'px';
+
+      settingsBtn.style.position = 'absolute';
+      settingsBtn.style.top = top;
+      settingsBtn.style.right = (fsRight + fsWidth + 8) + 'px';
+    });
+  }
+  window.addEventListener('resize', alignFullscreenButton);
+
+  applyOrientation();
+  window.addEventListener('resize', applyOrientation);
+  if (window.matchMedia) {
+    const mq = window.matchMedia('(orientation: landscape)');
+    if (mq.addEventListener) mq.addEventListener('change', applyOrientation);
+    else if (mq.addListener) mq.addListener(applyOrientation);
+  }
+
+  applyTheme();
+  renderVisualList();
+  renderVisual();
+  render();
+  requestAnimationFrame(alignFullscreenButton);
+  setTimeout(alignFullscreenButton, 300);
+})();
+</script>
+</body>
+</html>
