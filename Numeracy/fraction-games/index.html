@@ -77,13 +77,13 @@
 
         .container {
             width: 100%;
-            max-width: 720px;
+            max-width: 800px;
             height: 100%;
-            max-height: 680px;
+            max-height: 740px;
             background: var(--paper);
             border-radius: var(--radius);
             box-shadow: var(--shadow-md);
-            padding: 24px;
+            padding: 26px;
             display: flex;
             flex-direction: column;
             position: relative;
@@ -328,9 +328,9 @@
         .shape-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 16px;
             width: 100%;
-            max-width: 420px;
+            max-width: 480px;
         }
 
         .shape-card {
@@ -351,7 +351,7 @@
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 32px;
+            gap: 40px;
             width: 100%;
         }
 
@@ -366,15 +366,15 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 18px;
-            max-width: 260px;
+            gap: 22px;
+            max-width: 300px;
         }
 
         .target-fraction-display {
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-size: 1.2rem;
+            gap: 14px;
+            font-size: 1.4rem;
             font-weight: 700;
             font-family: 'Sora', sans-serif;
         }
@@ -384,15 +384,15 @@
             flex-direction: column;
             align-items: center;
             vertical-align: middle;
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             font-weight: 700;
             font-family: 'Sora', sans-serif;
-            padding: 0 4px;
+            padding: 0 6px;
             color: var(--ink);
         }
 
         .fraction-ui .num {
-            border-bottom: 2px solid var(--ink);
+            border-bottom: 3px solid var(--ink);
             padding-bottom: 1px;
             width: 100%;
             text-align: center;
@@ -406,7 +406,7 @@
 
         .options-row {
             display: flex;
-            gap: 10px;
+            gap: 16px;
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -414,8 +414,8 @@
         .fraction-opt-btn {
             background: var(--bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 8px 18px;
+            border-radius: 16px;
+            padding: 16px 30px;
             cursor: pointer;
             transition: all 0.15s ease;
         }
@@ -426,9 +426,9 @@
             flex-direction: row;
             align-items: center;
             justify-content: center;
-            gap: 26px;
+            gap: 36px;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
         }
 
         .identify-left {
@@ -446,13 +446,13 @@
         }
 
         .fraction-input-group input {
-            width: 56px;
-            height: 48px;
-            font-size: 1.25rem;
+            width: 74px;
+            height: 66px;
+            font-size: 1.6rem;
             font-family: 'Sora', sans-serif;
             text-align: center;
             border: 1px solid var(--border);
-            border-radius: 10px;
+            border-radius: 14px;
             outline: none;
             font-weight: 700;
             color: var(--ink);
@@ -468,8 +468,8 @@
         }
 
         .fraction-input-group .divider {
-            width: 54px;
-            height: 3px;
+            width: 70px;
+            height: 4px;
             background: var(--ink);
             border-radius: 2px;
         }
@@ -478,11 +478,11 @@
         .numpad {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            gap: 10px;
             background: var(--bg);
-            padding: 10px;
-            border-radius: 14px;
-            width: 170px;
+            padding: 12px;
+            border-radius: 16px;
+            width: 216px;
             flex-shrink: 0;
             border: 1px solid var(--border);
         }
@@ -490,10 +490,10 @@
         .numpad-btn {
             background: var(--paper);
             border: 1px solid var(--border);
-            border-radius: 10px;
-            height: 42px;
+            border-radius: 12px;
+            height: 56px;
             font-family: 'Sora', sans-serif;
-            font-size: 1.1rem;
+            font-size: 1.4rem;
             font-weight: 700;
             color: var(--ink);
             display: flex;
@@ -770,7 +770,29 @@
             }
 
             .identify-container {
-                gap: 12px;
+                gap: 14px;
+            }
+
+            .fraction-input-group input {
+                width: 58px;
+                height: 52px;
+                font-size: 1.3rem;
+            }
+
+            .fraction-input-group .divider {
+                width: 56px;
+            }
+
+            .fraction-ui {
+                font-size: 1.35rem;
+            }
+
+            .options-row {
+                gap: 10px;
+            }
+
+            .fraction-opt-btn {
+                padding: 12px 22px;
             }
 
             .make-whole-container {
@@ -779,12 +801,12 @@
             }
 
             .numpad {
-                width: 145px;
+                width: 168px;
             }
 
             .numpad-btn {
-                height: 38px;
-                font-size: 1.02rem;
+                height: 42px;
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -796,7 +818,8 @@
         <!-- Top Bar -->
         <header id="header" style="display: none;">
             <div class="header-top">
-                <div class="mode-title" id="mode-title">Find 1 Whole</div>
+                <div class="mode-title" id="mode-title">
+</div>
                 <div class="stats-bar">
                     <div class="stat-badge">Question <span id="trial-val">1/5</span></div>
                     <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" aria-label="Toggle sound">
@@ -828,7 +851,7 @@
                     <div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
                     <div>
                         <h3>Find 1 Part</h3>
-                        <p>Tap the shape that matches the unit fraction.</p>
+                        <p>Tap the shape that shows the unit fraction.</p>
                     </div>
                 </div>
                 <div class="card-btn c-indigo" onclick="startGame('makeWhole')">
@@ -982,11 +1005,11 @@
         function getSVGSize(type, large = false) {
             const isSmallScreen = window.innerWidth <= 520 || window.innerHeight <= 600;
             if (type === 'pie') {
-                if (large) return isSmallScreen ? 60 : 88;
-                return isSmallScreen ? 42 : 52;
+                if (large) return isSmallScreen ? 66 : 118;
+                return isSmallScreen ? 46 : 66;
             } else {
-                if (large) return isSmallScreen ? { w: 140, h: 46 } : { w: 175, h: 58 };
-                return isSmallScreen ? { w: 100, h: 36 } : { w: 120, h: 42 };
+                if (large) return isSmallScreen ? { w: 150, h: 50 } : { w: 220, h: 72 };
+                return isSmallScreen ? { w: 110, h: 38 } : { w: 150, h: 50 };
             }
         }
 
@@ -1227,7 +1250,7 @@
             const shapeType = Math.random() > 0.5 ? 'pie' : 'bar';
 
             const instr = document.getElementById('instruction-text');
-            instr.innerHTML = `Tap the shape showing <div class="fraction-ui" style="margin: 0 4px;"><span class="num">1</span><span class="den">${den}</span></div>`;
+            instr.innerHTML = `Tap the shape showing <div class="fraction-ui" style="margin: 0 4px; font-size: 1.1rem;"><span class="num">1</span><span class="den">${den}</span></div>`;
 
             let options = [{ num: 1, den: den, isCorrect: true }];
 
@@ -1302,7 +1325,7 @@
             display.innerHTML = `
                 <div class="fraction-ui"><span class="num">${num}</span><span class="den">${den}</span></div>
                 <span>+</span>
-                <span id="missing-target-slot" style="font-size: 1.5rem; color: var(--indigo);">?</span>
+                <span id="missing-target-slot" style="font-size: 1.8rem; color: var(--indigo);">?</span>
                 <span>= 1 Whole</span>
             `;
 
@@ -1424,7 +1447,7 @@
                 btn.className = 'fraction-opt-btn';
                 btn.style.fontFamily = "'Sora', sans-serif";
                 btn.style.fontWeight = '700';
-                btn.style.fontSize = '1.3rem';
+                btn.style.fontSize = '1.6rem';
                 btn.innerText = val;
 
                 btn.onclick = () => {
