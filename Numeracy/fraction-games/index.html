@@ -367,7 +367,7 @@
             flex-direction: column;
             align-items: center;
             gap: 22px;
-            max-width: 300px;
+            max-width: 460px;
         }
 
         .target-fraction-display {
@@ -409,6 +409,14 @@
             gap: 16px;
             flex-wrap: wrap;
             justify-content: center;
+        }
+
+        .options-row.nowrap {
+            flex-wrap: nowrap;
+        }
+
+        .options-row.nowrap .fraction-opt-btn {
+            padding: 14px 20px;
         }
 
         .fraction-opt-btn {
@@ -818,8 +826,7 @@
         <!-- Top Bar -->
         <header id="header" style="display: none;">
             <div class="header-top">
-                <div class="mode-title" id="mode-title">
-</div>
+                <div class="mode-title" id="mode-title">Find 1 Whole</div>
                 <div class="stats-bar">
                     <div class="stat-badge">Question <span id="trial-val">1/5</span></div>
                     <button class="sound-toggle" id="sound-toggle" onclick="toggleSound()" aria-label="Toggle sound">
@@ -1351,7 +1358,7 @@
             options = shuffleArray(options);
 
             const optsRow = document.createElement('div');
-            optsRow.className = 'options-row';
+            optsRow.className = 'options-row nowrap';
 
             options.forEach(opt => {
                 const btn = document.createElement('div');
