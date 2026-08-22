@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<!--
+  FILL THE WALLET! — a money-sorting drag & drop game for kids
+  ================================================================
+  SETUP: Place a folder named "assets" next to this HTML file, containing:
+    money(1).png ... money(8).png
+    not_money(1).png ... not_money(8).png
+    wallet_closed.png
+    wallet_open.png
+
+  Structure:
+    /fill-the-wallet.html
+    /assets/money(1).png
+    /assets/money(2).png
+    ... etc
+
+  Tip: for the "drag the item itself" feel, PNGs with transparent
+  backgrounds (no white rectangle behind the bill / object) look best,
+  since each item is shown with a soft drop-shadow hugging its own shape
+  rather than sitting inside a card.
+
+  If an image fails to load, a friendly emoji placeholder is shown so the
+  game still runs during development.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Fill the Wallet! — a money sorting game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fff8ec;
+    --panel:#ffffff;
+    --panel-border:#ffe3ac;
+    --sky:#3fa9e0;
+    --sky-dark:#1f86b8;
+    --sun:#ffc93c;
+    --grass:#46ae68;
+    --coral:#ff7a5c;
+    --plum:#8b5fbf;
+    --ink:#2e2b3a;
+    --muted:#8a8578;
+    --font-display:'Baloo 2', sans-serif;
+    --font-body:'Nunito', sans-serif;
+  }
+
+  *{ box-sizing:border-box; }
+  html{
+    -webkit-text-size-adjust:100%;
+  }
+  html,body{
+    margin:0; padding:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    overscroll-behavior:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  body{
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    position:relative;
+    overflow-x:hidden;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+  button{ font-family:inherit; }
+  img{ -webkit-user-drag:none; user-select:none; }
+
+  /* ---------- Decorative background bubbles ---------- */
+  .bubble{
+    position:fixed;
+    border-radius:50%;
+    filter:blur(2px);
+    opacity:0.5;
+    pointer-events:none;
+    z-index:0;
+  }
+  .bubble-1{ width:180px; height:180px; background:var(--sun); top:-60px; left:-60px; opacity:.35; }
+  .bubble-2{ width:130px; height:130px; background:var(--sky); top:60%; right:-50px; opacity:.25; }
+  .bubble-3{ width:90px; height:90px; background:var(--plum); bottom:-30px; left:8%; opacity:.18; }
+  .bubble-4{ width:60px; height:60px; background:var(--coral); top:12%; right:12%; opacity:.2; }
+
+  /* ---------- App shell ---------- */
+  #app{
+    position:relative;
+    z-index:1;
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+    padding:clamp(12px,3vw,24px) 16px clamp(16px,4vw,32px);
+  }
+  .screen{ width:100%; max-width:820px; display:flex; flex-direction:column; align-items:center; }
+  .hidden{ display:none !important; }
+
+  /* ---------- Start screen ---------- */
+  .start-card{
+    width:100%;
+    max-width:520px;
+    background:var(--panel);
+    border:3px solid var(--panel-border);
+    border-radius:28px;
+    padding:clamp(28px,5vw,44px) clamp(22px,5vw,40px);
+    text-align:center;
+    box-shadow:0 20px 40px -20px rgba(120,90,20,0.25);
+    margin-top:clamp(16px,6vh,56px);
+  }
+  .eyebrow{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.04em;
+    color:var(--plum);
+    margin:0 0 6px;
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(34px,7vw,50px);
+    line-height:1.05;
+    margin:0 0 14px;
+    color:var(--ink);
+  }
+  .subtitle{
+    font-size:16px;
+    line-height:1.55;
+    color:var(--muted);
+    margin:0 auto 26px;
+    max-width:34ch;
+    font-weight:600;
+  }
+  .field-label{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:15px;
+    color:var(--ink);
+    margin-bottom:12px;
+    display:block;
+  }
+  .rounds-picker{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-bottom:30px;
+    flex-wrap:wrap;
+  }
+  .rounds-btn{
+    width:48px; height:48px;
+    border-radius:14px;
+    border:2.5px solid var(--panel-border);
+    background:#fffdf7;
+    color:var(--ink);
+    font-family:var(--font-display);
+    font-size:19px;
+    font-weight:700;
+    cursor:pointer;
+    transition:transform .15s ease, background .15s ease, border-color .15s ease;
+  }
+  .rounds-btn:hover{ transform:translateY(-2px); border-color:var(--sun); }
+  .rounds-btn:focus-visible{ outline:3px solid var(--sky); outline-offset:2px; }
+  .rounds-btn.selected{
+    background:var(--sun);
+    border-color:var(--sun);
+    color:#5a4200;
+    transform:translateY(-2px);
+    box-shadow:0 8px 16px -6px rgba(255,201,60,0.6);
+  }
+  .primary-btn{
+    font-family:var(--font-display);
+    font-weight:700;
+    font-size:20px;
+    padding:15px 42px;
+    border-radius:999px;
+    border:none;
+    background:linear-gradient(180deg, #52c17a, var(--grass));
+    color:#fff;
+    cursor:pointer;
+    box-shadow:0 10px 22px -8px rgba(70,174,104,0.55);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .primary-btn:hover{ transform:translateY(-2px) scale(1.02); box-shadow:0 14px 26px -8px rgba(70,174,104,0.65); }
+  .primary-btn:active{ transform:translateY(0) scale(0.99); }
+  .primary-btn:focus-visible{ outline:3px solid var(--sky-dark); outline-offset:3px; }
+  .rules-hint{
+    margin-top:20px;
+    font-size:13px;
+    color:var(--muted);
+    font-weight:600;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:18px;
+    padding:0 2px;
+  }
+  .hud-pill{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--panel);
+    border:2.5px solid var(--panel-border);
+    border-radius:999px;
+    padding:8px 16px;
+  }
+  .hud-label{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:13px;
+    color:var(--muted);
+  }
+  .hud-value{
+    font-family:var(--font-display);
+    font-size:16px;
+    font-weight:700;
+    color:var(--plum);
+  }
+  .progress-track{
+    width:110px;
+    max-width:26vw;
+    height:8px;
+    border-radius:6px;
+    background:#f1ead9;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg, var(--sun), var(--grass));
+    transition:width .35s ease;
+    border-radius:6px;
+  }
+  .mute-btn{
+    width:42px; height:42px;
+    border-radius:50%;
+    border:2.5px solid var(--panel-border);
+    background:var(--panel);
+    color:var(--ink);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+    flex-shrink:0;
+  }
+  .mute-btn:focus-visible{ outline:3px solid var(--sky); outline-offset:2px; }
+
+  /* ---------- Stage ---------- */
+  .stage{
+    width:100%;
+    background:var(--panel);
+    border:3px solid var(--panel-border);
+    border-radius:28px;
+    padding:clamp(14px,4vw,32px);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(14px,3vw,30px);
+    box-shadow:0 16px 36px -22px rgba(120,90,20,0.22);
+  }
+
+  .tray{
+    width:100%;
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:clamp(4px,2vw,14px);
+    justify-items:center;
+    align-items:center;
+  }
+
+  /* No card, no box: the image itself is the draggable object */
+  .tray-item{
+    width:100%;
+    max-width:118px;
+    aspect-ratio:1/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:grab;
+    touch-action:none;
+    background:none;
+    border:none;
+    padding:4px;
+    border-radius:14px; /* only used for the focus ring shape */
+  }
+  .tray-item img{
+    width:100%; height:100%; object-fit:contain; pointer-events:none; display:block;
+    filter:drop-shadow(0 8px 10px rgba(60,40,10,0.22));
+    transition:filter .15s ease, transform .15s ease;
+  }
+  .tray-item:hover img{
+    transform:scale(1.06);
+    filter:drop-shadow(0 12px 16px rgba(60,40,10,0.28));
+  }
+  .tray-item:focus-visible{ outline:none; }
+  .tray-item:focus-visible img{
+    outline:3px solid var(--sky);
+    outline-offset:4px;
+    border-radius:10px;
+  }
+  .tray-item.kbd-lifted img{
+    filter:drop-shadow(0 4px 18px rgba(63,169,224,0.65));
+    transform:scale(1.1);
+  }
+  .tray-item.dragging{
+    cursor:grabbing;
+    z-index:500;
+  }
+  .tray-item.dragging img{
+    filter:drop-shadow(0 18px 22px rgba(60,40,10,0.32));
+    transform:scale(1.12) rotate(-3deg);
+  }
+  .tray-placeholder{
+    max-width:118px;
+    width:100%;
+    aspect-ratio:1/1;
+    border-radius:14px;
+    border:2px dashed #f1e6c8;
+  }
+  .tray-placeholder.collected{
+    border:none;
+    opacity:0;
+  }
+  .fallback-glyph{
+    font-size:44px;
+    line-height:1;
+    filter:drop-shadow(0 8px 10px rgba(60,40,10,0.22));
+    pointer-events:none;
+  }
+
+  /* ---------- Wallet ---------- */
+  .wallet-zone{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    position:relative;
+  }
+  .wallet-drop{
+    width:clamp(130px,28vw,220px);
+    aspect-ratio:1.35/1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:24px;
+    border:3px dashed #bfe3f5;
+    background:#f3fbff;
+    position:relative;
+    transition:border-color .15s ease, background .15s ease, transform .15s ease;
+  }
+  .wallet-drop.hover-target{
+    border-color:var(--sky);
+    background:#e4f4fc;
+    transform:scale(1.04);
+  }
+  .wallet-drop:focus-visible{ outline:3px solid var(--sky-dark); outline-offset:3px; }
+  .wallet-drop img{
+    width:80%; height:80%; object-fit:contain; pointer-events:none;
+    filter:drop-shadow(0 10px 14px rgba(60,40,10,0.18));
+  }
+  .wallet-caption{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:14px;
+    color:var(--muted);
+  }
+  .wallet-drop.shake{ animation:shake .35s ease; }
+  @keyframes shake{
+    20%,80%{ transform:translateX(3px) rotate(1deg); }
+    40%,60%{ transform:translateX(-5px) rotate(-1.5deg); }
+  }
+
+  /* ---------- Feedback FX ---------- */
+  .float-msg{
+    position:fixed;
+    z-index:950;
+    font-family:var(--font-display);
+    font-weight:700;
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .float-plus{
+    font-size:24px;
+    color:var(--grass);
+    animation:floatUp .7s ease forwards;
+  }
+  .float-bubble{
+    font-size:14px;
+    color:var(--coral);
+    background:#fff2ee;
+    border:2px solid #ffd4c8;
+    padding:6px 14px;
+    border-radius:999px;
+    animation:bubbleUp .8s ease forwards;
+  }
+  @keyframes floatUp{
+    0%{ opacity:0; transform:translate(-50%,0) scale(0.6); }
+    25%{ opacity:1; transform:translate(-50%,-10px) scale(1.1); }
+    100%{ opacity:0; transform:translate(-50%,-46px) scale(1); }
+  }
+  @keyframes bubbleUp{
+    0%{ opacity:0; transform:translate(-50%,4px) scale(0.7); }
+    20%{ opacity:1; transform:translate(-50%,-6px) scale(1.05); }
+    75%{ opacity:1; transform:translate(-50%,-10px) scale(1); }
+    100%{ opacity:0; transform:translate(-50%,-18px) scale(1); }
+  }
+  .confetti-piece{
+    position:fixed;
+    z-index:940;
+    width:9px; height:9px;
+    border-radius:3px;
+    pointer-events:none;
+    animation:confettiPop .65s ease-out forwards;
+  }
+  @keyframes confettiPop{
+    0%{ opacity:1; transform:translate(0,0) rotate(0deg) scale(1); }
+    100%{ opacity:0; transform:translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(0.4); }
+  }
+
+  /* ---------- Round transition / end screen ---------- */
+  .overlay-card{
+    width:100%;
+    max-width:460px;
+    background:var(--panel);
+    border:3px solid var(--panel-border);
+    border-radius:28px;
+    padding:clamp(28px,5vw,42px) clamp(22px,5vw,36px);
+    text-align:center;
+    box-shadow:0 20px 40px -20px rgba(120,90,20,0.25);
+    margin-top:clamp(20px,10vh,80px);
+  }
+  .overlay-card h2{
+    font-family:var(--font-display);
+    font-weight:800;
+    font-size:clamp(28px,5vw,36px);
+    margin:0 0 10px;
+    color:var(--ink);
+  }
+  .overlay-card p{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.5;
+    margin:0 0 26px;
+    font-weight:600;
+  }
+  .stat-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:14px;
+    margin:0 0 30px;
+    text-align:left;
+  }
+  .stat{
+    background:#fffdf7;
+    border:2.5px solid var(--panel-border);
+    border-radius:16px;
+    padding:14px 16px;
+  }
+  .stat-label{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .stat-value{
+    font-family:var(--font-display);
+    font-size:22px;
+    font-weight:800;
+    color:var(--plum);
+  }
+
+  #dragLayer{ position:fixed; inset:0; pointer-events:none; z-index:900; }
+</style>
+</head>
+<body>
+
+<div class="bubble bubble-1" aria-hidden="true"></div>
+<div class="bubble bubble-2" aria-hidden="true"></div>
+<div class="bubble bubble-3" aria-hidden="true"></div>
+<div class="bubble bubble-4" aria-hidden="true"></div>
+
+<div id="app">
+
+  <!-- START SCREEN -->
+  <section id="screen-start" class="screen">
+    <div class="start-card">
+      <h1 class="title">Fill the Wallet!</h1>
+      <p class="subtitle">Drag the real money into the wallet. Leave everything else on the table!</p>
+
+      <span class="field-label" id="rounds-label">How many rounds do you want to play?</span>
+      <div class="rounds-picker" role="group" aria-labelledby="rounds-label">
+        <button class="rounds-btn" data-rounds="1" aria-pressed="false">1</button>
+        <button class="rounds-btn" data-rounds="2" aria-pressed="false">2</button>
+        <button class="rounds-btn selected" data-rounds="3" aria-pressed="true">3</button>
+        <button class="rounds-btn" data-rounds="4" aria-pressed="false">4</button>
+        <button class="rounds-btn" data-rounds="5" aria-pressed="false">5</button>
+      </div>
+
+      <button class="primary-btn" id="btn-start">Let's Play!</button>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section id="screen-game" class="screen hidden">
+    <div class="hud">
+      <div class="hud-pill">
+        <span class="hud-label">Round</span>
+        <span class="hud-value" id="hud-round">1 of 3</span>
+      </div>
+      <div class="hud-pill">
+        <span class="hud-label">Collected</span>
+        <span class="hud-value" id="hud-progress">0 / 5</span>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+      <button class="mute-btn" id="btn-mute" aria-pressed="false" aria-label="Mute sound">🔊</button>
+    </div>
+
+    <div class="stage">
+      <div class="tray" id="tray" aria-label="Items on the table"></div>
+
+      <div class="wallet-zone">
+        <div class="wallet-drop" id="wallet-drop" tabindex="0" role="button" aria-label="Wallet. Drop or press enter to put the lifted item in.">
+          <img id="wallet-img" src="assets/wallet_closed.png" alt="Wallet" onerror="this.style.display='none'; document.getElementById('wallet-fallback').style.display='flex';">
+          <div id="wallet-fallback" style="display:none; width:75%; height:65%; align-items:center; justify-content:center; font-size:52px;">👛</div>
+        </div>
+        <span class="wallet-caption">Drag real money here!</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROUND TRANSITION -->
+  <section id="screen-round-end" class="screen hidden">
+    <div class="overlay-card">
+      <h2 id="round-end-title">Round 1 Done!</h2>
+      <p id="round-end-copy">Nice job! Ready for the next round?</p>
+      <button class="primary-btn" id="btn-next-round">Next Round!</button>
+    </div>
+  </section>
+
+  <!-- END SCREEN -->
+  <section id="screen-end" class="screen hidden">
+    <div class="overlay-card">
+      <h2>You Did It! 🎉</h2>
+      <p>Here's how your wallet filled up today.</p>
+      <div class="stat-grid">
+        <div class="stat"><div class="stat-label">Rounds played</div><div class="stat-value" id="stat-rounds">3</div></div>
+        <div class="stat"><div class="stat-label">Money collected</div><div class="stat-value" id="stat-deposited">15 / 15</div></div>
+        <div class="stat"><div class="stat-label">Oops! moments</div><div class="stat-value" id="stat-mistakes">0</div></div>
+        <div class="stat"><div class="stat-label">Time played</div><div class="stat-value" id="stat-time">00:00</div></div>
+      </div>
+      <button class="primary-btn" id="btn-restart">Play Again!</button>
+    </div>
+  </section>
+
+</div>
+
+<div id="dragLayer"></div>
+<div id="liveRegion" class="sr-only" aria-live="polite"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Config ---------------- */
+  const MONEY_PER_ROUND = 5;
+  const NOTMONEY_PER_ROUND = 3;
+  const MONEY_POOL = 8;
+  const NOTMONEY_POOL = 8;
+  const WALLET_HOVER_MARGIN = 24; // px of forgiveness around wallet drop zone
+  const CONFETTI_COLORS = ['#ffc93c', '#46ae68', '#3fa9e0', '#8b5fbf', '#ff7a5c'];
+
+  /* ---------------- Elements ---------------- */
+  const screens = {
+    start: document.getElementById('screen-start'),
+    game: document.getElementById('screen-game'),
+    roundEnd: document.getElementById('screen-round-end'),
+    end: document.getElementById('screen-end'),
+  };
+  const tray = document.getElementById('tray');
+  const dragLayer = document.getElementById('dragLayer');
+  const hudRound = document.getElementById('hud-round');
+  const hudProgress = document.getElementById('hud-progress');
+  const progressFill = document.getElementById('progress-fill');
+  const walletDrop = document.getElementById('wallet-drop');
+  const walletImg = document.getElementById('wallet-img');
+  const walletFallback = document.getElementById('wallet-fallback');
+  const liveRegion = document.getElementById('liveRegion');
+  const btnMute = document.getElementById('btn-mute');
+  const btnStart = document.getElementById('btn-start');
+  const btnNextRound = document.getElementById('btn-next-round');
+  const btnRestart = document.getElementById('btn-restart');
+  const roundsPicker = document.querySelector('.rounds-picker');
+
+  /* ---------------- State ---------------- */
+  let totalRounds = 3;
+  let currentRound = 1;
+  let moneyCollected = 0;
+  let mistakes = 0;
+  let totalDeposited = 0;
+  let totalMoneyAllRounds = 0;
+  let gameStartTime = 0;
+  let liftedKeyboardItem = null;
+  let activePointerItem = null;
+
+  /* ---------------- Utility ---------------- */
+  function shuffle(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+  function sampleDistinct(n, poolSize){
+    const pool = [];
+    for(let i=1;i<=poolSize;i++) pool.push(i);
+    shuffle(pool);
+    return pool.slice(0, n);
+  }
+  function announce(msg){
+    liveRegion.textContent = '';
+    requestAnimationFrame(() => { liveRegion.textContent = msg; });
+  }
+  function showScreen(name){
+    Object.values(screens).forEach(s => s.classList.add('hidden'));
+    screens[name].classList.remove('hidden');
+  }
+  function formatTime(ms){
+    const totalSec = Math.floor(ms/1000);
+    const m = Math.floor(totalSec/60).toString().padStart(2,'0');
+    const s = (totalSec%60).toString().padStart(2,'0');
+    return `${m}:${s}`;
+  }
+
+  /* ---------------- Audio ---------------- */
+  let audioCtx = null;
+  let muted = false;
+
+  function ensureAudio(){
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(Ctx) audioCtx = new Ctx();
+    }
+    if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function tone(freq, duration, opts={}){
+    if(muted || !audioCtx) return;
+    const { type='sine', delay=0, gain=0.18, glideTo=null } = opts;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+    if(glideTo){
+      osc.frequency.exponentialRampToValueAtTime(glideTo, audioCtx.currentTime + delay + duration);
+    }
+    g.gain.setValueAtTime(0.0001, audioCtx.currentTime + delay);
+    g.gain.exponentialRampToValueAtTime(gain, audioCtx.currentTime + delay + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + delay + duration);
+    osc.connect(g).connect(audioCtx.destination);
+    osc.start(audioCtx.currentTime + delay);
+    osc.stop(audioCtx.currentTime + delay + duration + 0.02);
+  }
+
+  function playPickup(){ ensureAudio(); tone(720, 0.06, { type:'triangle', gain:0.08 }); }
+  function playSuccess(){
+    ensureAudio();
+    tone(784, 0.1, { type:'sine', gain:0.15 });
+    tone(988, 0.1, { type:'sine', delay:0.07, gain:0.16 });
+    tone(1318, 0.16, { type:'sine', delay:0.14, gain:0.18 });
+  }
+  function playFail(){
+    ensureAudio();
+    tone(330, 0.16, { type:'sine', gain:0.1, glideTo:230 });
+  }
+
+  btnMute.addEventListener('click', () => {
+    muted = !muted;
+    btnMute.setAttribute('aria-pressed', String(muted));
+    btnMute.textContent = muted ? '🔇' : '🔊';
+    btnMute.setAttribute('aria-label', muted ? 'Unmute sound' : 'Mute sound');
+  });
+
+  /* ---------------- Wallet visuals ---------------- */
+  function setWalletOpen(open){
+    walletImg.src = open ? 'assets/wallet_open.png' : 'assets/wallet_closed.png';
+    walletImg.alt = open ? 'Open wallet' : 'Closed wallet';
+  }
+
+  /* ---------------- Feedback FX ---------------- */
+  function spawnConfetti(cx, cy){
+    for(let i=0;i<9;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const angle = (Math.PI * 2 * i / 9) + (Math.random()*0.4 - 0.2);
+      const dist = 46 + Math.random()*26;
+      piece.style.left = cx + 'px';
+      piece.style.top = cy + 'px';
+      piece.style.background = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+      piece.style.setProperty('--dx', Math.cos(angle)*dist + 'px');
+      piece.style.setProperty('--dy', Math.sin(angle)*dist - 10 + 'px');
+      piece.style.setProperty('--rot', (Math.random()*280 - 140) + 'deg');
+      document.body.appendChild(piece);
+      setTimeout(() => piece.remove(), 700);
+    }
+  }
+  function spawnFloatPlus(cx, cy){
+    const el = document.createElement('div');
+    el.className = 'float-msg float-plus';
+    el.style.left = cx + 'px';
+    el.style.top = cy + 'px';
+    el.textContent = '+1';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 750);
+  }
+  function spawnFailBubble(cx, cy){
+    const el = document.createElement('div');
+    el.className = 'float-msg float-bubble';
+    el.style.left = cx + 'px';
+    el.style.top = cy + 'px';
+    el.textContent = 'Not money!';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 850);
+  }
+
+  /* ---------------- Round setup ---------------- */
+  function setupRound(){
+    tray.innerHTML = '';
+    moneyCollected = 0;
+    updateProgressUI();
+
+    const moneyIdx = sampleDistinct(MONEY_PER_ROUND, MONEY_POOL);
+    const notMoneyIdx = sampleDistinct(NOTMONEY_PER_ROUND, NOTMONEY_POOL);
+
+    const items = [
+      ...moneyIdx.map(i => ({ type:'money', src:`assets/money(${i}).png` })),
+      ...notMoneyIdx.map(i => ({ type:'not_money', src:`assets/not_money(${i}).png` })),
+    ];
+    shuffle(items);
+
+    items.forEach((data, i) => {
+      const el = document.createElement('div');
+      el.className = 'tray-item';
+      el.dataset.type = data.type;
+      el.dataset.id = `item-${currentRound}-${i}`;
+      el.tabIndex = 0;
+      el.setAttribute('role', 'button');
+      el.setAttribute('aria-label', `Item ${i+1} of ${items.length}. Lift and drop into the wallet if it's real money.`);
+
+      const img = document.createElement('img');
+      img.src = data.src;
+      img.alt = '';
+      img.draggable = false;
+      img.addEventListener('error', () => {
+        img.remove();
+        const glyph = document.createElement('span');
+        glyph.className = 'fallback-glyph';
+        glyph.textContent = data.type === 'money' ? '💵' : '🧦';
+        el.appendChild(glyph);
+      });
+
+      el.appendChild(img);
+      attachItemInteractions(el);
+      tray.appendChild(el);
+    });
+
+    hudRound.textContent = `${currentRound} of ${totalRounds}`;
+  }
+
+  function updateProgressUI(){
+    hudProgress.textContent = `${moneyCollected} / ${MONEY_PER_ROUND}`;
+    progressFill.style.width = `${(moneyCollected / MONEY_PER_ROUND) * 100}%`;
+  }
+
+  /* ---------------- Pointer-based drag & drop ---------------- */
+  function attachItemInteractions(item){
+    item.addEventListener('pointerdown', (e) => {
+      if(item.classList.contains('collected') || activePointerItem) return;
+      if(e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+      e.preventDefault();
+      startPointerDrag(item, e);
+    });
+
+    item.addEventListener('keydown', (e) => {
+      if(e.key === 'Escape' && liftedKeyboardItem === item){
+        cancelKeyboardLift();
+        return;
+      }
+      if(e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      if(liftedKeyboardItem === item){
+        cancelKeyboardLift();
+        return;
+      }
+      if(liftedKeyboardItem) cancelKeyboardLift();
+      liftedKeyboardItem = item;
+      item.classList.add('kbd-lifted');
+      item.setAttribute('aria-pressed', 'true');
+      ensureAudio();
+      playPickup();
+      setWalletOpen(true);
+      announce('Item lifted. Move to the wallet and press enter to drop it in, or press escape to put it back.');
+      walletDrop.focus();
+    });
+  }
+
+  function cancelKeyboardLift(){
+    if(!liftedKeyboardItem) return;
+    liftedKeyboardItem.classList.remove('kbd-lifted');
+    liftedKeyboardItem.setAttribute('aria-pressed', 'false');
+    liftedKeyboardItem = null;
+    setWalletOpen(false);
+  }
+
+  walletDrop.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape'){ cancelKeyboardLift(); return; }
+    if(e.key !== 'Enter' && e.key !== ' ') return;
+    if(!liftedKeyboardItem) return;
+    e.preventDefault();
+    const item = liftedKeyboardItem;
+    liftedKeyboardItem = null;
+    item.classList.remove('kbd-lifted');
+    resolveDropKeyboard(item);
+  });
+
+  function startPointerDrag(item, e){
+    activePointerItem = item;
+    const rect = item.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'tray-placeholder';
+    item.parentNode.insertBefore(placeholder, item);
+
+    dragLayer.appendChild(item);
+    item.style.position = 'fixed';
+    item.style.left = rect.left + 'px';
+    item.style.top = rect.top + 'px';
+    item.style.width = rect.width + 'px';
+    item.style.height = rect.height + 'px';
+    item.style.margin = '0';
+    item.style.pointerEvents = 'auto';
+    item.style.transition = 'none';
+    item.classList.add('dragging');
+
+    item._placeholder = placeholder;
+    item._offsetX = offsetX;
+    item._offsetY = offsetY;
+
+    try{ item.setPointerCapture(e.pointerId); }catch(err){}
+
+    setWalletOpen(true);
+    ensureAudio();
+    playPickup();
+
+    const onMove = (ev) => {
+      item.style.left = (ev.clientX - offsetX) + 'px';
+      item.style.top = (ev.clientY - offsetY) + 'px';
+      const overWallet = isOverWallet(ev.clientX, ev.clientY);
+      walletDrop.classList.toggle('hover-target', overWallet);
+    };
+
+    const onUp = (ev) => {
+      item.removeEventListener('pointermove', onMove);
+      item.removeEventListener('pointerup', onUp);
+      item.removeEventListener('pointercancel', onUp);
+      walletDrop.classList.remove('hover-target');
+      const overWallet = isOverWallet(ev.clientX, ev.clientY);
+      activePointerItem = null;
+      resolveDropPointer(item, overWallet);
+    };
+
+    item.addEventListener('pointermove', onMove);
+    item.addEventListener('pointerup', onUp);
+    item.addEventListener('pointercancel', onUp);
+  }
+
+  function isOverWallet(x, y){
+    const r = walletDrop.getBoundingClientRect();
+    return (
+      x >= r.left - WALLET_HOVER_MARGIN &&
+      x <= r.right + WALLET_HOVER_MARGIN &&
+      y >= r.top - WALLET_HOVER_MARGIN &&
+      y <= r.bottom + WALLET_HOVER_MARGIN
+    );
+  }
+
+  function resolveDropPointer(item, overWallet){
+    if(overWallet && item.dataset.type === 'money'){
+      depositSuccessPointer(item);
+    } else if(overWallet){
+      depositFailPointer(item, true);
+    } else {
+      depositFailPointer(item, false);
+    }
+  }
+
+  function depositSuccessPointer(item){
+    playSuccess();
+    moneyCollected++;
+    totalDeposited++;
+    updateProgressUI();
+    announce(`Deposited. ${moneyCollected} of ${MONEY_PER_ROUND} collected.`);
+
+    const wRect = walletDrop.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    const targetX = wRect.left + wRect.width/2 - itemRect.width/2;
+    const targetY = wRect.top + wRect.height/2 - itemRect.height/2;
+
+    spawnConfetti(wRect.left + wRect.width/2, wRect.top + wRect.height/2);
+    spawnFloatPlus(wRect.left + wRect.width/2, wRect.top + wRect.height*0.25);
+
+    requestAnimationFrame(() => {
+      item.style.transition = 'left .35s cubic-bezier(.3,.6,.3,1), top .35s cubic-bezier(.3,.6,.3,1), transform .35s ease, opacity .35s ease';
+      item.style.left = targetX + 'px';
+      item.style.top = targetY + 'px';
+      item.style.transform = 'scale(0.15) rotate(10deg)';
+      item.style.opacity = '0';
+    });
+
+    const cleanup = () => {
+      item.removeEventListener('transitionend', cleanup);
+      // The item itself can go — it already left the tray grid when the drag
+      // started. Its placeholder stays behind (now invisible) so it keeps
+      // holding that exact spot and nothing else on the tray has to move.
+      if(item._placeholder){
+        item._placeholder.classList.add('collected');
+        item._placeholder.setAttribute('aria-hidden', 'true');
+      }
+      item.remove();
+      setTimeout(() => {
+        setWalletOpen(false);
+        checkRoundComplete();
+      }, 120);
+    };
+    item.addEventListener('transitionend', cleanup);
+    setTimeout(cleanup, 500); // safety fallback
+  }
+
+  function depositFailPointer(item, isMistake){
+    if(isMistake){
+      playFail();
+      mistakes++;
+      const wRect = walletDrop.getBoundingClientRect();
+      spawnFailBubble(wRect.left + wRect.width/2, wRect.top);
+      walletDrop.classList.remove('shake');
+      void walletDrop.offsetWidth;
+      walletDrop.classList.add('shake');
+      announce('Not money. Back to the table it goes.');
+    }
+    setTimeout(() => setWalletOpen(false), isMistake ? 180 : 0);
+
+    const placeholder = item._placeholder;
+    const rect = placeholder.getBoundingClientRect();
+
+    requestAnimationFrame(() => {
+      item.style.transition = 'left .3s ease, top .3s ease, transform .3s ease';
+      item.style.left = rect.left + 'px';
+      item.style.top = rect.top + 'px';
+      item.style.transform = 'scale(1) rotate(0deg)';
+    });
+
+    const cleanup = () => {
+      item.removeEventListener('transitionend', cleanup);
+      item.classList.remove('dragging');
+      item.style.position = '';
+      item.style.left = '';
+      item.style.top = '';
+      item.style.width = '';
+      item.style.height = '';
+      item.style.margin = '';
+      item.style.transition = '';
+      item.style.transform = '';
+      item.style.pointerEvents = '';
+      placeholder.replaceWith(item);
+      delete item._placeholder;
+    };
+    item.addEventListener('transitionend', cleanup);
+    setTimeout(cleanup, 450); // safety fallback
+  }
+
+  function resolveDropKeyboard(item){
+    const wRect = walletDrop.getBoundingClientRect();
+    if(item.dataset.type === 'money'){
+      playSuccess();
+      moneyCollected++;
+      totalDeposited++;
+      updateProgressUI();
+      announce(`Deposited. ${moneyCollected} of ${MONEY_PER_ROUND} collected.`);
+      spawnConfetti(wRect.left + wRect.width/2, wRect.top + wRect.height/2);
+      spawnFloatPlus(wRect.left + wRect.width/2, wRect.top + wRect.height*0.25);
+      item.style.transition = 'transform .3s ease, opacity .3s ease';
+      item.style.transform = 'scale(0.2)';
+      item.style.opacity = '0';
+      setTimeout(() => {
+        // Hide in place rather than removing, so the grid slot stays
+        // reserved and the other tray items never shift around.
+        item.style.visibility = 'hidden';
+        item.style.pointerEvents = 'none';
+        item.tabIndex = -1;
+        item.setAttribute('aria-hidden', 'true');
+        setWalletOpen(false);
+        checkRoundComplete();
+      }, 300);
+    } else {
+      playFail();
+      mistakes++;
+      spawnFailBubble(wRect.left + wRect.width/2, wRect.top);
+      walletDrop.classList.remove('shake');
+      void walletDrop.offsetWidth;
+      walletDrop.classList.add('shake');
+      announce('Not money. Back to the table it goes.');
+      item.setAttribute('aria-pressed', 'false');
+      setTimeout(() => setWalletOpen(false), 180);
+    }
+  }
+
+  /* ---------------- Round / game flow ---------------- */
+  function checkRoundComplete(){
+    if(moneyCollected < MONEY_PER_ROUND) return;
+    setTimeout(() => {
+      if(currentRound >= totalRounds){
+        endGame();
+      } else {
+        showRoundEnd();
+      }
+    }, 250);
+  }
+
+  function showRoundEnd(){
+    document.getElementById('round-end-title').textContent = `Round ${currentRound} Done!`;
+    const left = totalRounds - currentRound;
+    document.getElementById('round-end-copy').textContent =
+      `Nice job! ${left} more round${left === 1 ? '' : 's'} to go.`;
+    showScreen('roundEnd');
+  }
+
+  btnNextRound.addEventListener('click', () => {
+    currentRound++;
+    showScreen('game');
+    setupRound();
+  });
+
+  function endGame(){
+    const elapsed = Date.now() - gameStartTime;
+    document.getElementById('stat-rounds').textContent = totalRounds;
+    document.getElementById('stat-deposited').textContent = `${totalDeposited} / ${totalMoneyAllRounds}`;
+    document.getElementById('stat-mistakes').textContent = mistakes;
+    document.getElementById('stat-time').textContent = formatTime(elapsed);
+    showScreen('end');
+  }
+
+  /* ---------------- Start / restart ---------------- */
+  roundsPicker.addEventListener('click', (e) => {
+    const btn = e.target.closest('.rounds-btn');
+    if(!btn) return;
+    roundsPicker.querySelectorAll('.rounds-btn').forEach(b => {
+      b.classList.remove('selected');
+      b.setAttribute('aria-pressed', 'false');
+    });
+    btn.classList.add('selected');
+    btn.setAttribute('aria-pressed', 'true');
+    totalRounds = parseInt(btn.dataset.rounds, 10);
+  });
+
+  btnStart.addEventListener('click', () => {
+    ensureAudio();
+    currentRound = 1;
+    mistakes = 0;
+    totalDeposited = 0;
+    totalMoneyAllRounds = totalRounds * MONEY_PER_ROUND;
+    gameStartTime = Date.now();
+    setWalletOpen(false);
+    showScreen('game');
+    setupRound();
+  });
+
+  btnRestart.addEventListener('click', () => {
+    showScreen('start');
+  });
+
+  /* ---------------- Init ---------------- */
+  setWalletOpen(false);
+  showScreen('start');
+
+})();
+</script>
+
+</body>
+</html>
