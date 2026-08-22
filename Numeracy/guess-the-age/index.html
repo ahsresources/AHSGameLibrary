@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<!--
+  GUESS THE AGE — a pass-and-play party game
+
+  SETUP:
+  1. Put this file inside a folder.
+  2. In that same folder, add a folder named "assets".
+  3. Put your photos inside assets/, named by the subject's real age.
+     Example: assets/34.jpg, assets/61.jpg, assets/9.jpg
+  4. Open this file in a browser and play. No install, no server required.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guess the Age</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Libre+Franklin:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2e9d4;
+    --bg-deep:#e9dcbd;
+    --panel:#fffcf5;
+    --panel-raised:#ffffff;
+    --gold:#c8932b;
+    --gold-bright:#dba53d;
+    --gold-deep:#8a5a12;
+    --cream:#fffaf0;
+    --line: rgba(43,28,18,.16);
+    --text:#2b1c12;
+    --text-dim:#6d5745;
+    --text-faint:#9c8670;
+    --shadow-lg: 0 18px 44px rgba(80,55,25,.16);
+    --shadow-sm: 0 6px 16px rgba(80,55,25,.14);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin:0; padding:0;
+    height:100%;
+    overflow:hidden;
+    background:
+      radial-gradient(1200px 700px at 50% -10%, #fffaf0 0%, var(--bg) 55%, var(--bg-deep) 100%);
+    color: var(--text);
+    font-family: 'Libre Franklin', sans-serif;
+  }
+
+  body{
+    height:100vh;
+    height:100dvh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 14px 16px;
+  }
+
+  ::selection{ background: var(--gold); color:#fffaf0; }
+
+  button { font-family:inherit; cursor:pointer; }
+  input { font-family:inherit; }
+
+  .marquee{
+    font-family:'Anton', sans-serif;
+    font-weight:400;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+  }
+
+  .eyebrow{
+    font-family:'Libre Franklin', sans-serif;
+    font-weight:700;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-size: .72rem;
+    color: var(--text-dim);
+  }
+
+  .mono{ font-family:'Space Mono', monospace; }
+
+  /* ---------- stage / card shell ---------- */
+
+  #app{
+    width:100%; max-width: 640px;
+    height:100%;
+    display:flex;
+    align-items:center;
+  }
+
+  .booth{
+    width:100%;
+    max-height: 100%;
+    background:
+      linear-gradient(180deg, var(--panel-raised) 0%, var(--panel) 100%);
+    border: 1px solid rgba(200,147,43,.3);
+    border-radius: var(--radius);
+    overflow:hidden;
+    box-shadow: var(--shadow-lg);
+    position:relative;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .booth-inner{
+    padding: clamp(16px,3vh,26px) clamp(18px, 4vw, 40px) clamp(16px,3vh,24px);
+    overflow-y:auto;
+    flex:1 1 auto;
+    min-height:0;
+  }
+
+  .mute-btn{
+    position:absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 5;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fffefb;
+    border: 1px solid rgba(43,28,18,.18);
+    color: var(--text-dim);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow: var(--shadow-sm);
+    transition: border-color .15s ease, color .15s ease;
+  }
+  .mute-btn:hover{ border-color: var(--gold); color: var(--gold-deep); }
+
+  h1.title{
+    font-size: clamp(1.4rem, 4.2vh, 2.2rem);
+    margin: 0;
+    line-height: 1.05;
+  }
+
+  .hero-row{
+    display:flex;
+    align-items:center;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+
+  .hero-pic{
+    display:block;
+    height: clamp(64px, 13vh, 108px);
+    width:auto;
+    flex-shrink:0;
+  }
+
+  .mode-toggle{
+    display:flex;
+    gap:8px;
+  }
+  .mode-btn{
+    flex:1;
+    background:#fffefb;
+    border:1px solid rgba(43,28,18,.18);
+    color: var(--text-dim);
+    border-radius: 10px;
+    padding: 11px 10px;
+    font-weight:700;
+    font-size:.82rem;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    transition: border-color .15s ease, color .15s ease, background .15s ease;
+  }
+  .mode-btn svg{ flex-shrink:0; }
+  .mode-btn.active{
+    border-color: var(--gold);
+    color: var(--gold-deep);
+    background: rgba(200,147,43,.12);
+  }
+  .mode-btn:hover{ border-color: var(--gold); }
+
+  .arasaac-credit{
+    text-align:center;
+    font-size:.68rem;
+    color: var(--text-faint);
+    margin: 10px 0 0;
+  }
+  .arasaac-credit a{ color: var(--text-faint); }
+
+  .intro-text{
+    margin: 0 0 16px;
+    font-size: .88rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    text-align:center;
+  }
+
+  /* ---------- buttons ---------- */
+
+  .btn{
+    border:none;
+    border-radius: 999px;
+    padding: 12px 24px;
+    font-weight: 700;
+    letter-spacing:.05em;
+    text-transform: uppercase;
+    font-size: .8rem;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+  }
+  .btn:active{ transform: translateY(1px) scale(.99); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; filter:grayscale(.4); }
+
+  .btn-primary{
+    background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+    color: #2b1a06;
+    box-shadow: 0 8px 18px rgba(200,147,43,.28);
+  }
+  .btn-primary:not(:disabled):hover{ filter:brightness(1.06); box-shadow: 0 10px 22px rgba(200,147,43,.4); }
+
+  .btn-secondary{
+    background: transparent;
+    color: var(--text-dim);
+    border: 2px solid var(--line);
+  }
+  .btn-secondary:hover{ background: rgba(43,28,18,.06); }
+
+  .btn-ghost{
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid rgba(43,28,18,.2);
+    padding: 10px 18px;
+  }
+  .btn-ghost:hover{ color: var(--text); border-color: rgba(43,28,18,.4); }
+
+  .btn-block{ width:100%; }
+
+  /* ---------- setup screen ---------- */
+
+  .field{ margin-bottom: 14px; }
+  .field label{
+    display:block;
+    margin-bottom:7px;
+  }
+  .hint{
+    font-size:.76rem;
+    color: var(--text-faint);
+    margin-top:6px;
+  }
+
+  .row-input{
+    display:flex;
+    gap:10px;
+  }
+
+  input[type="text"], input[type="number"]{
+    background: #fffefb;
+    border: 1px solid rgba(43,28,18,.18);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: .95rem;
+    width:100%;
+    outline:none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type="text"]:focus, input[type="number"]:focus{
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200,147,43,.15);
+  }
+  input[type="number"]{ max-width: 110px; }
+
+  .chip-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:12px;
+  }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background: #fffefb;
+    border:1px solid rgba(43,28,18,.14);
+    border-left: 4px solid var(--chip-color, var(--gold));
+    border-radius: 999px;
+    padding: 6px 7px 6px 13px;
+    font-size:.86rem;
+    font-weight:600;
+    box-shadow: var(--shadow-sm);
+  }
+  .chip-emoji{ font-size:1.05rem; line-height:1; }
+  .chip button{
+    background:none; border:none; color: var(--text-faint);
+    width:20px; height:20px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size: .95rem; line-height:1;
+  }
+  .chip button:hover{ color: var(--gold-deep); background: rgba(138,90,18,.08); }
+
+  .empty-note{
+    font-size:.84rem;
+    color: var(--text-faint);
+    font-style:italic;
+    padding: 4px 2px;
+  }
+
+  .error-box{
+    background: rgba(138,90,18,.08);
+    border:1px solid rgba(138,90,18,.35);
+    color: var(--gold-deep);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: .85rem;
+    margin-bottom: 14px;
+  }
+
+  .divider{
+    height:1px;
+    background: linear-gradient(90deg, transparent, rgba(200,147,43,.4), transparent);
+    margin: 16px 0;
+  }
+
+  /* ---------- round guess screen ---------- */
+
+  .round-meta{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    margin-bottom: 8px;
+    padding-right: 34px;
+  }
+
+  .ticket-num{
+    font-size: 1.4rem;
+    color: var(--gold-deep);
+  }
+
+  .turn-banner{
+    text-align:center;
+    margin: 2px 0 12px;
+  }
+  .turn-banner .eyebrow{ display:block; margin-bottom:4px; }
+  .turn-name{
+    font-size: clamp(1.3rem, 4vh, 2rem);
+  }
+
+  .photo-frame{
+    position:relative;
+    border-radius: 14px;
+    overflow:hidden;
+    border: 5px solid var(--cream);
+    box-shadow: var(--shadow-sm), 0 0 0 1px rgba(43,28,18,.14);
+    background: #efe4cc;
+    aspect-ratio: 16 / 8;
+    max-height: 30vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin: 0 auto;
+  }
+  .photo-frame img{
+    width:100%; height:100%; object-fit:cover; display:block;
+  }
+  .photo-missing{
+    color: var(--text-faint);
+    text-align:center;
+    padding: 20px;
+    font-size:.85rem;
+  }
+  .photo-missing .mono{ display:block; margin-top:8px; color: var(--gold); font-size:.8rem; }
+
+  .guess-panel{ margin-top: 14px; }
+
+  .guess-readout{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    margin-bottom: 8px;
+  }
+  .guess-readout .num-input{
+    width: 92px;
+    text-align:center;
+    font-family:'Space Mono', monospace;
+    font-size: 1.5rem;
+    font-weight:700;
+    color: var(--gold-deep);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid rgba(200,147,43,.4);
+    padding: 2px 4px 4px;
+  }
+  .guess-readout .num-input:focus{ outline:none; border-color: var(--gold); }
+  .guess-readout .yrs{
+    font-family:'Space Mono', monospace;
+    color: var(--text-faint);
+    font-size:1rem;
+  }
+
+  input[type="range"]{
+    -webkit-appearance:none;
+    appearance:none;
+    width:100%;
+    height:8px;
+    border-radius:999px;
+    background: linear-gradient(90deg, var(--line) 0%, var(--gold) 50%, var(--gold-deep) 100%);
+    outline:none;
+    margin: 8px 0 4px;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:24px; height:24px; border-radius:50%;
+    background: #fffefb;
+    border: 3px solid var(--gold-deep);
+    box-shadow: 0 3px 8px rgba(43,28,18,.35);
+    cursor:pointer;
+    margin-top:-1px;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:20px; height:20px; border-radius:50%;
+    background: #fffefb;
+    border: 3px solid var(--gold-deep);
+    box-shadow: 0 3px 8px rgba(43,28,18,.35);
+    cursor:pointer;
+  }
+
+  .scale-labels{
+    display:flex; justify-content:space-between;
+    font-size:.72rem; color: var(--text-faint);
+    font-family:'Space Mono', monospace;
+    margin-bottom: 12px;
+  }
+
+  .lockedin-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin: 12px 0 2px;
+  }
+  .lock-chip{
+    font-size:.72rem;
+    font-family:'Space Mono', monospace;
+    padding:5px 11px;
+    border-radius:999px;
+    border: 1px solid rgba(43,28,18,.16);
+    color: var(--text-faint);
+  }
+  .lock-chip.done{
+    color:#2b1a06;
+    background: var(--gold);
+    border-color: var(--gold);
+    font-weight:700;
+  }
+
+  /* ---------- reveal screen ---------- */
+
+  .stamp{
+    display:inline-block;
+    transform: rotate(-6deg);
+    border: 3px solid var(--gold-deep);
+    color: var(--gold-deep);
+    font-family:'Anton', sans-serif;
+    letter-spacing:.04em;
+    padding: 4px 16px;
+    border-radius: 8px;
+    font-size: 1rem;
+    margin: 8px auto 2px;
+    position:relative;
+  }
+  .stamp-wrap{ text-align:center; }
+
+  .gauge-wrap{ margin: 6px auto 0; max-width: 340px; }
+  .gauge-legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap: 6px 14px;
+    justify-content:center;
+    margin-top: 2px;
+  }
+  .legend-item{
+    display:flex; align-items:center; gap:6px;
+    font-size:.78rem;
+    color: var(--text-dim);
+  }
+  .legend-emoji{ font-size:1rem; line-height:1; flex-shrink:0; }
+
+  .results-list{ margin-top: 10px; display:flex; flex-direction:column; gap:7px; }
+  .result-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    background: #fffefb;
+    border: 1px solid rgba(43,28,18,.1);
+    border-left: 4px solid var(--row-color, var(--gold));
+    border-radius: 10px;
+    padding: 8px 13px;
+    box-shadow: var(--shadow-sm);
+  }
+  .result-row .rname{ font-weight:700; flex:1; min-width:0; }
+  .result-row .rguess{ font-family:'Space Mono', monospace; color: var(--text-faint); font-size:.82rem; }
+  .result-row .rpts{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    color: var(--gold-deep);
+    min-width: 70px;
+    text-align:right;
+  }
+
+  /* ---------- scoreboard ---------- */
+
+  .board-list{ display:flex; flex-direction:column; gap:9px; margin-top: 6px; }
+  .board-row{
+    position:relative;
+    background: #fffefb;
+    border:1px solid rgba(43,28,18,.12);
+    border-radius: 12px;
+    padding: 11px 15px;
+    overflow:hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .board-row-fill{
+    position:absolute;
+    left:0; top:0; bottom:0;
+    background: linear-gradient(90deg, rgba(200,147,43,.2), rgba(200,147,43,.02));
+    width:0%;
+    transition: width 1s cubic-bezier(.22,.9,.3,1);
+    z-index:0;
+  }
+  .board-row-content{
+    position:relative; z-index:1;
+    display:flex; align-items:center; gap:14px;
+  }
+  .board-rank{
+    font-family:'Anton', sans-serif;
+    font-size:1.2rem;
+    color: var(--gold-deep);
+    width: 32px;
+    flex-shrink:0;
+  }
+  .board-name{ font-weight:700; flex:1; }
+  .board-score{ font-family:'Space Mono', monospace; font-weight:700; }
+  .board-delta{
+    font-family:'Space Mono', monospace;
+    font-size:.73rem;
+    color: var(--text-dim);
+  }
+
+  /* ---------- final / podium ---------- */
+
+  .podium{
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap: 10px;
+    margin: 14px 0 6px;
+  }
+  .podium-col{
+    display:flex; flex-direction:column; align-items:center;
+    width: 30%;
+  }
+  .podium-name{ font-weight:800; text-align:center; font-size:.88rem; margin-bottom:4px; word-break:break-word; }
+  .podium-score{ font-family:'Space Mono', monospace; font-size:.76rem; color: var(--text-dim); margin-bottom:6px; }
+  .podium-block{
+    width:100%;
+    border-radius: 10px 10px 0 0;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding-top: 8px;
+    font-family:'Anton', sans-serif;
+    color:#2b1a06;
+  }
+  .podium-col.p1 .podium-block{ height: 92px; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); font-size:1.5rem; }
+  .podium-col.p2 .podium-block{ height: 68px; background: linear-gradient(180deg, #f2ead6, #ddd0ae); font-size:1.3rem; }
+  .podium-col.p3 .podium-block{ height: 50px; background: linear-gradient(180deg, #e3ae7c, #c98a52); font-size:1.3rem; }
+
+  .rest-list{ margin-top: 10px; display:flex; flex-direction:column; gap:6px;}
+  .rest-row{
+    display:flex; justify-content:space-between;
+    font-size:.86rem; color: var(--text-dim);
+    padding: 6px 4px;
+    border-bottom: 1px solid rgba(43,28,18,.08);
+  }
+
+  .btn-cluster{
+    display:flex; gap:12px; margin-top: 14px; flex-wrap:wrap;
+  }
+  .btn-cluster .btn{ flex:1; min-width: 160px; }
+
+  @media (max-height: 700px){
+    .photo-frame{ max-height: 22vh; }
+  }
+
+  .visually-hidden{
+    position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition-duration: .001ms !important; animation-duration: .001ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+
+  /* ============================= CONFIG ============================= */
+
+  // Ages available to the game. Each number must match an image at
+  // assets/{age}.jpg — e.g. 20 expects assets/20.jpg.
+  var AGES = [1, 2, 3, 7, 12, 15, 20, 23, 27, 30, 35, 43, 49, 53, 55, 67, 68, 80];
+
+  // Animal emojis assigned to players. No pigs.
+  var ANIMAL_EMOJIS = ['🦁','🐯','🐨','🐼','🐸','🐵','🦊','🐻','🐰','🐱','🐶','🐮','🐺','🦄','🐴','🦓','🦒','🐘','🦛','🦏','🐢','🐍','🦎','🐙','🦈','🐬','🐳','🦋','🐝','🦉','🦅','🐧','🐔','🦆','🐿️','🦔'];
+
+  /* ============================= AUDIO ============================= */
+
+  var audioCtx = null;
+  function getAudioCtx(){
+    if(!audioCtx){
+      try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e){ audioCtx = null; }
+    }
+    return audioCtx;
+  }
+
+  function playTone(freq, startOffset, duration, type, peakGain){
+    if(state.muted) return;
+    var ctx = getAudioCtx();
+    if(!ctx) return;
+    if(ctx.state === 'suspended'){ ctx.resume(); }
+    var t0 = ctx.currentTime + (startOffset || 0);
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(peakGain || 0.14, t0 + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + duration + 0.03);
+  }
+
+  function sndClick(){ playTone(560, 0, 0.07, 'sine', 0.11); }
+  function sndAdd(){ playTone(660, 0, 0.08, 'sine', 0.12); playTone(880, 0.06, 0.09, 'sine', 0.11); }
+  function sndRemove(){ playTone(420, 0, 0.09, 'sine', 0.1); }
+  function sndError(){ playTone(300, 0, 0.09, 'square', 0.07); playTone(220, 0.08, 0.12, 'square', 0.07); }
+  function sndLock(){ playTone(740, 0, 0.09, 'sine', 0.13); }
+  function sndReveal(){ playTone(523.25, 0, 0.12, 'sine', 0.14); playTone(659.25, 0.09, 0.12, 'sine', 0.14); playTone(783.99, 0.18, 0.2, 'sine', 0.15); }
+  function sndWin(){ playTone(523.25, 0, 0.12, 'sine', 0.16); playTone(659.25, 0.11, 0.12, 'sine', 0.16); playTone(783.99, 0.22, 0.12, 'sine', 0.16); playTone(1046.5, 0.33, 0.28, 'sine', 0.18); }
+  function sndMuteToggle(){ playTone(700, 0, 0.06, 'sine', 0.1); }
+
+  /* ============================= STATE ============================= */
+
+  var PALETTE = ['#c8932b', '#6b7d6e', '#8a5a12', '#7d6b95'];
+
+  var state = {
+    screen: 'setup',
+    mode: null,             // null | 'single' | 'multi'
+    players: [],           // {id, name, total, history: [{age, guess, pts}]}
+    multiPlayersBackup: [], // preserves multiplayer roster while single mode is active
+    nextPlayerId: 1,
+    roundsWanted: 8,
+    roundPlan: [],           // ages chosen for this game, in play order
+    currentRound: 0,         // index into roundPlan
+    currentPlayerIndex: 0,   // whose turn within the round
+    currentGuessValue: 50,
+    roundGuesses: [],        // [{playerId, guess, pts}] for the active/just-finished round
+    muted: false,
+    error: ''
+  };
+
+  function uid(){ return state.nextPlayerId++; }
+
+  function playerColor(idx){ return PALETTE[idx % PALETTE.length]; }
+
+  function pickEmoji(){
+    var used = state.players.map(function(p){ return p.emoji; });
+    var available = ANIMAL_EMOJIS.filter(function(e){ return used.indexOf(e) === -1; });
+    var pool = available.length ? available : ANIMAL_EMOJIS;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  /* ============================= HELPERS ============================= */
+
+  function shuffle(arr){
+    var a = arr.slice();
+    for(var i = a.length - 1; i > 0; i--){
+      var j = Math.floor(Math.random() * (i+1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function computePoints(guess, actual){
+    var diff = Math.abs(guess - actual);
+    var pts = Math.round(1000 * Math.max(0, 1 - diff/50));
+    return pts;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function sortedPlayers(){
+    return state.players.slice().sort(function(a,b){ return b.total - a.total; });
+  }
+
+  /* ============================= ACTIONS ============================= */
+
+  function setMode(mode){
+    if(mode === state.mode) return;
+    sndClick();
+    if(mode === 'single'){
+      state.multiPlayersBackup = state.players.slice();
+      state.players = [{ id: uid(), name: 'You', emoji: pickEmoji(), total: 0, history: [] }];
+    } else if(mode === 'multi'){
+      state.players = state.multiPlayersBackup.slice();
+    }
+    state.mode = mode;
+    state.error = '';
+    render();
+  }
+
+  function addPlayer(name){
+    name = (name || '').trim();
+    if(!name) return;
+    if(state.players.some(function(p){ return p.name.toLowerCase() === name.toLowerCase(); })){
+      state.error = 'That name is already added.';
+      sndError();
+      render();
+      return;
+    }
+    state.players.push({ id: uid(), name: name, emoji: pickEmoji(), total: 0, history: [] });
+    state.error = '';
+    sndAdd();
+    render();
+  }
+
+  function removePlayer(id){
+    state.players = state.players.filter(function(p){ return p.id !== id; });
+    sndRemove();
+    render();
+  }
+
+  function startGame(){
+    if(!state.mode){
+      state.error = 'Choose single player or multiplayer to begin.';
+      sndError();
+      render(); return;
+    }
+    if(state.mode === 'multi' && state.players.length < 2){
+      state.error = 'Add at least 2 players for multiplayer.';
+      sndError();
+      render(); return;
+    }
+    if(state.mode === 'single' && state.players.length < 1){
+      state.players = [{ id: uid(), name: 'You', emoji: pickEmoji(), total: 0, history: [] }];
+    }
+    var wanted = Math.max(1, Math.min(state.roundsWanted || 1, AGES.length));
+    state.roundPlan = shuffle(AGES).slice(0, wanted);
+    state.players.forEach(function(p){ p.total = 0; p.history = []; });
+    state.currentRound = 0;
+    state.currentPlayerIndex = 0;
+    state.currentGuessValue = 50;
+    state.roundGuesses = [];
+    state.error = '';
+    state.screen = 'round-guess';
+    sndClick();
+    render();
+  }
+
+  function currentAge(){ return state.roundPlan[state.currentRound]; }
+  function currentPlayer(){ return state.players[state.currentPlayerIndex]; }
+
+  function lockInGuess(){
+    var p = currentPlayer();
+    if(!p) return;
+    state.roundGuesses.push({ playerId: p.id, name: p.name, emoji: p.emoji, guess: state.currentGuessValue, pts: 0 });
+    state.currentPlayerIndex++;
+    state.currentGuessValue = 50;
+    sndLock();
+    if(state.currentPlayerIndex >= state.players.length){
+      finalizeRound();
+      state.screen = 'round-reveal';
+      sndReveal();
+    }
+    render();
+  }
+
+  function finalizeRound(){
+    var actual = currentAge();
+    state.roundGuesses.forEach(function(g){
+      g.pts = computePoints(g.guess, actual);
+      var player = state.players.find(function(p){ return p.id === g.playerId; });
+      if(player){
+        player.total += g.pts;
+        player.history.push({ age: actual, guess: g.guess, pts: g.pts });
+      }
+    });
+  }
+
+  function goToScoreboard(){ state.screen = 'scoreboard'; sndClick(); render(); }
+
+  function nextRound(){
+    state.currentRound++;
+    state.roundGuesses = [];
+    state.currentPlayerIndex = 0;
+    state.currentGuessValue = 50;
+    if(state.currentRound >= state.roundPlan.length){
+      state.screen = 'final';
+      sndWin();
+    } else {
+      state.screen = 'round-guess';
+      sndClick();
+    }
+    render();
+  }
+
+  function playAgain(){
+    state.screen = 'setup';
+    state.currentRound = 0;
+    state.currentPlayerIndex = 0;
+    state.roundGuesses = [];
+    state.roundPlan = [];
+    state.error = '';
+    state.players.forEach(function(p){ p.total = 0; p.history = []; });
+    sndClick();
+    render();
+  }
+
+  function toggleMute(){
+    state.muted = !state.muted;
+    if(!state.muted){ sndMuteToggle(); }
+    render();
+  }
+
+  /* ============================= NUMBER LINE (signature element) ============================= */
+
+  function buildNumberLine(guesses, actual){
+    var axisY = 68, x0 = 26, x1 = 274;
+    function xFor(v){ return x0 + (Math.max(0, Math.min(100, v))/100) * (x1 - x0); }
+
+    var ticks = '';
+    for(var v = 0; v <= 100; v += 10){
+      var x = xFor(v);
+      var major = (v % 50 === 0);
+      ticks += '<line x1="'+x+'" y1="'+(axisY-(major?7:4))+'" x2="'+x+'" y2="'+(axisY+(major?7:4))+'" stroke="rgba(43,28,18,.3)" stroke-width="'+(major?2:1.5)+'"/>';
+      if(major){
+        ticks += '<text x="'+x+'" y="'+(axisY+22)+'" text-anchor="middle" font-family="Space Mono, monospace" font-size="11" fill="rgba(43,28,18,.55)">'+v+'</text>';
+      }
+    }
+
+    var axisLine = '<line x1="'+x0+'" y1="'+axisY+'" x2="'+x1+'" y2="'+axisY+'" stroke="rgba(43,28,18,.28)" stroke-width="2" stroke-linecap="round"/>';
+
+    var markers = '';
+    guesses.forEach(function(g, i){
+      var x = xFor(g.guess);
+      var y = axisY - 14 - (i % 3) * 14;
+      var color = playerColor(state.players.findIndex(function(pl){ return pl.id === g.playerId; }));
+      markers += '<line x1="'+x+'" y1="'+(y+9)+'" x2="'+x+'" y2="'+axisY+'" stroke="'+color+'" stroke-width="1.5" opacity=".5"/>';
+      markers += '<circle cx="'+x+'" cy="'+y+'" r="10" fill="#fffcf5" stroke="'+color+'" stroke-width="1.5"/>';
+      markers += '<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-size="12">'+g.emoji+'</text>';
+    });
+
+    var ax = xFor(actual);
+    var actualMarker = ''+
+      '<g id="actualMarker" style="opacity:0; transform:translateY(-8px); transform-origin:'+ax+'px '+axisY+'px; transition:opacity .6s ease, transform .6s cubic-bezier(.34,1.4,.4,1);">'+
+        '<line x1="'+ax+'" y1="18" x2="'+ax+'" y2="'+axisY+'" stroke="#8a5a12" stroke-width="2.5"/>'+
+        '<rect x="'+(ax-16)+'" y="4" width="32" height="18" rx="9" fill="#8a5a12"/>'+
+        '<text x="'+ax+'" y="17" text-anchor="middle" font-family="Space Mono, monospace" font-weight="700" font-size="11" fill="#fffcf5">'+actual+'</text>'+
+      '</g>';
+
+    return ''+
+    '<svg viewBox="0 0 300 100" width="100%" role="img" aria-label="Number line showing the revealed age and each guess">'+
+      axisLine +
+      ticks +
+      markers +
+      actualMarker +
+    '</svg>';
+  }
+
+  /* ============================= SCREENS ============================= */
+
+  function screenSetup(){
+    var chips = state.players.map(function(p, i){
+      return '<div class="chip" style="--chip-color:'+playerColor(i)+'">'+
+        '<span class="chip-emoji">'+p.emoji+'</span>'+escapeHtml(p.name)+
+        '<button type="button" data-action="remove-player" data-id="'+p.id+'" aria-label="Remove '+escapeHtml(p.name)+'">&times;</button>'+
+      '</div>';
+    }).join('');
+
+    var maxRounds = AGES.length;
+
+    var modeToggle = ''+
+      '<div class="mode-toggle">'+
+        '<button type="button" class="mode-btn'+(state.mode==='single'?' active':'')+'" data-action="set-mode" data-mode="single">'+
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>'+
+          'Single Player'+
+        '</button>'+
+        '<button type="button" class="mode-btn'+(state.mode==='multi'?' active':'')+'" data-action="set-mode" data-mode="multi">'+
+          '<svg width="18" height="16" viewBox="0 0 28 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.2"/><path d="M4 20c0-3.4 2.7-6 6-6s6 2.6 6 6"/><circle cx="19" cy="7" r="2.6"/><path d="M15.5 13.2c.6-.2 1.3-.3 2-.3 3.1 0 5.5 2.4 5.5 5.5"/></svg>'+
+          'Multiplayer'+
+        '</button>'+
+      '</div>';
+
+    var playersField = state.mode === 'multi' ? (''+
+      '<div class="field">'+
+        '<label class="eyebrow">Players</label>'+
+        '<div class="row-input">'+
+          '<input type="text" id="playerNameInput" placeholder="Add a name" maxlength="24">'+
+          '<button type="button" class="btn btn-secondary" data-action="add-player" style="white-space:nowrap;">Add</button>'+
+        '</div>'+
+        (chips ? '<div class="chip-list">'+chips+'</div>' : '<p class="empty-note">Add at least 2 players.</p>')+
+      '</div>'
+    ) : '';
+
+    return ''+
+    '<div class="booth-inner">'+
+      '<div class="hero-row">'+
+        '<img class="hero-pic" src="https://static.arasaac.org/pictograms/30482/30482_500.png" alt="" '+
+          'onerror="this.onerror=null; this.src=\'https://api.arasaac.org/api/pictograms/30482\'; this.onerror=function(){ this.style.display=\'none\'; };">'+
+        '<h1 class="title marquee">Guess the Age</h1>'+
+      '</div>'+
+      '<p class="intro-text">Choose a mode, then take turns guessing the age in every photo. Closest guess wins the round &mdash; most points wins the game.</p>'+
+
+      (state.error ? '<div class="error-box">'+escapeHtml(state.error)+'</div>' : '')+
+
+      '<div class="field">'+
+        '<label class="eyebrow">Mode</label>'+
+        modeToggle+
+      '</div>'+
+
+      playersField+
+
+      '<div class="field">'+
+        '<label class="eyebrow" for="roundsInput">Rounds</label>'+
+        '<input type="number" id="roundsInput" min="1" max="'+maxRounds+'" value="'+Math.min(state.roundsWanted, maxRounds)+'">'+
+        '<p class="hint">Max '+maxRounds+'.</p>'+
+      '</div>'+
+
+      '<div class="divider"></div>'+
+
+      '<button type="button" class="btn btn-primary btn-block" data-action="start-game">Start Game</button>'+
+      '<p class="arasaac-credit">Pictogram by <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a> (CC BY-NC-SA)</p>'+
+    '</div>';
+  }
+
+  function screenRoundGuess(){
+    var age = currentAge();
+    var player = currentPlayer();
+    var roundNum = state.currentRound + 1;
+    var totalRounds = state.roundPlan.length;
+
+    var lockChips = state.players.map(function(p, i){
+      var done = i < state.currentPlayerIndex;
+      return '<span class="lock-chip'+(done?' done':'')+'">'+ (done ? '&#10003; ' : '') + p.emoji+' '+escapeHtml(p.name)+'</span>';
+    }).join('');
+
+    return ''+
+    '<div class="booth-inner">'+
+      '<div class="round-meta">'+
+        '<div class="eyebrow">Round</div>'+
+        '<div class="ticket-num mono">'+roundNum+' / '+totalRounds+'</div>'+
+      '</div>'+
+
+      '<div class="turn-banner">'+
+        '<span class="eyebrow">Now guessing</span>'+
+        '<div class="turn-name marquee">'+player.emoji+' '+escapeHtml(player.name)+'</div>'+
+      '</div>'+
+
+      '<div class="photo-frame">'+
+        '<img src="assets/'+age+'.jpg" alt="Photo to guess the age of" '+
+          'onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'+
+        '<div class="photo-missing" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%;">'+
+          'Missing <span class="mono">assets/'+age+'.jpg</span>'+
+        '</div>'+
+      '</div>'+
+
+      '<div class="guess-panel">'+
+        '<div class="guess-readout">'+
+          '<input type="number" id="guessNumber" class="num-input" min="0" max="100" value="'+state.currentGuessValue+'">'+
+          '<span class="yrs">years</span>'+
+        '</div>'+
+        '<input type="range" id="guessSlider" min="0" max="100" value="'+state.currentGuessValue+'">'+
+        '<div class="scale-labels"><span>0</span><span>50</span><span>100</span></div>'+
+
+        '<button type="button" class="btn btn-primary btn-block" data-action="lock-in">Lock In</button>'+
+
+        (lockChips ? '<div class="lockedin-row">'+lockChips+'</div>' : '')+
+      '</div>'+
+    '</div>';
+  }
+
+  function screenRoundReveal(){
+    var age = currentAge();
+    var rows = state.roundGuesses.slice().sort(function(a,b){ return b.pts - a.pts; }).map(function(g){
+      var idx = state.players.findIndex(function(p){ return p.id === g.playerId; });
+      var color = playerColor(idx);
+      return '<div class="result-row" style="--row-color:'+color+'">'+
+        '<span class="rname">'+g.emoji+' '+escapeHtml(g.name)+'</span>'+
+        '<span class="rguess mono">'+g.guess+'</span>'+
+        '<span class="rpts">+'+g.pts+'</span>'+
+      '</div>';
+    }).join('');
+
+    var legend = state.players.map(function(p, i){
+      return '<div class="legend-item"><span class="legend-emoji">'+p.emoji+'</span>'+escapeHtml(p.name)+'</div>';
+    }).join('');
+
+    return ''+
+    '<div class="booth-inner">'+
+      '<div class="photo-frame">'+
+        '<img src="assets/'+age+'.jpg" alt="Revealed photo" '+
+          'onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'+
+        '<div class="photo-missing" style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100%;">'+
+          'Missing <span class="mono">assets/'+age+'.jpg</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="stamp-wrap"><div class="stamp">Actually '+age+'</div></div>'+
+
+      '<div class="gauge-wrap">'+ buildNumberLine(state.roundGuesses, age) +'</div>'+
+      (state.players.length > 1 ? '<div class="gauge-legend">'+legend+'</div>' : '')+
+
+      '<div class="results-list">'+rows+'</div>'+
+
+      '<div class="btn-cluster">'+
+        (state.mode === 'single'
+          ? '<button type="button" class="btn btn-primary btn-block" data-action="next-round">'+((state.currentRound+1 >= state.roundPlan.length) ? 'Final Score' : 'Next Round')+'</button>'
+          : '<button type="button" class="btn btn-primary btn-block" data-action="show-scoreboard">Standings</button>')+
+      '</div>'+
+    '</div>';
+  }
+
+  function screenScoreboard(){
+    var ranked = sortedPlayers();
+    var maxScore = Math.max(1, ranked[0] ? ranked[0].total : 1);
+    var isLastRound = (state.currentRound + 1) >= state.roundPlan.length;
+
+    var rows = ranked.map(function(p, i){
+      var idx = state.players.findIndex(function(pl){ return pl.id === p.id; });
+      var lastGain = p.history.length ? p.history[p.history.length-1].pts : 0;
+      var pct = Math.round((p.total / maxScore) * 100);
+      return '<div class="board-row">'+
+        '<div class="board-row-fill" style="width:'+pct+'%; background: linear-gradient(90deg, '+playerColor(idx)+'44, transparent);"></div>'+
+        '<div class="board-row-content">'+
+          '<div class="board-rank">'+(i+1)+'</div>'+
+          '<div class="board-name">'+p.emoji+' '+escapeHtml(p.name)+'</div>'+
+          '<div style="text-align:right;">'+
+            '<div class="board-score">'+p.total.toLocaleString()+'</div>'+
+            '<div class="board-delta">+'+lastGain+'</div>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+
+    return ''+
+    '<div class="booth-inner">'+
+      '<div class="eyebrow" style="text-align:center; display:block;">Round '+(state.currentRound+1)+' / '+state.roundPlan.length+'</div>'+
+      '<h1 class="title marquee" style="text-align:center; font-size:clamp(1.4rem,4.4vh,2rem);">Standings</h1>'+
+      '<div class="board-list">'+rows+'</div>'+
+      '<div class="btn-cluster">'+
+        '<button type="button" class="btn btn-primary btn-block" data-action="next-round">'+(isLastRound ? 'Final Results' : 'Next Round')+'</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  function screenFinal(){
+    if(state.mode === 'single'){
+      var solo = state.players[0];
+
+      return ''+
+      '<div class="booth-inner">'+
+        '<div class="eyebrow" style="text-align:center; display:block;">Game Over</div>'+
+        '<h1 class="title marquee" style="text-align:center;">'+ (solo ? solo.total.toLocaleString() : 0) +' pts</h1>'+
+        '<p class="intro-text" style="margin-top:2px;">Your final score across '+ (solo ? solo.history.length : 0) +' rounds.</p>'+
+        '<div class="btn-cluster">'+
+          '<button type="button" class="btn btn-primary btn-block" data-action="play-again">Play Again</button>'+
+        '</div>'+
+      '</div>';
+    }
+
+    var ranked = sortedPlayers();
+    var top3 = ranked.slice(0,3);
+    var rest = ranked.slice(3);
+
+    var order = [];
+    if(top3[1]) order.push({p: top3[1], cls:'p2', rank:2});
+    if(top3[0]) order.push({p: top3[0], cls:'p1', rank:1});
+    if(top3[2]) order.push({p: top3[2], cls:'p3', rank:3});
+
+    var podium = order.map(function(o){
+      return '<div class="podium-col '+o.cls+'">'+
+        '<div class="podium-name">'+o.p.emoji+' '+escapeHtml(o.p.name)+'</div>'+
+        '<div class="podium-score mono">'+o.p.total.toLocaleString()+' pts</div>'+
+        '<div class="podium-block">'+o.rank+'</div>'+
+      '</div>';
+    }).join('');
+
+    var restRows = rest.map(function(p, i){
+      return '<div class="rest-row"><span>'+(i+4)+'. '+p.emoji+' '+escapeHtml(p.name)+'</span><span class="mono">'+p.total.toLocaleString()+' pts</span></div>';
+    }).join('');
+
+    var champion = ranked[0];
+
+    return ''+
+    '<div class="booth-inner">'+
+      '<div class="eyebrow" style="text-align:center; display:block;">Winner</div>'+
+      '<h1 class="title marquee" style="text-align:center;">'+ (champion ? escapeHtml(champion.name) : '') +'</h1>'+
+      '<div class="podium">'+podium+'</div>'+
+      (rest.length ? '<div class="rest-list">'+restRows+'</div>' : '')+
+      '<div class="btn-cluster">'+
+        '<button type="button" class="btn btn-primary btn-block" data-action="play-again">Play Again</button>'+
+      '</div>'+
+    '</div>';
+  }
+
+  /* ============================= RENDER ============================= */
+
+  var screens = {
+    'setup': screenSetup,
+    'round-guess': screenRoundGuess,
+    'round-reveal': screenRoundReveal,
+    'scoreboard': screenScoreboard,
+    'final': screenFinal
+  };
+
+  var ICON_SOUND_ON = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
+  var ICON_SOUND_OFF = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9v6h4l5 4V5L8 9H4z"/><line x1="16" y1="9" x2="21" y2="14"/><line x1="21" y1="9" x2="16" y2="14"/></svg>';
+
+  function render(){
+    var app = document.getElementById('app');
+    app.innerHTML = ''+
+      '<div class="booth">'+
+        '<button type="button" class="mute-btn" data-action="toggle-mute" aria-label="'+(state.muted ? 'Unmute sound' : 'Mute sound')+'">'+
+          (state.muted ? ICON_SOUND_OFF : ICON_SOUND_ON)+
+        '</button>'+
+        screens[state.screen]()+
+      '</div>';
+    postRender();
+  }
+
+  function postRender(){
+    if(state.screen === 'setup'){
+      var nameInput = document.getElementById('playerNameInput');
+      if(nameInput){
+        nameInput.addEventListener('keydown', function(e){
+          if(e.key === 'Enter'){ e.preventDefault(); addPlayer(nameInput.value); }
+        });
+      }
+      var roundsInput = document.getElementById('roundsInput');
+      if(roundsInput){
+        roundsInput.addEventListener('change', function(){
+          var v = parseInt(roundsInput.value, 10);
+          state.roundsWanted = isNaN(v) ? 1 : v;
+        });
+      }
+    }
+
+    if(state.screen === 'round-guess'){
+      var slider = document.getElementById('guessSlider');
+      var num = document.getElementById('guessNumber');
+      if(slider && num){
+        slider.addEventListener('input', function(){
+          num.value = slider.value;
+          state.currentGuessValue = parseInt(slider.value, 10);
+        });
+        num.addEventListener('input', function(){
+          var v = Math.max(0, Math.min(100, parseInt(num.value || '0', 10)));
+          slider.value = v;
+          state.currentGuessValue = v;
+        });
+      }
+    }
+
+    if(state.screen === 'round-reveal'){
+      var marker = document.getElementById('actualMarker');
+      if(marker){
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            marker.style.opacity = '1';
+            marker.style.transform = 'translateY(0)';
+          });
+        });
+      }
+    }
+
+    if(state.screen === 'scoreboard'){
+      document.querySelectorAll('.board-row-fill').forEach(function(el){
+        var w = el.style.width;
+        el.style.width = '0%';
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){ el.style.width = w; });
+        });
+      });
+    }
+  }
+
+  /* ============================= EVENTS ============================= */
+
+  document.getElementById('app').addEventListener('click', function(e){
+    var el = e.target.closest('[data-action]');
+    if(!el) return;
+    var action = el.getAttribute('data-action');
+
+    if(action === 'toggle-mute'){
+      toggleMute();
+    } else if(action === 'set-mode'){
+      setMode(el.getAttribute('data-mode'));
+    } else if(action === 'add-player'){
+      var input = document.getElementById('playerNameInput');
+      addPlayer(input.value);
+      input.value = '';
+      input.focus();
+    } else if(action === 'remove-player'){
+      removePlayer(parseInt(el.getAttribute('data-id'), 10));
+    } else if(action === 'start-game'){
+      var roundsInput = document.getElementById('roundsInput');
+      if(roundsInput) state.roundsWanted = parseInt(roundsInput.value, 10) || 1;
+      startGame();
+    } else if(action === 'lock-in'){
+      lockInGuess();
+    } else if(action === 'show-scoreboard'){
+      goToScoreboard();
+    } else if(action === 'next-round'){
+      nextRound();
+    } else if(action === 'play-again'){
+      playAgain();
+    }
+  });
+
+  render();
+
+})();
+</script>
+</body>
+</html>
