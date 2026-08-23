@@ -1,5 +1,15 @@
 [
   {
+    "id": "same-or-different",
+    "title": "Same or Different",
+    "description": "Learn and identify sets that are the same or different.",
+    "creatorName": "Teacher Carmina",
+    "category": "Numeracy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["same different", "comparison"],
+    "uploadDate": "2026-08-23"
+  },
+  {
     "id": "fill-the-wallet",
     "title": "Fill the Wallet",
     "description": "Identify money and put it in the wallet.",
