@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Same or Different?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --mint:#B8F2E6;
+    --teal:#4AC7A8;
+    --teal-dark:#2E8B75;
+    --yellow:#FFE08A;
+    --yellow-dark:#D9A93A;
+    --coral:#FF8C94;
+    --coral-dark:#D9636E;
+    --ink:#4B4E6D;
+    --white:#FFFFFF;
+    --cream:#FBFFFE;
+
+    /* Sizes scale with the smaller of viewport width/height so the whole
+       game fits without scrolling on laptop, tablet and mobile alike. */
+    --plate-size: clamp(90px, min(26vh, 30vw), 190px);
+    --icon-lg: clamp(100px, min(23vh, 25vw), 200px);
+    --icon-sm: clamp(78px, min(16vh, 18vw), 150px);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%; margin:0; overflow:hidden;}
+  body{
+    font-family:'Quicksand', sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 15% 10%, rgba(255,224,138,0.35), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(255,140,148,0.25), transparent 40%),
+      linear-gradient(180deg, var(--mint) 0%, #ecfbf7 45%, #ffffff 100%);
+    display:flex;
+    justify-content:center;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #app{
+    width:100%;
+    max-width:900px;
+    height:100vh;
+    height:100dvh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    padding:1.6vh 3vw calc(1.6vh + env(safe-area-inset-bottom, 0px));
+  }
+  h1,h2,h3{font-family:'Baloo 2', sans-serif; margin:0;}
+  button{font-family:inherit;}
+  img{-webkit-user-drag:none; user-select:none;}
+  button:focus-visible, .proceed-card:focus-visible, .answer-card:focus-visible, .mode-card:focus-visible, .icon-btn:focus-visible{
+    outline:3px solid var(--ink);
+    outline-offset:3px;
+  }
+
+  .screen{display:flex; flex-direction:column; flex:1; min-height:0; align-items:center; width:100%;}
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    width:100%;
+    flex:0 0 auto;
+    padding:0.6vh 0.4vw 0.6vh;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:clamp(16px, 2.8vh, 20px);
+    color:var(--ink);
+  }
+  .brand .dot{width:14px;height:14px;border-radius:50%;background:var(--teal);box-shadow: 10px 0 0 var(--coral);}
+  .icon-btn{
+    all:unset;
+    cursor:pointer;
+    width:clamp(38px,5.5vh,44px);height:clamp(38px,5.5vh,44px);
+    border-radius:50%;
+    background:var(--white);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 0 rgba(75,78,109,.1), 0 6px 14px rgba(75,78,109,.15);
+    font-size:clamp(16px,2.4vh,20px);
+    transition:transform .15s ease;
+  }
+  .icon-btn:hover{transform:translateY(-2px);}
+  .icon-btn:active{transform:translateY(0);}
+
+  /* ---------- Home ---------- */
+  .home-hero{text-align:center; flex:0 0 auto; padding:0.6vh 20px 0;}
+  .home-title{
+    font-size:clamp(22px,5vh,52px);
+    line-height:1.15;
+    color:var(--ink);
+  }
+  .home-title .word-same{color:var(--teal-dark);}
+  .home-title .word-diff{color:var(--coral-dark);}
+  .home-sub{
+    max-width:480px;
+    margin:0.8vh auto 0;
+    font-size:clamp(13px,2.2vh,18px);
+    color:#6b6e8f;
+    font-weight:500;
+  }
+  .home-illustration{
+    display:flex;justify-content:center;align-items:center;gap:clamp(16px,4vw,28px);
+    flex:0 0 auto; padding:0.8vh 16px;
+  }
+  .mode-grid{
+    display:flex;gap:clamp(14px,2.4vw,22px);justify-content:center;flex-wrap:wrap;
+    flex:1; min-height:0; align-items:center; width:100%;
+  }
+  .mode-card{
+    all:unset;cursor:pointer;
+    width:clamp(170px, 32vw, 260px);
+    background:var(--white);
+    border-radius:28px;
+    padding:clamp(14px,2.4vh,26px) clamp(14px,2.2vw,22px);
+    box-shadow:0 8px 0 rgba(75,78,109,.1), 0 16px 32px rgba(75,78,109,.16);
+    display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.2vh,10px);
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .mode-card:hover{transform:translateY(-6px);}
+  .mode-card .mode-plate{
+    width:clamp(56px,9vh,92px);height:clamp(56px,9vh,92px);border-radius:50%;
+    background:var(--cream);
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(20px,3.4vh,34px);gap:2px;
+  }
+  .mode-card.learn .mode-plate{box-shadow:inset 0 0 0 6px var(--mint), 0 4px 12px rgba(75,78,109,.12);}
+  .mode-card.quiz .mode-plate{box-shadow:inset 0 0 0 6px var(--yellow), 0 4px 12px rgba(75,78,109,.12);}
+  .mode-card h3{font-size:clamp(16px,2.8vh,22px);}
+  .mode-card p{font-size:clamp(12px,1.9vh,14.5px);color:#6b6e8f;text-align:center;margin:0;font-weight:500;}
+  .mode-card .cta{
+    margin-top:4px;
+    font-weight:700;
+    font-size:clamp(12px,1.9vh,14.5px);
+    padding:clamp(7px,1.2vh,9px) clamp(16px,3vw,22px);
+    border-radius:999px;
+    color:var(--white);
+  }
+  .mode-card.learn .cta{background:var(--teal);}
+  .mode-card.quiz .cta{background:var(--coral);}
+
+  /* ---------- Stage / plates ---------- */
+  .stage{
+    display:flex;align-items:center;justify-content:center;
+    gap:clamp(14px,6vw,56px);
+    flex:1; min-height:0; width:100%;
+  }
+  .plate-wrap{display:flex;flex-direction:column;align-items:center;}
+  .plate-mat{
+    width:calc(var(--plate-size) + 20px);
+    height:calc(var(--plate-size) + 20px);
+    border-radius:50%;
+    background:var(--mint);
+    display:flex;align-items:center;justify-content:center;
+    animation:popIn .45s ease both;
+  }
+  .plate-rim{
+    width:var(--plate-size);
+    height:var(--plate-size);
+    border-radius:50%;
+    background:var(--cream);
+    border:clamp(5px, 1vh, 8px) solid var(--ink);
+    box-shadow:
+      0 6px 0 rgba(75,78,109,.08),
+      0 12px 26px rgba(75,78,109,.16);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .food-grid{
+    display:flex;flex-wrap:wrap;align-items:center;justify-content:center;
+    gap:2px;width:80%;height:80%;
+  }
+  .food-item{line-height:1;filter:drop-shadow(0 2px 2px rgba(0,0,0,.08));}
+  .size-lg .food-item{font-size:clamp(30px, min(8vh,9vw), 58px);}
+  .size-md .food-item{font-size:clamp(24px, min(6.2vh,7vw), 46px);}
+  .size-sm .food-item{font-size:clamp(18px, min(4.6vh,5vw), 34px);}
+
+  @keyframes popIn{
+    0%{transform:scale(.7);opacity:0;}
+    70%{transform:scale(1.05);opacity:1;}
+    100%{transform:scale(1);}
+  }
+
+  /* ---------- Concept icon image (same.png / different.png) ---------- */
+  .concept-icon-img{
+    width:var(--icon-lg);
+    height:var(--icon-lg);
+    object-fit:contain;
+    display:block;
+  }
+  .concept-icon-img.small{
+    width:var(--icon-sm);
+    height:var(--icon-sm);
+  }
+
+  /* ---------- Learn mode ---------- */
+  .learn-body{
+    flex:1; min-height:0; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:clamp(10px,2.2vh,22px);
+  }
+  .learn-body .stage{flex:0 0 auto;}
+
+  .learn-caption{
+    text-align:center;
+    font-size:clamp(16px,3.2vh,24px);
+    font-weight:700;
+    flex:0 0 auto;
+    margin:0;
+  }
+  .learn-caption.same-color{color:var(--teal-dark);}
+  .learn-caption.diff-color{color:var(--coral-dark);}
+
+  .proceed-wrap{display:flex;flex-direction:column;align-items:center;gap:0.8vh; flex:0 0 auto; width:100%;}
+  .proceed-card{
+    all:unset;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .proceed-card img{display:block;}
+  .proceed-card.same{animation:pulseTeal 1.8s ease-in-out infinite;}
+  .proceed-card.diff{animation:pulseCoral 1.8s ease-in-out infinite;}
+
+  @keyframes pulseTeal{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.06);}
+  }
+  @keyframes pulseCoral{
+    0%,100%{transform:scale(1);}
+    50%{transform:scale(1.06);}
+  }
+
+  .slide-dots{display:flex;gap:8px;justify-content:center;}
+  .slide-dot{width:9px;height:9px;border-radius:50%;background:rgba(75,78,109,.18);}
+  .slide-dot.active{background:var(--ink);}
+
+  /* ---------- Center panel (learn done / results) ---------- */
+  .center-panel{
+    width:min(92%,460px);margin:auto;text-align:center;
+    background:var(--white);border-radius:32px;
+    padding:clamp(20px,4vh,40px) clamp(18px,4vw,30px);
+    box-shadow:0 10px 0 rgba(75,78,109,.08), 0 20px 40px rgba(75,78,109,.15);
+  }
+  .center-panel h2{font-size:clamp(20px,3.6vh,26px); margin-bottom:10px;}
+  .center-panel p{color:#6b6e8f;font-weight:500;margin:0 0 clamp(12px,2.4vh,22px); font-size:clamp(13px,2vh,15px);}
+  .btn-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;}
+  .btn{
+    all:unset;cursor:pointer;font-weight:700;font-size:clamp(13px,2vh,15px);
+    padding:clamp(10px,1.8vh,13px) clamp(20px,4vw,28px);border-radius:999px;color:var(--white);
+    box-shadow:0 5px 0 rgba(75,78,109,.15);
+    transition:transform .15s ease;
+  }
+  .btn:hover{transform:translateY(-2px);}
+  .btn:active{transform:translateY(0);}
+  .btn.primary{background:var(--teal);}
+  .btn.secondary{background:var(--ink);}
+  .btn.ghost{background:var(--white); color:var(--ink); box-shadow:0 0 0 2px var(--mint) inset;}
+
+  /* ---------- Quiz ---------- */
+  .progress-bar{
+    display:flex;gap:6px;width:min(90%,440px);flex:0 0 auto; margin-bottom:0.4vh;
+  }
+  .progress-dot{flex:1;height:clamp(7px,1.2vh,10px);border-radius:6px;background:rgba(75,78,109,.12);transition:background .3s ease;}
+  .progress-dot.filled{background:var(--teal);}
+  .progress-dot.current{background:var(--yellow-dark);}
+  .progress-label{text-align:center;font-size:clamp(11px,1.7vh,13px);font-weight:700;color:#8a8db3; flex:0 0 auto; margin-bottom:0.4vh;}
+
+  .quiz-body{
+    flex:1; min-height:0; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:clamp(8px,1.6vh,18px);
+  }
+  .quiz-body .stage{flex:0 0 auto;}
+
+  .quiz-question{text-align:center;font-weight:700;font-size:clamp(15px, 2.8vh, 20px);flex:0 0 auto; margin:0;color:var(--ink);}
+
+  .answers-group{
+    display:flex;align-items:center;justify-content:center;
+    gap:clamp(14px,3.5vw,28px);
+    background:var(--white);
+    border-radius:28px;
+    padding:clamp(14px,2.4vh,24px) clamp(20px,4.5vw,34px);
+    box-shadow:0 8px 0 rgba(75,78,109,.1), 0 14px 28px rgba(75,78,109,.16);
+    flex:0 0 auto;
+  }
+  .answers-divider{width:2px;align-self:stretch;background:rgba(75,78,109,.15);border-radius:2px;}
+  .answer-card{
+    all:unset;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    border-radius:18px;
+    transition:transform .15s ease;
+  }
+  .answer-card img{display:block;}
+  .answer-card:hover{transform:translateY(-3px);}
+  .answer-card.correct{animation:correctPop .6s ease;}
+  .answer-card.shake{animation:shakeCard .4s ease;}
+  .answer-card.disabled{opacity:.5;pointer-events:none;}
+
+  @keyframes correctPop{
+    0%{transform:scale(1);}
+    30%{transform:scale(1.14);}
+    60%{transform:scale(.96);}
+    100%{transform:scale(1);}
+  }
+  @keyframes shakeCard{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-9px);}
+    40%{transform:translateX(9px);}
+    60%{transform:translateX(-5px);}
+    80%{transform:translateX(5px);}
+  }
+
+  /* ---------- Results ---------- */
+  .stars-row{display:flex;justify-content:center;gap:10px;margin:10px 0 14px;}
+  .star{font-size:clamp(26px,4.4vh,38px); opacity:.25;animation:starPop .5s ease both;}
+  .star.filled{opacity:1;}
+  .star:nth-child(1){animation-delay:.05s;}
+  .star:nth-child(2){animation-delay:.18s;}
+  .star:nth-child(3){animation-delay:.31s;}
+  @keyframes starPop{
+    0%{transform:scale(0) rotate(-20deg);}
+    70%{transform:scale(1.2) rotate(6deg);}
+    100%{transform:scale(1) rotate(0);}
+  }
+  .score-text{font-weight:700;font-size:clamp(14px,2.2vh,17px);color:var(--ink);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important;}
+  }
+
+  /* Extra-short viewports (small phones in landscape) trim optional copy */
+  @media (max-height: 430px){
+    .home-sub{display:none;}
+    .mode-card p{display:none;}
+    .home-illustration{display:none;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+
+  /* ============ DATA ============ */
+  var FOODS = ['🍎','🍌','🍇','🍓','🍉','🍒','🍑','🥝','🍕','🍩','🍪','🧁','🥕','🍟','🍭'];
+
+  function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function makeSameQuestion(){
+    var food = pick(FOODS);
+    var qty = randInt(1,4);
+    return {type:'same', foodA:food, foodB:food, qtyA:qty, qtyB:qty};
+  }
+  function makeDiffQuestion(){
+    var food = pick(FOODS);
+    var low = randInt(1,2);
+    var high = randInt(5,7);
+    var swap = Math.random() < 0.5;
+    return {type:'diff', foodA:food, foodB:food, qtyA: swap?high:low, qtyB: swap?low:high};
+  }
+
+  /* ============ STATE ============ */
+  var state = {
+    screen:'home',
+    learnSlides:[],
+    learnIndex:0,
+    quizQuestions:[],
+    quizIndex:0,
+    firstTryCorrect:0,
+    mistakeOnCurrent:false,
+    locked:false,
+    audioCtx:null
+  };
+
+  /* ============ AUDIO ============ */
+  function getAudioCtx(){
+    if(!state.audioCtx){
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      state.audioCtx = new Ctx();
+    }
+    if(state.audioCtx.state === 'suspended'){ state.audioCtx.resume(); }
+    return state.audioCtx;
+  }
+
+  function playSuccessSound(){
+    try{
+      var ctx = getAudioCtx();
+      var now = ctx.currentTime;
+      var notes = [523.25, 659.25, 783.99];
+      notes.forEach(function(freq, i){
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        var start = now + i*0.09;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.28, start+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start+0.32);
+        osc.start(start);
+        osc.stop(start+0.35);
+      });
+    }catch(e){}
+  }
+
+  function playTapSound(){
+    try{
+      var ctx = getAudioCtx();
+      var now = ctx.currentTime;
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = 660;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.22, now+0.012);
+      gain.gain.exponentialRampToValueAtTime(0.001, now+0.14);
+      osc.start(now);
+      osc.stop(now+0.16);
+    }catch(e){}
+  }
+
+  function playFanfare(){
+    try{
+      var ctx = getAudioCtx();
+      var now = ctx.currentTime;
+      var notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach(function(freq, i){
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        var start = now + i*0.11;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.3, start+0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, start+0.4);
+        osc.start(start);
+        osc.stop(start+0.45);
+      });
+    }catch(e){}
+  }
+
+  /* ============ ICON IMAGES (files live in /assets) ============ */
+  function imgSame(extraClass){
+    return '<img src="assets/same.png" alt="Same" class="concept-icon-img '+(extraClass||'')+'">';
+  }
+  function imgDiff(extraClass){
+    return '<img src="assets/different.png" alt="Different" class="concept-icon-img '+(extraClass||'')+'">';
+  }
+
+  /* ============ RENDER HELPERS ============ */
+  function sizeClass(qty){
+    if(qty<=2) return 'size-lg';
+    if(qty<=4) return 'size-md';
+    return 'size-sm';
+  }
+  function renderPlate(qty, food, cls){
+    var items = '';
+    for(var i=0;i<qty;i++){ items += '<span class="food-item">'+food+'</span>'; }
+    return '<div class="plate-wrap"><div class="plate-mat"><div class="plate-rim"><div class="food-grid '+cls+'">'+items+'</div></div></div></div>';
+  }
+  function renderStage(q){
+    /* Both plates use the same item size (based on the larger quantity)
+       so the food never looks bigger or smaller just because a plate
+       happens to hold fewer items. */
+    var cls = sizeClass(Math.max(q.qtyA, q.qtyB));
+    return '<div class="stage">'+renderPlate(q.qtyA, q.foodA, cls)+renderPlate(q.qtyB, q.foodB, cls)+'</div>';
+  }
+
+  /* ============ SCREENS ============ */
+  function screenHome(){
+    return ''+
+    '<div class="screen">'+
+    '<div class="topbar"><div class="brand"><span class="dot"></span> Same or Different?</div><div></div></div>'+
+    '<div class="home-hero">'+
+      '<h1 class="home-title">Is it the <span class="word-same">Same</span> or <span class="word-diff">Different</span>?</h1>'+
+      '<p class="home-sub">Compare the treats on each plate and learn to spot matching and non-matching amounts.</p>'+
+    '</div>'+
+    '<div class="home-illustration">'+ imgSame() + imgDiff() +'</div>'+
+    '<div class="mode-grid">'+
+      '<button class="mode-card learn" onclick="App.startLearn()">'+
+        '<div class="mode-plate">🍓🍓</div>'+
+        '<h3>Learn</h3>'+
+        '<p>Walk through friendly examples of same and different quantities.</p>'+
+        '<span class="cta">Start Learning</span>'+
+      '</button>'+
+      '<button class="mode-card quiz" onclick="App.startQuiz()">'+
+        '<div class="mode-plate">🍎❓</div>'+
+        '<h3>Quiz</h3>'+
+        '<p>Test what you know with 8 quick rounds. Tap the right answer!</p>'+
+        '<span class="cta">Start Quiz</span>'+
+      '</button>'+
+    '</div>'+
+    '</div>';
+  }
+
+  function screenLearn(){
+    var q = state.learnSlides[state.learnIndex];
+    var isSame = q.type === 'same';
+    var dots = '';
+    for(var i=0;i<state.learnSlides.length;i++){
+      dots += '<span class="slide-dot'+(i===state.learnIndex?' active':'')+'"></span>';
+    }
+    return ''+
+    '<div class="screen">'+
+    '<div class="topbar"><button class="icon-btn" onclick="App.goHome()" aria-label="Back to home">✕</button><div class="brand">Learn</div><div style="width:44px"></div></div>'+
+    '<div class="learn-body">'+
+      renderStage(q)+
+      '<p class="learn-caption '+(isSame?'same-color':'diff-color')+'">This is '+(isSame?'same':'different')+'</p>'+
+      '<div class="proceed-wrap">'+
+        '<button class="proceed-card '+(isSame?'same':'diff')+'" onclick="App.nextLearnSlide()" aria-label="'+(isSame?'Same. Tap to continue.':'Different. Tap to continue.')+'">'+
+          (isSame ? imgSame() : imgDiff()) +
+        '</button>'+
+        '<div class="slide-dots">'+dots+'</div>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
+  }
+
+  function screenLearnDone(){
+    return ''+
+    '<div class="screen">'+
+    '<div class="topbar"><button class="icon-btn" onclick="App.goHome()" aria-label="Back to home">✕</button><div class="brand">Learn</div><div style="width:44px"></div></div>'+
+    '<div class="center-panel">'+
+      '<h2>Nice work! 🎉</h2>'+
+      '<p>You reviewed same and different quantities. Ready to try the quiz?</p>'+
+      '<div class="btn-row">'+
+        '<button class="btn primary" onclick="App.startQuiz()">Try the Quiz</button>'+
+        '<button class="btn ghost" onclick="App.startLearn()">Review Again</button>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
+  }
+
+  function screenQuiz(){
+    var q = state.quizQuestions[state.quizIndex];
+    var dots = '';
+    for(var i=0;i<state.quizQuestions.length;i++){
+      var cls = 'progress-dot';
+      if(i < state.quizIndex) cls += ' filled';
+      else if(i === state.quizIndex) cls += ' current';
+      dots += '<span class="'+cls+'"></span>';
+    }
+    return ''+
+    '<div class="screen">'+
+    '<div class="topbar"><button class="icon-btn" onclick="App.goHome()" aria-label="Back to home">✕</button><div class="brand">Quiz</div><div style="width:44px"></div></div>'+
+    '<div class="progress-bar">'+dots+'</div>'+
+    '<div class="progress-label">Question '+(state.quizIndex+1)+' of '+state.quizQuestions.length+'</div>'+
+    '<div class="quiz-body">'+
+      renderStage(q)+
+      '<p class="quiz-question">Same amount, or different?</p>'+
+      '<div class="answers-group">'+
+        '<button id="answer-same" class="answer-card" onclick="App.answerQuiz(\'same\')" aria-label="Same">'+ imgSame('small') +'</button>'+
+        '<div class="answers-divider"></div>'+
+        '<button id="answer-diff" class="answer-card" onclick="App.answerQuiz(\'diff\')" aria-label="Different">'+ imgDiff('small') +'</button>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
+  }
+
+  function screenResults(){
+    var score = state.firstTryCorrect;
+    var total = state.quizQuestions.length;
+    var stars = score===total ? 3 : (score>=Math.ceil(total*0.75) ? 2 : (score>=Math.ceil(total*0.5) ? 1 : 0));
+    var msgs = [
+      "Keep practicing — you're getting there!",
+      "Good effort! A little more practice will help.",
+      "Great job! You really know your stuff.",
+      "Amazing! Perfect score, superstar!"
+    ];
+    var starsHtml = '';
+    for(var i=0;i<3;i++){
+      starsHtml += '<span class="star'+(i<stars?' filled':'')+'">⭐</span>';
+    }
+    return ''+
+    '<div class="screen">'+
+    '<div class="topbar"><button class="icon-btn" onclick="App.goHome()" aria-label="Back to home">✕</button><div class="brand">Results</div><div style="width:44px"></div></div>'+
+    '<div class="center-panel">'+
+      '<h2>Quiz Complete!</h2>'+
+      '<div class="stars-row">'+starsHtml+'</div>'+
+      '<p class="score-text">You got '+score+' out of '+total+' correct on the first try.</p>'+
+      '<p>'+msgs[stars]+'</p>'+
+      '<div class="btn-row">'+
+        '<button class="btn primary" onclick="App.startQuiz()">Play Again</button>'+
+        '<button class="btn secondary" onclick="App.goHome()">Back to Home</button>'+
+      '</div>'+
+    '</div>'+
+    '</div>';
+  }
+
+  /* ============ RENDER DISPATCH ============ */
+  function render(){
+    var html = '';
+    if(state.screen === 'home') html = screenHome();
+    else if(state.screen === 'learn') html = screenLearn();
+    else if(state.screen === 'learnDone') html = screenLearnDone();
+    else if(state.screen === 'quiz') html = screenQuiz();
+    else if(state.screen === 'results') html = screenResults();
+    document.getElementById('app').innerHTML = html;
+  }
+
+  /* ============ ACTIONS ============ */
+  function goHome(){ state.screen='home'; render(); }
+
+  function startLearn(){
+    state.learnSlides = [
+      makeSameQuestion(), makeSameQuestion(), makeSameQuestion(),
+      makeDiffQuestion(), makeDiffQuestion(), makeDiffQuestion()
+    ];
+    state.learnIndex = 0;
+    state.screen = 'learn';
+    render();
+  }
+  function nextLearnSlide(){
+    playTapSound();
+    if(state.learnIndex < state.learnSlides.length - 1){
+      state.learnIndex++;
+      render();
+    } else {
+      state.screen = 'learnDone';
+      render();
+    }
+  }
+
+  function startQuiz(){
+    var qs = [];
+    for(var i=0;i<8;i++){
+      qs.push(Math.random() < 0.5 ? makeSameQuestion() : makeDiffQuestion());
+    }
+    state.quizQuestions = qs;
+    state.quizIndex = 0;
+    state.firstTryCorrect = 0;
+    state.mistakeOnCurrent = false;
+    state.locked = false;
+    state.screen = 'quiz';
+    render();
+  }
+
+  function answerQuiz(choice){
+    if(state.locked) return;
+    var q = state.quizQuestions[state.quizIndex];
+    var correct = (q.type === choice);
+    var el = document.getElementById('answer-' + choice);
+
+    if(correct){
+      state.locked = true;
+      if(!state.mistakeOnCurrent) state.firstTryCorrect++;
+      playSuccessSound();
+      if(el) el.classList.add('correct');
+      var other = document.getElementById('answer-' + (choice==='same'?'diff':'same'));
+      if(other) other.classList.add('disabled');
+
+      var isLast = (state.quizIndex === state.quizQuestions.length - 1);
+      setTimeout(function(){
+        state.quizIndex++;
+        state.mistakeOnCurrent = false;
+        state.locked = false;
+        if(state.quizIndex >= state.quizQuestions.length){
+          state.screen = 'results';
+          playFanfare();
+        }
+        render();
+      }, isLast ? 500 : 750);
+    } else {
+      state.mistakeOnCurrent = true;
+      if(el){
+        el.classList.remove('shake');
+        void el.offsetWidth;
+        el.classList.add('shake');
+        setTimeout(function(){ el.classList.remove('shake'); }, 400);
+      }
+    }
+  }
+
+  window.App = {
+    goHome: goHome,
+    startLearn: startLearn,
+    nextLearnSlide: nextLearnSlide,
+    startQuiz: startQuiz,
+    answerQuiz: answerQuiz
+  };
+
+  render();
+})();
+</script>
+</body>
+</html>
