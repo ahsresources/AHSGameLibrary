@@ -25,7 +25,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Fill the Wallet! — a money sorting game</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -68,6 +68,7 @@
     overflow-x:hidden;
     overflow-y:auto;
     -webkit-overflow-scrolling:touch;
+    touch-action:manipulation;
   }
   .sr-only{
     position:absolute; width:1px; height:1px; padding:0; margin:-1px;
@@ -616,6 +617,39 @@
   let liftedKeyboardItem = null;
   let activePointerItem = null;
 
+  /* ---------------- Stop double-tap zoom ----------------
+     Several mobile browsers (notably iOS Safari) will still zoom on a fast
+     double-tap even with maximum-scale/user-scalable set in the viewport
+     meta tag. That zoom shifts the visual viewport while a dragged item's
+     fixed-position coordinates stay the same, making it look like the item
+     jumped to the edge of the screen. This is the standard fix: swallow the
+     second tap of any fast double-tap so the browser never gets the chance
+     to zoom. */
+  let lastTouchEnd = 0;
+  document.addEventListener('touchend', (e) => {
+    const now = Date.now();
+    if(now - lastTouchEnd <= 350){
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  }, { passive:false });
+
+  /* Safety net: if a drag's pointerup/pointercancel is ever swallowed by the
+     browser (e.g. mid-gesture interruption), don't leave the game
+     permanently unable to start a new drag. */
+  function forceEndStuckDrag(){
+    if(!activePointerItem) return;
+    const item = activePointerItem;
+    activePointerItem = null;
+    walletDrop.classList.remove('hover-target');
+    depositFailPointer(item, false);
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if(activePointerItem && e.target !== activePointerItem && !activePointerItem.contains(e.target)){
+      forceEndStuckDrag();
+    }
+  }, true);
+
   /* ---------------- Utility ---------------- */
   function shuffle(arr){
     for(let i = arr.length - 1; i > 0; i--){
@@ -788,7 +822,14 @@
   /* ---------------- Pointer-based drag & drop ---------------- */
   function attachItemInteractions(item){
     item.addEventListener('pointerdown', (e) => {
-      if(item.classList.contains('collected') || activePointerItem) return;
+      // item._placeholder stays set for the whole life of a drag, including
+      // the return-to-tray or fly-to-wallet animation that plays after
+      // release. A fast double-click/double-tap could fire a second
+      // pointerdown before that animation finished, starting a second drag
+      // while the item's parent was still the fixed drag layer instead of
+      // the tray — which is what sent items flying to the top-left corner.
+      // Blocking re-entry until the previous drag has fully resolved fixes it.
+      if(item.classList.contains('collected') || item._placeholder || activePointerItem) return;
       if(e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
       e.preventDefault();
       startPointerDrag(item, e);
@@ -801,6 +842,7 @@
       }
       if(e.key !== 'Enter' && e.key !== ' ') return;
       e.preventDefault();
+      if(item._resolving) return; // previous drop for this item hasn't finished yet
       if(liftedKeyboardItem === item){
         cancelKeyboardLift();
         return;
@@ -994,6 +1036,7 @@
   }
 
   function resolveDropKeyboard(item){
+    item._resolving = true;
     const wRect = walletDrop.getBoundingClientRect();
     if(item.dataset.type === 'money'){
       playSuccess();
@@ -1025,7 +1068,10 @@
       walletDrop.classList.add('shake');
       announce('Not money. Back to the table it goes.');
       item.setAttribute('aria-pressed', 'false');
-      setTimeout(() => setWalletOpen(false), 180);
+      setTimeout(() => {
+        setWalletOpen(false);
+        item._resolving = false;
+      }, 180);
     }
   }
 
