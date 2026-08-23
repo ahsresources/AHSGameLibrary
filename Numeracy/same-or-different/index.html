@@ -94,9 +94,14 @@
   .icon-btn:active{transform:translateY(0);}
 
   /* ---------- Home ---------- */
-  .home-hero{text-align:center; flex:0 0 auto; padding:0.6vh 20px 0;}
+  .home-body{
+    flex:1; min-height:0; width:100%;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:clamp(8px,1.8vh,20px);
+  }
+  .home-hero{text-align:center; flex:0 0 auto; padding:0 20px;}
   .home-title{
-    font-size:clamp(22px,5vh,52px);
+    font-size:clamp(20px,4.6vh,52px);
     line-height:1.15;
     color:var(--ink);
   }
@@ -104,32 +109,36 @@
   .home-title .word-diff{color:var(--coral-dark);}
   .home-sub{
     max-width:480px;
-    margin:0.8vh auto 0;
-    font-size:clamp(13px,2.2vh,18px);
+    margin:0.6vh auto 0;
+    font-size:clamp(12px,2vh,18px);
     color:#6b6e8f;
     font-weight:500;
   }
   .home-illustration{
-    display:flex;justify-content:center;align-items:center;gap:clamp(16px,4vw,28px);
-    flex:0 0 auto; padding:0.8vh 16px;
+    display:flex;justify-content:center;align-items:center;gap:clamp(14px,3.5vw,24px);
+    flex:0 0 auto;
+  }
+  .concept-icon-img.home{
+    width:clamp(40px, 7vh, 64px);
+    height:clamp(40px, 7vh, 64px);
   }
   .mode-grid{
-    display:flex;gap:clamp(14px,2.4vw,22px);justify-content:center;flex-wrap:wrap;
-    flex:1; min-height:0; align-items:center; width:100%;
+    display:flex;gap:clamp(12px,2.4vw,22px);justify-content:center;flex-wrap:wrap;
+    flex:0 0 auto; align-items:center; width:100%;
   }
   .mode-card{
     all:unset;cursor:pointer;
-    width:clamp(170px, 32vw, 260px);
+    width:clamp(150px, 32vw, 260px);
     background:var(--white);
-    border-radius:28px;
-    padding:clamp(14px,2.4vh,26px) clamp(14px,2.2vw,22px);
+    border-radius:26px;
+    padding:clamp(10px,2vh,26px) clamp(12px,2.2vw,22px);
     box-shadow:0 8px 0 rgba(75,78,109,.1), 0 16px 32px rgba(75,78,109,.16);
-    display:flex;flex-direction:column;align-items:center;gap:clamp(6px,1.2vh,10px);
+    display:flex;flex-direction:column;align-items:center;gap:clamp(4px,1vh,10px);
     transition:transform .2s ease, box-shadow .2s ease;
   }
   .mode-card:hover{transform:translateY(-6px);}
   .mode-card .mode-plate{
-    width:clamp(56px,9vh,92px);height:clamp(56px,9vh,92px);border-radius:50%;
+    width:clamp(46px,8vh,92px);height:clamp(46px,8vh,92px);border-radius:50%;
     background:var(--cream);
     display:flex;align-items:center;justify-content:center;
     font-size:clamp(20px,3.4vh,34px);gap:2px;
@@ -154,6 +163,7 @@
     display:flex;align-items:center;justify-content:center;
     gap:clamp(14px,6vw,56px);
     flex:1; min-height:0; width:100%;
+    position:relative;
   }
   .plate-wrap{display:flex;flex-direction:column;align-items:center;}
   .plate-mat{
@@ -238,6 +248,19 @@
     50%{transform:scale(1.06);}
   }
 
+  .proceed-card.same.tapped{animation:tapPopTeal .32s ease;}
+  .proceed-card.diff.tapped{animation:tapPopCoral .32s ease;}
+  @keyframes tapPopTeal{
+    0%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(74,199,168,0));}
+    40%{transform:scale(1.28); filter:drop-shadow(0 0 26px rgba(74,199,168,.75));}
+    100%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(74,199,168,0));}
+  }
+  @keyframes tapPopCoral{
+    0%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(255,140,148,0));}
+    40%{transform:scale(1.28); filter:drop-shadow(0 0 26px rgba(255,140,148,.75));}
+    100%{transform:scale(1); filter:drop-shadow(0 0 0 rgba(255,140,148,0));}
+  }
+
   .slide-dots{display:flex;gap:8px;justify-content:center;}
   .slide-dot{width:9px;height:9px;border-radius:50%;background:rgba(75,78,109,.18);}
   .slide-dot.active{background:var(--ink);}
@@ -279,6 +302,29 @@
     gap:clamp(8px,1.6vh,18px);
   }
   .quiz-body .stage{flex:0 0 auto;}
+
+  .quiz-toast{
+    position:absolute;
+    top:2%;
+    left:50%;
+    transform:translate(-50%,-10px);
+    opacity:0;
+    pointer-events:none;
+    background:var(--white);
+    color:var(--ink);
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size:clamp(15px,2.8vh,22px);
+    padding:clamp(8px,1.6vh,14px) clamp(18px,3.6vw,28px);
+    border-radius:999px;
+    box-shadow:0 10px 24px rgba(75,78,109,.28);
+    white-space:nowrap;
+    z-index:5;
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .quiz-toast.same{background:var(--teal); color:#fff;}
+  .quiz-toast.diff{background:var(--coral); color:#fff;}
+  .quiz-toast.show{opacity:1; transform:translate(-50%,0);}
 
   .quiz-question{text-align:center;font-weight:700;font-size:clamp(15px, 2.8vh, 20px);flex:0 0 auto; margin:0;color:var(--ink);}
 
@@ -374,6 +420,7 @@
     screen:'home',
     learnSlides:[],
     learnIndex:0,
+    learnLocked:false,
     quizQuestions:[],
     quizIndex:0,
     firstTryCorrect:0,
@@ -478,7 +525,7 @@
        so the food never looks bigger or smaller just because a plate
        happens to hold fewer items. */
     var cls = sizeClass(Math.max(q.qtyA, q.qtyB));
-    return '<div class="stage">'+renderPlate(q.qtyA, q.foodA, cls)+renderPlate(q.qtyB, q.foodB, cls)+'</div>';
+    return '<div class="stage">'+renderPlate(q.qtyA, q.foodA, cls)+renderPlate(q.qtyB, q.foodB, cls)+'<div id="quiz-toast" class="quiz-toast"></div></div>';
   }
 
   /* ============ SCREENS ============ */
@@ -486,24 +533,26 @@
     return ''+
     '<div class="screen">'+
     '<div class="topbar"><div class="brand"><span class="dot"></span> Same or Different?</div><div></div></div>'+
-    '<div class="home-hero">'+
-      '<h1 class="home-title">Is it the <span class="word-same">Same</span> or <span class="word-diff">Different</span>?</h1>'+
-      '<p class="home-sub">Compare the treats on each plate and learn to spot matching and non-matching amounts.</p>'+
-    '</div>'+
-    '<div class="home-illustration">'+ imgSame() + imgDiff() +'</div>'+
-    '<div class="mode-grid">'+
-      '<button class="mode-card learn" onclick="App.startLearn()">'+
-        '<div class="mode-plate">🍓🍓</div>'+
-        '<h3>Learn</h3>'+
-        '<p>Walk through friendly examples of same and different quantities.</p>'+
-        '<span class="cta">Start Learning</span>'+
-      '</button>'+
-      '<button class="mode-card quiz" onclick="App.startQuiz()">'+
-        '<div class="mode-plate">🍎❓</div>'+
-        '<h3>Quiz</h3>'+
-        '<p>Test what you know with 8 quick rounds. Tap the right answer!</p>'+
-        '<span class="cta">Start Quiz</span>'+
-      '</button>'+
+    '<div class="home-body">'+
+      '<div class="home-hero">'+
+        '<h1 class="home-title">Is it the <span class="word-same">Same</span> or <span class="word-diff">Different</span>?</h1>'+
+        '<p class="home-sub">Compare the treats on each plate and learn to spot matching and non-matching amounts.</p>'+
+      '</div>'+
+      '<div class="home-illustration">'+ imgSame('home') + imgDiff('home') +'</div>'+
+      '<div class="mode-grid">'+
+        '<button class="mode-card learn" onclick="App.startLearn()">'+
+          '<div class="mode-plate">🤔</div>'+
+          '<h3>Learn</h3>'+
+          '<p>Walk through friendly examples of same and different quantities.</p>'+
+          '<span class="cta">Start Learning</span>'+
+        '</button>'+
+        '<button class="mode-card quiz" onclick="App.startQuiz()">'+
+          '<div class="mode-plate">📝</div>'+
+          '<h3>Quiz</h3>'+
+          '<p>Test what you know with 8 quick rounds. Tap the right answer!</p>'+
+          '<span class="cta">Start Quiz</span>'+
+        '</button>'+
+      '</div>'+
     '</div>'+
     '</div>';
   }
@@ -520,9 +569,9 @@
     '<div class="topbar"><button class="icon-btn" onclick="App.goHome()" aria-label="Back to home">✕</button><div class="brand">Learn</div><div style="width:44px"></div></div>'+
     '<div class="learn-body">'+
       renderStage(q)+
-      '<p class="learn-caption '+(isSame?'same-color':'diff-color')+'">This is '+(isSame?'same':'different')+'</p>'+
+      '<p class="learn-caption '+(isSame?'same-color':'diff-color')+'">'+(isSame?'This is same. Tap same.':'This is different. Tap different.')+'</p>'+
       '<div class="proceed-wrap">'+
-        '<button class="proceed-card '+(isSame?'same':'diff')+'" onclick="App.nextLearnSlide()" aria-label="'+(isSame?'Same. Tap to continue.':'Different. Tap to continue.')+'">'+
+        '<button id="proceed-btn" class="proceed-card '+(isSame?'same':'diff')+'" onclick="App.tapProceed()" aria-label="'+(isSame?'Same. Tap to continue.':'Different. Tap to continue.')+'">'+
           (isSame ? imgSame() : imgDiff()) +
         '</button>'+
         '<div class="slide-dots">'+dots+'</div>'+
@@ -622,11 +671,11 @@
       makeDiffQuestion(), makeDiffQuestion(), makeDiffQuestion()
     ];
     state.learnIndex = 0;
+    state.learnLocked = false;
     state.screen = 'learn';
     render();
   }
   function nextLearnSlide(){
-    playTapSound();
     if(state.learnIndex < state.learnSlides.length - 1){
       state.learnIndex++;
       render();
@@ -634,6 +683,22 @@
       state.screen = 'learnDone';
       render();
     }
+  }
+
+  var LEARN_TAP_ANIM_MS = 300;
+
+  function tapProceed(){
+    if(state.learnLocked) return;
+    state.learnLocked = true;
+    playTapSound();
+    var el = document.getElementById('proceed-btn');
+    if(el){
+      el.classList.add('tapped');
+    }
+    setTimeout(function(){
+      state.learnLocked = false;
+      nextLearnSlide();
+    }, LEARN_TAP_ANIM_MS);
   }
 
   function startQuiz(){
@@ -650,6 +715,22 @@
     render();
   }
 
+  var TOAST_VISIBLE_MS = 1000;
+  var TOAST_FADE_MS = 250;
+
+  function showQuizToast(type){
+    var toast = document.getElementById('quiz-toast');
+    if(!toast) return;
+    toast.textContent = type === 'same' ? 'Same!' : 'Different!';
+    toast.className = 'quiz-toast ' + type;
+    // force reflow so the show class always (re)triggers the transition
+    void toast.offsetWidth;
+    toast.classList.add('show');
+    setTimeout(function(){
+      toast.classList.remove('show');
+    }, TOAST_VISIBLE_MS);
+  }
+
   function answerQuiz(choice){
     if(state.locked) return;
     var q = state.quizQuestions[state.quizIndex];
@@ -663,8 +744,9 @@
       if(el) el.classList.add('correct');
       var other = document.getElementById('answer-' + (choice==='same'?'diff':'same'));
       if(other) other.classList.add('disabled');
+      showQuizToast(q.type);
 
-      var isLast = (state.quizIndex === state.quizQuestions.length - 1);
+      var advanceDelay = TOAST_VISIBLE_MS + TOAST_FADE_MS + 150;
       setTimeout(function(){
         state.quizIndex++;
         state.mistakeOnCurrent = false;
@@ -674,7 +756,7 @@
           playFanfare();
         }
         render();
-      }, isLast ? 500 : 750);
+      }, advanceDelay);
     } else {
       state.mistakeOnCurrent = true;
       if(el){
@@ -689,7 +771,7 @@
   window.App = {
     goHome: goHome,
     startLearn: startLearn,
-    nextLearnSlide: nextLearnSlide,
+    tapProceed: tapProceed,
     startQuiz: startQuiz,
     answerQuiz: answerQuiz
   };
