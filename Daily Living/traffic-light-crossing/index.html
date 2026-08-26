@@ -320,22 +320,28 @@
       height: 100px;
       z-index: 6;
       pointer-events: none;
+      transform: translateZ(0);
     }
 
     .car {
       position: absolute;
-      font-size: 7rem;
+      font-size: 5.5rem;
       bottom: 0;
+      left: 0;
       filter: drop-shadow(2px 4px 0 #000);
+      will-change: transform;
+      backface-visibility: hidden;
+      transform: translateX(-220px);
     }
 
     .car-right {
-      left: -220px;
-      transform: scaleX(-1);
+      transform: translateX(-220px) scaleX(-1);
     }
 
     .car-left {
-      right: -220px;
+      right: 0;
+      left: auto;
+      transform: translateX(220px);
     }
 
     .car-drive-right {
@@ -347,13 +353,13 @@
     }
 
     @keyframes driveRight {
-      0% { left: -220px; }
-      100% { left: 110vw; }
+      0% { transform: translateX(-220px) scaleX(-1); }
+      100% { transform: translateX(110vw) scaleX(-1); }
     }
 
     @keyframes driveLeft {
-      0% { right: -220px; }
-      100% { right: 110vw; }
+      0% { transform: translateX(220px); }
+      100% { transform: translateX(-110vw); }
     }
 
     /* First-Person Perspective Road & Light-Controlled Pedestrian Crossing */
