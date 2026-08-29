@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Day — Diary</title>
+<title>Daily Diary</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
@@ -290,6 +290,10 @@
     *{animation-duration:0.01ms !important;transition-duration:0.01ms !important;}
   }
 
+  .intro-p{font-size:0.98rem;line-height:1.55;color:var(--ink-soft);margin:0 0 14px;}
+  .intro-p:last-child{margin-bottom:0;}
+  .intro-p strong{color:var(--ink);}
+
   /* ---------- Download menu ---------- */
   .download-menu{display:flex;flex-direction:column;gap:3px;padding:6px;min-width:172px;}
   .dl-option{
@@ -374,7 +378,7 @@ let state = {
   date: todayStr(),
   entries: [],
   entriesLoaded: false,
-  recentDays: [],
+  introOpen: true,
   enterDirection: null,
   workspace: null,      // {editingId, subjectId, customSubjectLabel, sentence, tokens} or null when modal closed
   popup: { open:false, tokenIndex:null, term:'', results:[], loading:false, error:null },
@@ -428,21 +432,11 @@ async function loadDay(date){
 async function persistDay(){
   const ok = lsSet(DAY_PREFIX+state.date, state.entries);
   if(!ok) showToast('Could not save on this device — try again.', true);
-  else loadRecentDays();
-}
-async function loadRecentDays(){
-  const keys = lsListKeys(DAY_PREFIX);
-  state.recentDays = keys
-    .map(k => k.replace(DAY_PREFIX,''))
-    .filter(d => d !== todayStr())
-    .sort((a,b)=> b.localeCompare(a))
-    .slice(0,6);
-  renderTabsRow();
 }
 
 /* ======================= COACH MARK ======================= */
 function updateCoachVisibility(){
-  if(state.date === todayStr() && state.entries.length === 0 && !state.coach.dismissed){
+  if(!state.introOpen && state.date === todayStr() && state.entries.length === 0 && !state.coach.dismissed){
     state.coach.visible = true;
   } else {
     state.coach.visible = false;
@@ -512,6 +506,8 @@ function onKeydown(e){
   if(e.key === 'Escape'){
     if(state.popup.open){ closePopup(); return; }
     if(state.workspace){ closeEntryModal(); return; }
+    if(state.archiveOpen){ closeArchive(); return; }
+    if(state.introOpen){ closeIntro(); return; }
   }
   if(e.key === 'Enter' && e.target.id === 'picto-search-input'){
     e.preventDefault();
@@ -543,11 +539,11 @@ function onClick(e){
   if(action === 'prev-day'){ changeDayBy(-1, 'prev'); }
   else if(action === 'next-day'){ changeDayBy(1, 'next'); }
   else if(action === 'go-today'){ navigateToDate(todayStr(), 'fade'); }
-  else if(action === 'select-tab-day'){ navigateToDate(t.dataset.date, 'fade'); }
   else if(action === 'toggle-jump'){ state.jumpOpen = !state.jumpOpen; state.downloadOpen=false; renderTabsRow(); }
   else if(action === 'toggle-download'){ state.downloadOpen = !state.downloadOpen; state.jumpOpen=false; renderTabsRow(); }
   else if(action === 'open-archive'){ state.archiveOpen = true; renderArchiveRoot(); }
   else if(action === 'close-archive'){ closeArchive(); }
+  else if(action === 'close-intro'){ closeIntro(); }
   else if(action === 'archive-select-day'){ navigateToDate(t.dataset.date, 'fade'); closeArchive(); }
   else if(action === 'download-current'){ downloadCurrentPDF(); }
   else if(action === 'download-all'){ downloadAllPDF(); }
@@ -832,6 +828,35 @@ function render(){
   renderModalRoot();
   renderCoach();
   renderArchiveRoot();
+  renderIntroRoot();
+}
+
+function closeIntro(){
+  state.introOpen = false;
+  renderIntroRoot();
+  updateCoachVisibility();
+  renderCoach();
+}
+function renderIntroRoot(){
+  let root = document.getElementById('intro-root');
+  if(!root){ root = document.createElement('div'); root.id='intro-root'; document.body.appendChild(root); }
+  if(!state.introOpen){ root.innerHTML=''; return; }
+  root.innerHTML = `
+    <div class="overlay" id="intro-overlay" style="z-index:120;">
+      <div class="card-modal" role="dialog" aria-modal="true" aria-label="About this app">
+        <div class="modal-header">
+          <h3>Welcome to the Daily Diary</h3>
+        </div>
+        <div class="modal-body">
+          <p class="intro-p">This diary helps students practice <strong>recalling details of their day</strong>, <strong>putting events in the right order</strong>, and <strong>forming full sentences</strong> \u2014 with the option to add pictograms to support understanding.</p>
+          <p class="intro-p"><strong>Recommended use:</strong> fill it in at the end of the school day. The teacher models by thinking aloud and writing down the entries with input from students, then students read the page together, or take turns building their own sentences about the day. Teachers can also support by providing helping words or 5W1H prompts.</p>
+        </div>
+        <div class="modal-footer" style="justify-content:flex-end;">
+          <button type="button" class="btn btn-primary" data-action="close-intro">Got it, let\u2019s begin</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('intro-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='intro-overlay') closeIntro(); });
 }
 
 function renderTabsRowShell(){
@@ -844,7 +869,6 @@ function renderTabsRow(){
   root.innerHTML = `
   <div class="tabs-row">
     <button type="button" class="day-tab today ${state.date===today?'active':''}" data-action="go-today">Today</button>
-    ${state.recentDays.map(d => `<button type="button" class="day-tab ${state.date===d?'active':''}" data-action="select-tab-day" data-date="${d}">${formatDateShort(d)}</button>`).join('')}
     <div class="tabs-spacer"></div>
     <div class="jump-wrap">
       <button type="button" class="jump-btn" data-action="toggle-download" aria-label="Download as PDF" title="Download as PDF">
@@ -1117,7 +1141,6 @@ function bindCustomLabelInput(){
 (async function init(){
   document.body.insertAdjacentHTML('beforeend', '<div id="toast-root"></div><div id="print-root"></div>');
   await loadDay(state.date);
-  loadRecentDays();
 })();
 </script>
 </body>
