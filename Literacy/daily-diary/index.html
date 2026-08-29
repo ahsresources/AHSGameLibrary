@@ -289,6 +289,44 @@
   @media (prefers-reduced-motion: reduce){
     *{animation-duration:0.01ms !important;transition-duration:0.01ms !important;}
   }
+
+  /* ---------- Download menu ---------- */
+  .download-menu{display:flex;flex-direction:column;gap:3px;padding:6px;min-width:172px;}
+  .dl-option{
+    text-align:left;background:transparent;border:none;padding:9px 11px;border-radius:8px;
+    font-size:0.85rem;font-weight:700;color:var(--ink);
+  }
+  .dl-option:hover{background:var(--accent-soft);color:var(--accent-dark);}
+
+  /* ---------- Archive modal ---------- */
+  .archive-list{display:flex;flex-direction:column;gap:4px;}
+  .archive-item{
+    display:flex;justify-content:space-between;align-items:center;gap:10px;
+    background:transparent;border:none;border-radius:var(--radius-sm);
+    padding:12px 14px;text-align:left;
+  }
+  .archive-item:hover{background:var(--paper-shade);}
+  .archive-item-date{font-size:0.95rem;font-weight:700;color:var(--ink);}
+  .archive-item-count{font-size:0.78rem;font-weight:700;color:var(--ink-faint);flex-shrink:0;}
+
+  /* ---------- Print (PDF export) ---------- */
+  #print-root{display:none;}
+  @media print{
+    body{background:#fff !important;padding:0 !important;}
+    body > *:not(#print-root){display:none !important;}
+    #print-root{display:block !important;background:#fff;}
+    .print-page{padding:10mm 6mm;}
+    .print-page + .print-page{page-break-before:always;}
+    .print-date{font-family:'Atkinson Hyperlegible',sans-serif;font-weight:700;font-size:1.5rem;color:#111;margin-bottom:16px;}
+    .print-entry{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid #ddd;break-inside:avoid;}
+    .print-tape{display:inline-block;font-family:'Atkinson Hyperlegible',sans-serif;font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#111;padding:4px 10px;border-radius:999px;margin-bottom:8px;}
+    .print-pics{display:flex;flex-wrap:wrap;gap:6px 12px;}
+    .print-pic-item{display:flex;flex-direction:column;align-items:center;gap:4px;}
+    .print-pic-slot{width:42px;height:42px;display:flex;align-items:center;justify-content:center;}
+    .print-pic-slot img{width:42px;height:42px;object-fit:contain;}
+    .print-pic-item span{font-family:'Atkinson Hyperlegible',sans-serif;font-size:1rem;font-weight:700;color:#111;}
+  }
+  @page{ margin:16mm; }
 </style>
 </head>
 <body>
@@ -344,6 +382,8 @@ let state = {
   toast: null,
   toastTimer: null,
   jumpOpen: false,
+  archiveOpen: false,
+  downloadOpen: false,
   drag: { active:false, id:null },
 };
 
@@ -504,7 +544,13 @@ function onClick(e){
   else if(action === 'next-day'){ changeDayBy(1, 'next'); }
   else if(action === 'go-today'){ navigateToDate(todayStr(), 'fade'); }
   else if(action === 'select-tab-day'){ navigateToDate(t.dataset.date, 'fade'); }
-  else if(action === 'toggle-jump'){ state.jumpOpen = !state.jumpOpen; renderTabsRow(); }
+  else if(action === 'toggle-jump'){ state.jumpOpen = !state.jumpOpen; state.downloadOpen=false; renderTabsRow(); }
+  else if(action === 'toggle-download'){ state.downloadOpen = !state.downloadOpen; state.jumpOpen=false; renderTabsRow(); }
+  else if(action === 'open-archive'){ state.archiveOpen = true; renderArchiveRoot(); }
+  else if(action === 'close-archive'){ closeArchive(); }
+  else if(action === 'archive-select-day'){ navigateToDate(t.dataset.date, 'fade'); closeArchive(); }
+  else if(action === 'download-current'){ downloadCurrentPDF(); }
+  else if(action === 'download-all'){ downloadAllPDF(); }
   else if(action === 'open-add'){ dismissCoach(); openEntryModal(); }
   else if(action === 'edit-entry'){ openEntryModal(t.dataset.id); }
   else if(action === 'delete-entry'){ deleteEntry(t.dataset.id); }
@@ -535,6 +581,99 @@ function navigateToDate(newDate, direction){
   state.date = newDate;
   state.enterDirection = direction || 'fade';
   loadDay(newDate);
+}
+
+/* ======================= ARCHIVE ======================= */
+function getArchiveEntries(){
+  const keys = lsListKeys(DAY_PREFIX);
+  return keys.map(k => {
+    const date = k.replace(DAY_PREFIX,'');
+    const data = lsGet(k);
+    return { date, entries: Array.isArray(data) ? data : [] };
+  }).filter(e => e.entries.length > 0);
+}
+function closeArchive(){
+  state.archiveOpen = false;
+  renderArchiveRoot();
+}
+function renderArchiveRoot(){
+  let root = document.getElementById('archive-root');
+  if(!root){ root = document.createElement('div'); root.id='archive-root'; document.body.appendChild(root); }
+  if(!state.archiveOpen){ root.innerHTML=''; return; }
+  const days = getArchiveEntries().sort((a,b)=> b.date.localeCompare(a.date));
+  root.innerHTML = `
+    <div class="overlay" id="archive-overlay" style="z-index:105;">
+      <div class="card-modal" role="dialog" aria-modal="true" aria-label="Archive">
+        <div class="modal-header">
+          <h3>Archive</h3>
+          <div class="sub">${days.length} day${days.length===1?'':'s'} with entries</div>
+          <button type="button" class="close-x" data-action="close-archive" aria-label="Close">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          ${days.length ? `<div class="archive-list">
+            ${days.map(d => `
+              <button type="button" class="archive-item" data-action="archive-select-day" data-date="${d.date}">
+                <span class="archive-item-date">${formatDateLong(d.date)}</span>
+                <span class="archive-item-count">${d.entries.length} entr${d.entries.length===1?'y':'ies'}</span>
+              </button>`).join('')}
+          </div>` : `<div class="modal-state">No saved entries yet. Add a few from Add Entry and they\u2019ll show up here.</div>`}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('archive-overlay')?.addEventListener('click', (e)=>{ if(e.target.id==='archive-overlay') closeArchive(); });
+}
+
+/* ======================= PDF DOWNLOAD (print-to-PDF) ======================= */
+function buildPrintPagesHtml(days){
+  return days.map(d => `
+    <div class="print-page">
+      <div class="print-date">${formatDateLong(d.date)}</div>
+      <div class="print-entries">
+        ${d.entries.map(entry => {
+          const subj = subjectById(entry.subjectId);
+          const label = entry.customLabel || subj.label;
+          return `
+          <div class="print-entry">
+            <span class="print-tape" style="background:${subj.color}">${escapeHtml(label)}</span>
+            <div class="print-pics">
+              ${entry.tokens.map(t => `
+                <div class="print-pic-item">
+                  <div class="print-pic-slot">${t.pictogram ? `<img src="${t.pictogram.url}" alt="${escapeHtml(t.pictogram.label)}">` : ''}</div>
+                  <span>${escapeHtml(t.text)}</span>
+                </div>`).join('')}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+function printPages(days){
+  const root = document.getElementById('print-root');
+  if(!root) return;
+  root.innerHTML = buildPrintPagesHtml(days);
+  state.downloadOpen = false;
+  renderTabsRow();
+  const imgs = Array.from(root.querySelectorAll('img'));
+  const waits = imgs.map(img => new Promise(resolve=>{
+    if(img.complete) return resolve();
+    img.addEventListener('load', resolve, {once:true});
+    img.addEventListener('error', resolve, {once:true});
+  }));
+  Promise.race([
+    Promise.all(waits),
+    new Promise(resolve=>setTimeout(resolve, 4000)),
+  ]).then(()=>{ window.print(); });
+}
+function downloadCurrentPDF(){
+  if(!state.entries.length){ showToast('No entries to download for this day.', true); return; }
+  printPages([{date: state.date, entries: state.entries}]);
+}
+function downloadAllPDF(){
+  const days = getArchiveEntries().sort((a,b)=> a.date.localeCompare(b.date));
+  if(!days.length){ showToast('No saved entries to download yet.', true); return; }
+  printPages(days);
 }
 
 /* ======================= ENTRY MODAL ======================= */
@@ -692,6 +831,7 @@ function render(){
   applyEnterAnimation();
   renderModalRoot();
   renderCoach();
+  renderArchiveRoot();
 }
 
 function renderTabsRowShell(){
@@ -706,6 +846,18 @@ function renderTabsRow(){
     <button type="button" class="day-tab today ${state.date===today?'active':''}" data-action="go-today">Today</button>
     ${state.recentDays.map(d => `<button type="button" class="day-tab ${state.date===d?'active':''}" data-action="select-tab-day" data-date="${d}">${formatDateShort(d)}</button>`).join('')}
     <div class="tabs-spacer"></div>
+    <div class="jump-wrap">
+      <button type="button" class="jump-btn" data-action="toggle-download" aria-label="Download as PDF" title="Download as PDF">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0l-5-5m5 5l5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      ${state.downloadOpen ? `<div class="jump-input download-menu">
+        <button type="button" class="dl-option" data-action="download-current">This page (PDF)</button>
+        <button type="button" class="dl-option" data-action="download-all">All pages (PDF)</button>
+      </div>` : ''}
+    </div>
+    <button type="button" class="jump-btn" data-action="open-archive" aria-label="Browse archive" title="Browse archive">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="5" rx="1.5" stroke="currentColor" stroke-width="1.8"/><path d="M4 9v9a2 2 0 002 2h12a2 2 0 002-2V9" stroke="currentColor" stroke-width="1.8"/><path d="M10 13h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
     <div class="jump-wrap">
       <button type="button" class="jump-btn" data-action="toggle-jump" aria-label="Jump to a date" title="Jump to a date">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -963,7 +1115,7 @@ function bindCustomLabelInput(){
 
 /* ======================= INIT ======================= */
 (async function init(){
-  document.body.insertAdjacentHTML('beforeend', '<div id="toast-root"></div>');
+  document.body.insertAdjacentHTML('beforeend', '<div id="toast-root"></div><div id="print-root"></div>');
   await loadDay(state.date);
   loadRecentDays();
 })();
