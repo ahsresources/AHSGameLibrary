@@ -463,11 +463,37 @@ function renderToast(){
 }
 
 /* ======================= TOKENS ======================= */
+/* Content-based alignment (LCS) so editing one word doesn't strip pictures
+   from other words that are unchanged, even if the word count shifts briefly
+   mid-edit. Matches words by their text, not their position. */
+function alignWords(oldWords, newWords){
+  const m = oldWords.length, n = newWords.length;
+  const dp = Array.from({length:m+1}, ()=>new Array(n+1).fill(0));
+  for(let i=m-1;i>=0;i--){
+    for(let j=n-1;j>=0;j--){
+      dp[i][j] = oldWords[i]===newWords[j] ? dp[i+1][j+1]+1 : Math.max(dp[i+1][j], dp[i][j+1]);
+    }
+  }
+  const mapping = new Array(n).fill(-1);
+  let i=0, j=0;
+  while(i<m && j<n){
+    if(oldWords[i]===newWords[j] && dp[i][j]===dp[i+1][j+1]+1){
+      mapping[j]=i; i++; j++;
+    } else if(dp[i+1][j] >= dp[i][j+1]){
+      i++;
+    } else {
+      j++;
+    }
+  }
+  return mapping;
+}
 function rebuildTokens(newSentence, oldTokens){
   const words = newSentence.trim().length ? newSentence.trim().split(/\s+/) : [];
-  return words.map((w, i) => {
-    const old = oldTokens[i];
-    if(old && old.text === w) return old;
+  const oldWords = oldTokens.map(t=>t.text);
+  const mapping = alignWords(oldWords, words);
+  return words.map((w, j) => {
+    const oi = mapping[j];
+    if(oi >= 0 && oldTokens[oi] && oldTokens[oi].text === w) return oldTokens[oi];
     return {text:w, pictogram:null};
   });
 }
@@ -484,7 +510,7 @@ async function searchPictograms(term){
     state.popup.results = Array.isArray(data) ? data.slice(0,24) : [];
   }catch(e){
     state.popup.results = [];
-    state.popup.error = "Couldn't load pictures. Check your connection and try again.";
+    state.popup.error = "No entries found. Try another word.";
   }
   state.popup.loading = false;
   renderPopupBody();
@@ -845,13 +871,12 @@ function renderIntroRoot(){
     <div class="overlay" id="intro-overlay" style="z-index:120;">
       <div class="card-modal" role="dialog" aria-modal="true" aria-label="About this app">
         <div class="modal-header">
-          <h3>Welcome to the Daily Diary 📓</h3>
+          <h3>Welcome to the Daily Diary</h3>
         </div>
         <div class="modal-body">
           <p class="intro-p">This diary helps students practice <strong>recalling details of their day</strong>, <strong>putting events in order</strong>, and <strong>forming full sentences</strong> \u2014 with the option to add pictograms to support understanding.</p>
-          <p class="intro-p"><strong>💡 Recommended use:</strong> Fill it in at the end of the school day. Teacher models by thinking aloud and writing down the entries with input from students, then students read the page together, or take turns building their own sentences about the day. Teachers can further support by providing helping words or 5W1H prompts.</p>
-          <p class="intro-p"><strong>📥 Save Data:</strong> Entries are automatically saved in the browser cache. They will be deleted if cache is cleared. Click the download button to save entries as PDF or to print out a physical copy.</p>
-        
+          <p class="intro-p"><strong>💡 Recommended use:</strong> Fill it in at the end of the school day. Teachers model by thinking aloud and writing down the entries with input from students, then students read the page together, or take turns building their own sentences about the day. Teachers can further support by providing helping words or 5W1H prompts.</p>
+          <p class="intro-p"><strong>📥 Save Data:</strong> Entries are saved in the browser cache. They will be deleted if cache is cleared. Click the download button to save entries as PDF or to print out a physical copy.</p>
         </div>
         <div class="modal-footer" style="justify-content:flex-end;">
           <button type="button" class="btn btn-primary" data-action="close-intro">Got it, let\u2019s begin</button>
