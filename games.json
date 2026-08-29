@@ -1,5 +1,15 @@
 [
   {
+    "id": "daily-diary",
+    "title": "Daily Diary",
+    "description": "Practice recalling events of the day by writing a diary.",
+    "creatorName": "Teacher Carmina",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["writing", "LC.SL.3.11"],
+    "uploadDate": "2026-08-29"
+  },
+  {
     "id": "same-or-different",
     "title": "Same or Different",
     "description": "Identify sets that have the same or different amounts.",
