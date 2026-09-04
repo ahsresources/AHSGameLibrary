@@ -92,7 +92,7 @@
     {
     "id": "traffic-light-crossing",
     "title": "Traffic Light Crossing",
-    "description": "Cross the road using when the green man appears!",
+    "description": "Cross the road when the green man appears!",
     "creatorName": "Teacher Ketti",
     "category": "Daily Living",
     "compatibility": ["desktop", "tablet", "mobile"],
