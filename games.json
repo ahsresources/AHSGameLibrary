@@ -6,7 +6,7 @@
     "creatorName": "Teacher Carmina",
     "category": "Numeracy",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["money", "change", "NM.MA.3.6", "NM.MA.3.3"],
+    "tags": ["featured", "money", "change", "NM.MA.3.6", "NM.MA.3.3"],
     "uploadDate": "2026-09-12"
   },
   {
@@ -96,7 +96,7 @@
     "creatorName": "Teacher Carmina",
     "category": "Daily Living",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["gender", "DL.HL.4.3", "featured"],
+    "tags": ["gender", "DL.HL.4.3"],
     "uploadDate": "2026-07-30"
   },
   {
@@ -116,7 +116,7 @@
     "creatorName": "Teacher Ketti",
     "category": "Daily Living",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["dirty", "clean", "laundry", "self-care", "DL.HL.9.1"],
+    "tags": ["featured", "dirty", "clean", "laundry", "self-care", "DL.HL.9.1"],
     "uploadDate": "2026-07-30"
   },
     {
@@ -126,7 +126,7 @@
     "creatorName": "Teacher Ketti",
     "category": "Daily Living",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["featured", "traffic light", "MILES", "road safety", "self-care", "DL.HL.9.1"],
+    "tags": ["traffic light", "MILES", "road safety", "self-care", "DL.HL.9.1"],
     "uploadDate": "2026-07-30"
   },
   {
@@ -186,7 +186,7 @@
     "creatorName": "Teacher Eileen",
     "category": "Literacy",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["reading", "sight words", "LC.RD.5.5"],
+    "tags": ["featured", "reading", "sight words", "LC.RD.5.5"],
     "uploadDate": "2026-07-11"
   },
    {
@@ -196,7 +196,7 @@
     "creatorName": "Teacher Joan",
     "category": "SEL",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["featured", "zones of regulation", "emotions", "behaviour", "SE.SF.3.2"],
+    "tags": ["zones of regulation", "emotions", "behaviour", "SE.SF.3.2"],
     "uploadDate": "2026-07-11"
   },
    {
@@ -206,7 +206,7 @@
     "creatorName": "Teacher Joan",
     "category": "SEL",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["regulation", "good choices", "bad choices", "SE.SF.3.2"],
+    "tags": ["featured", "regulation", "good choices", "bad choices", "SE.SF.3.2"],
     "uploadDate": "2026-07-11"
   },
    {
@@ -216,7 +216,7 @@
     "creatorName": "Teacher Nurul",
     "category": "Numeracy",
     "compatibility": ["desktop", "tablet", "mobile"],
-    "tags": ["featured", "counting", "numbers", "NM.NO.1.1", "NM.NO.1.3"],
+    "tags": ["counting", "numbers", "NM.NO.1.1", "NM.NO.1.3"],
     "uploadDate": "2026-07-11"
   },
    {
