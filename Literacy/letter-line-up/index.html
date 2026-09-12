@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Letter Line-Up</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --board:#1F3A34;
+    --board-dark:#173029;
+    --chalk:#F4F1EC;
+    --chalk-dim:#C9D6D0;
+    --yellow:#FFD166;
+    --green:#6FCF97;
+    --coral:#F2545B;
+    --blue:#7EC8E3;
+    --frame:#7A5230;
+    --frame-dark:#5E3E24;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.03), transparent 40%),
+      radial-gradient(circle at 80% 85%, rgba(255,255,255,0.025), transparent 45%),
+      var(--board);
+    font-family:'Inter',sans-serif;
+    color:var(--chalk);
+    padding:18px;
+  }
+
+  .frame{
+    width:100%;
+    max-width:780px;
+    background:var(--frame);
+    border-radius:18px;
+    padding:10px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.35), inset 0 0 0 4px var(--frame-dark);
+  }
+
+  .board{
+    background:var(--board-dark);
+    border-radius:12px;
+    padding:26px 26px 22px;
+    position:relative;
+    overflow:hidden;
+    box-shadow:inset 0 0 60px rgba(0,0,0,0.35);
+  }
+  .board::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image:
+      radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size:3px 3px;
+    opacity:0.35;
+    pointer-events:none;
+  }
+
+  header{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:14px;
+    margin-bottom:20px;
+    flex-wrap:wrap;
+    position:relative;
+    z-index:1;
+  }
+  h1{
+    font-family:'Fredoka',sans-serif;
+    font-size:26px;
+    font-weight:600;
+    margin:0;
+    letter-spacing:0.3px;
+    color:var(--chalk);
+  }
+  h1 span{color:var(--yellow);}
+  .stats{
+    display:flex;
+    gap:18px;
+    font-size:13px;
+    color:var(--chalk-dim);
+  }
+  .stats b{
+    display:block;
+    font-family:'Fredoka',sans-serif;
+    font-size:19px;
+    color:var(--chalk);
+    font-weight:600;
+  }
+
+  .instructions{
+    font-size:14px;
+    color:var(--chalk-dim);
+    margin:0 0 18px;
+    position:relative;
+    z-index:1;
+  }
+
+  .stage{
+    position:relative;
+    z-index:1;
+    background:rgba(255,255,255,0.03);
+    border:2px dashed rgba(244,241,236,0.25);
+    border-radius:14px;
+    padding:26px 18px 30px;
+    margin-bottom:22px;
+    text-align:center;
+  }
+
+  .reference{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:6px;
+    min-height:64px;
+  }
+  .tile{
+    width:44px;
+    height:52px;
+    border-radius:8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Fredoka',sans-serif;
+    font-size:26px;
+    font-weight:600;
+    background:transparent;
+    border:2px solid rgba(244,241,236,0.35);
+    color:var(--chalk-dim);
+    transition:transform .15s ease, background .15s ease, border-color .15s ease, color .15s ease;
+    transform:rotate(calc(var(--r,0) * 1deg));
+  }
+  .tile.done{
+    border-color:var(--green);
+    color:var(--green);
+    background:rgba(111,207,151,0.08);
+  }
+  .tile.current{
+    border-color:var(--yellow);
+    color:var(--yellow);
+    background:rgba(255,209,102,0.1);
+    transform:scale(1.12) rotate(0deg);
+    box-shadow:0 0 0 3px rgba(255,209,102,0.15);
+  }
+  .tile.wrong-flash{
+    border-color:var(--coral);
+    color:var(--coral);
+    animation:shake .28s ease;
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0) scale(1.12);}
+    25%{transform:translateX(-5px) scale(1.12);}
+    75%{transform:translateX(5px) scale(1.12);}
+  }
+
+  .prompt-line{
+    font-size:13px;
+    color:var(--chalk-dim);
+    margin-top:14px;
+    min-height:18px;
+  }
+  .prompt-line b{color:var(--yellow); font-weight:600;}
+
+  .keyboard{
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:center;
+  }
+  .krow{display:flex; gap:6px;}
+  .key{
+    min-width:34px;
+    height:42px;
+    padding:0 4px;
+    border-radius:6px;
+    border:none;
+    background:rgba(244,241,236,0.08);
+    color:var(--chalk);
+    font-family:'Fredoka',sans-serif;
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .12s ease, transform .08s ease;
+  }
+  .key:hover{background:rgba(244,241,236,0.16);}
+  .key:active{transform:scale(0.92);}
+  .key.hint{
+    background:var(--yellow);
+    color:var(--board-dark);
+  }
+
+  footer{
+    position:relative;
+    z-index:1;
+    display:flex;
+    justify-content:center;
+    margin-top:22px;
+  }
+  .btn{
+    font-family:'Fredoka',sans-serif;
+    font-weight:600;
+    font-size:15px;
+    padding:10px 22px;
+    border-radius:9px;
+    border:none;
+    background:var(--blue);
+    color:var(--board-dark);
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease;
+  }
+  .btn:hover{filter:brightness(1.08);}
+  .btn:active{transform:scale(0.96);}
+
+  .overlay{
+    position:absolute; inset:0;
+    background:rgba(23,48,41,0.94);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:5;
+    border-radius:12px;
+    text-align:center;
+    padding:30px;
+  }
+  .overlay.hidden{display:none;}
+  .overlay-card h2{
+    font-family:'Fredoka',sans-serif;
+    font-size:28px;
+    margin:0 0 6px;
+    color:var(--yellow);
+  }
+  .overlay-card p{color:var(--chalk-dim); margin:4px 0 20px; font-size:14px;}
+  .result-grid{
+    display:flex;
+    gap:24px;
+    justify-content:center;
+    margin-bottom:22px;
+  }
+  .result-grid div b{
+    display:block;
+    font-family:'Fredoka',sans-serif;
+    font-size:24px;
+    color:var(--chalk);
+  }
+  .result-grid div span{font-size:12px; color:var(--chalk-dim);}
+
+  .mode-options{
+    display:flex;
+    gap:16px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:8px;
+  }
+  .mode-card{
+    width:200px;
+    padding:20px 16px;
+    border-radius:12px;
+    border:2px solid rgba(244,241,236,0.25);
+    background:rgba(244,241,236,0.03);
+    color:var(--chalk);
+    cursor:pointer;
+    text-align:left;
+    transition:transform .1s ease, border-color .12s ease, background .12s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .mode-card:hover{
+    border-color:var(--yellow);
+    background:rgba(255,209,102,0.08);
+    transform:translateY(-2px);
+  }
+  .mode-card .mode-title{
+    display:block;
+    font-family:'Fredoka',sans-serif;
+    font-size:19px;
+    font-weight:600;
+    color:var(--yellow);
+    margin-bottom:6px;
+  }
+  .mode-card .mode-sample{
+    display:block;
+    font-family:'Fredoka',sans-serif;
+    font-size:15px;
+    letter-spacing:2px;
+    color:var(--chalk-dim);
+    margin-bottom:8px;
+  }
+  .mode-card p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--chalk-dim);
+    line-height:1.4;
+  }
+  .mode-link{
+    background:none;
+    border:none;
+    color:var(--chalk-dim);
+    font-family:'Inter',sans-serif;
+    font-size:12.5px;
+    text-decoration:underline;
+    cursor:pointer;
+    padding:0;
+  }
+  .mode-link:hover{color:var(--chalk);}
+
+  @media (max-width:480px){
+    .tile{width:34px; height:44px; font-size:20px;}
+    .key{min-width:26px; height:36px; font-size:12px;}
+    h1{font-size:21px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <div class="board" id="board">
+
+    <header>
+      <h1>Letter <span>Line-Up</span></h1>
+      <div class="stats">
+        <div>Round<b id="roundNum">1</b></div>
+        <div>Score<b id="scoreNum">0</b></div>
+        <div>Streak<b id="streakNum">0</b></div>
+        <div>Time<b id="timeNum">0:00</b></div>
+      </div>
+    </header>
+
+    <p class="instructions">
+      <span id="modeLabel"></span> — type the letters in the order shown below. Use your keyboard, or tap the letters on screen.
+      &nbsp;<button class="mode-link" id="changeModeBtn">Change mode</button>
+    </p>
+
+    <div class="stage">
+      <div class="reference" id="reference"></div>
+      <div class="prompt-line" id="promptLine">Type <b>A</b> to begin</div>
+    </div>
+
+    <div class="keyboard" id="keyboard"></div>
+
+    <footer>
+      <button class="btn" id="restartBtn">Restart game</button>
+    </footer>
+
+    <div class="overlay hidden" id="overlay">
+      <div class="overlay-card">
+        <h2 id="overlayTitle">Round complete!</h2>
+        <p id="overlaySub">Nice work — get ready for the next one.</p>
+        <div class="result-grid" id="resultGrid"></div>
+        <button class="btn" id="overlayBtn">Continue</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="modeSelect">
+      <div class="overlay-card">
+        <h2>Choose a mode</h2>
+        <p>Pick how you want the letters to be arranged.</p>
+        <div class="mode-options">
+          <button class="mode-card" id="modeRandomBtn">
+            <span class="mode-title">Random letters</span>
+            <span class="mode-sample">F&nbsp;K&nbsp;B&nbsp;R&nbsp;M</span>
+            <p>Letters are picked in random order each round. Good for letter recognition practice.</p>
+          </button>
+          <button class="mode-card" id="modeAlphaBtn">
+            <span class="mode-title">Alphabetical order</span>
+            <span class="mode-sample">C&nbsp;D&nbsp;E&nbsp;F&nbsp;G</span>
+            <p>Letters always in A–Z order. Good for practicing the alphabet sequence.</p>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  const TOTAL_ROUNDS = 8;
+  const KEY_ROWS = [
+    "QWERTYUIOP",
+    "ASDFGHJKL",
+    "ZXCVBNM"
+  ];
+
+  let round = 1;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let totalTyped = 0;
+  let totalMistakes = 0;
+  let sequence = [];
+  let position = 0;
+  let startTime = null;
+  let timerId = null;
+  let elapsedLocked = 0;
+  let gameOver = false;
+  let mode = null; // 'random' | 'alpha'
+
+  const referenceEl = document.getElementById('reference');
+  const promptLine = document.getElementById('promptLine');
+  const keyboardEl = document.getElementById('keyboard');
+  const roundNumEl = document.getElementById('roundNum');
+  const scoreNumEl = document.getElementById('scoreNum');
+  const streakNumEl = document.getElementById('streakNum');
+  const timeNumEl = document.getElementById('timeNum');
+  const overlay = document.getElementById('overlay');
+  const overlayTitle = document.getElementById('overlayTitle');
+  const overlaySub = document.getElementById('overlaySub');
+  const resultGrid = document.getElementById('resultGrid');
+  const overlayBtn = document.getElementById('overlayBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const modeSelect = document.getElementById('modeSelect');
+  const modeRandomBtn = document.getElementById('modeRandomBtn');
+  const modeAlphaBtn = document.getElementById('modeAlphaBtn');
+  const changeModeBtn = document.getElementById('changeModeBtn');
+  const modeLabel = document.getElementById('modeLabel');
+
+  function buildKeyboard(){
+    keyboardEl.innerHTML = '';
+    KEY_ROWS.forEach(row=>{
+      const rowEl = document.createElement('div');
+      rowEl.className = 'krow';
+      row.split('').forEach(letter=>{
+        const btn = document.createElement('button');
+        btn.className = 'key';
+        btn.textContent = letter;
+        btn.dataset.letter = letter;
+        btn.addEventListener('click', ()=> handleInput(letter));
+        rowEl.appendChild(btn);
+      });
+      keyboardEl.appendChild(rowEl);
+    });
+  }
+
+  function letterPoolForRound(r){
+    // Rounds grow the usable alphabet range, so early rounds are gentler.
+    const caps = [5,8,11,14,17,20,23,26];
+    const limit = caps[Math.min(r-1, caps.length-1)];
+    return "ABCDEFGHIJKLMNOPQRSTUVWXYZ".slice(0, limit);
+  }
+
+  function generateSequence(r){
+    const len = Math.min(4 + r, 11);
+    const pool = letterPoolForRound(r);
+    const seq = [];
+    if (mode === 'alpha'){
+      const startMax = Math.max(pool.length - len, 0);
+      const start = Math.floor(Math.random()*(startMax+1));
+      for(let i=0;i<len;i++){
+        seq.push(pool[(start+i) % pool.length]);
+      }
+    } else {
+      for(let i=0;i<len;i++){
+        seq.push(pool[Math.floor(Math.random()*pool.length)]);
+      }
+    }
+    return seq;
+  }
+
+  function renderReference(){
+    referenceEl.innerHTML = '';
+    sequence.forEach((letter, i)=>{
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.style.setProperty('--r', (i % 2 === 0 ? -3 : 3));
+      tile.textContent = letter;
+      if (i < position) tile.classList.add('done');
+      if (i === position) tile.classList.add('current');
+      referenceEl.appendChild(tile);
+    });
+  }
+
+  function updatePrompt(){
+    if (position >= sequence.length) return;
+    promptLine.innerHTML = 'Type <b>' + sequence[position] + '</b>';
+  }
+
+  function highlightKey(letter, cls){
+    const btn = keyboardEl.querySelector('.key[data-letter="'+letter+'"]');
+    if(!btn) return;
+    btn.classList.add(cls);
+    setTimeout(()=>btn.classList.remove(cls), 180);
+  }
+
+  let audioCtx = null;
+  function playCorrectSound(){
+    try{
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.1);
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(0.18, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    } catch(e){ /* audio not available, fail silently */ }
+  }
+
+  function startTimer(){
+    if (timerId) return;
+    startTime = Date.now() - elapsedLocked;
+    timerId = setInterval(()=>{
+      const s = Math.floor((Date.now() - startTime)/1000);
+      const m = Math.floor(s/60);
+      const sec = String(s%60).padStart(2,'0');
+      timeNumEl.textContent = m + ':' + sec;
+    }, 250);
+  }
+
+  function stopTimer(){
+    if (timerId){ clearInterval(timerId); timerId = null; }
+    if (startTime) elapsedLocked = Date.now() - startTime;
+  }
+
+  function handleInput(letter){
+    if (gameOver || position >= sequence.length) return;
+    startTimer();
+    letter = letter.toUpperCase();
+    const target = sequence[position];
+
+    if (letter === target){
+      highlightKey(letter, 'hint');
+      playCorrectSound();
+      position++;
+      streak++;
+      bestStreak = Math.max(bestStreak, streak);
+      totalTyped++;
+      score += 10 + Math.min(streak, 10);
+      renderReference();
+      if (position >= sequence.length){
+        finishRound();
+      } else {
+        updatePrompt();
+      }
+    } else {
+      totalTyped++;
+      totalMistakes++;
+      streak = 0;
+      const tiles = referenceEl.querySelectorAll('.tile');
+      const tile = tiles[position];
+      if (tile){
+        tile.classList.add('wrong-flash');
+        setTimeout(()=>tile.classList.remove('wrong-flash'), 280);
+      }
+      highlightKey(letter, 'hint');
+    }
+    scoreNumEl.textContent = score;
+    streakNumEl.textContent = streak;
+  }
+
+  function finishRound(){
+    stopTimer();
+    const accuracy = totalTyped > 0 ? Math.round(((totalTyped - totalMistakes)/totalTyped)*100) : 100;
+
+    if (round >= TOTAL_ROUNDS){
+      gameOver = true;
+      overlayTitle.textContent = 'All rounds complete!';
+      overlaySub.textContent = 'Here is how the run went.';
+      resultGrid.innerHTML =
+        statBlock(score, 'Score') +
+        statBlock(accuracy + '%', 'Accuracy') +
+        statBlock(bestStreak, 'Best streak') +
+        statBlock(timeNumEl.textContent, 'Total time');
+      overlayBtn.textContent = 'Play again';
+      overlay.classList.remove('hidden');
+    } else {
+      overlayTitle.textContent = 'Round ' + round + ' complete!';
+      overlaySub.textContent = 'Get ready — the next round is a little longer.';
+      resultGrid.innerHTML =
+        statBlock(score, 'Score') +
+        statBlock(accuracy + '%', 'Accuracy') +
+        statBlock(streak, 'Streak');
+      overlayBtn.textContent = 'Next round';
+      overlay.classList.remove('hidden');
+    }
+  }
+
+  function statBlock(value, label){
+    return '<div><b>'+value+'</b><span>'+label+'</span></div>';
+  }
+
+  function nextRound(){
+    overlay.classList.add('hidden');
+    if (gameOver){
+      resetGame();
+      return;
+    }
+    round++;
+    position = 0;
+    sequence = generateSequence(round);
+    roundNumEl.textContent = round;
+    renderReference();
+    updatePrompt();
+  }
+
+  function resetGame(){
+    round = 1;
+    score = 0;
+    streak = 0;
+    bestStreak = 0;
+    totalTyped = 0;
+    totalMistakes = 0;
+    position = 0;
+    gameOver = false;
+    elapsedLocked = 0;
+    startTime = null;
+    stopTimer();
+    timeNumEl.textContent = '0:00';
+    scoreNumEl.textContent = '0';
+    streakNumEl.textContent = '0';
+    roundNumEl.textContent = '1';
+    sequence = generateSequence(round);
+    renderReference();
+    updatePrompt();
+    overlay.classList.add('hidden');
+  }
+
+  function chooseMode(chosen){
+    mode = chosen;
+    modeLabel.textContent = mode === 'alpha' ? 'Alphabetical order' : 'Random letters';
+    modeSelect.classList.add('hidden');
+    resetGame();
+  }
+
+  window.addEventListener('keydown', (e)=>{
+    if (!mode) return;
+    const k = e.key.toUpperCase();
+    if (k.length === 1 && k >= 'A' && k <= 'Z'){
+      handleInput(k);
+    }
+  });
+
+  overlayBtn.addEventListener('click', nextRound);
+  restartBtn.addEventListener('click', resetGame);
+  modeRandomBtn.addEventListener('click', ()=> chooseMode('random'));
+  modeAlphaBtn.addEventListener('click', ()=> chooseMode('alpha'));
+  changeModeBtn.addEventListener('click', ()=>{
+    stopTimer();
+    modeSelect.classList.remove('hidden');
+  });
+
+  buildKeyboard();
+  // Game waits at the mode-select screen until a mode is chosen.
+})();
+</script>
+
+</body>
+</html>
