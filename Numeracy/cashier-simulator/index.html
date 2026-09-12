@@ -1,0 +1,1544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kampung Corner Mart — Cashier Shift</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-store:#EDE7DA;
+    --ink:#20241F;
+    --ink-soft:#5B6058;
+    --accent-green:#2F8F46;
+    --accent-green-dark:#236837;
+    --accent-red:#C1442C;
+    --cream:#F4F1E9;
+    --belt:#2A2926;
+    --belt-stripe:#F4B400;
+    --vfd-bg:#070B09;
+    --vfd-glow:#3CF2C0;
+    --steel-light:#DDE1E2;
+    --steel-dark:#9AA1A6;
+    --table-h: 156px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:'Sora',sans-serif;
+    background:
+      radial-gradient(ellipse at 30% 0%, #F7F2E4 0%, transparent 55%),
+      radial-gradient(ellipse at 80% 100%, #E4DECF 0%, transparent 55%),
+      var(--bg-store);
+    color:var(--ink);
+    padding:18px;
+  }
+  button{font-family:inherit;}
+  button:focus-visible, .belt-item:focus-visible{
+    outline:3px solid #2F8F46;
+    outline-offset:2px;
+  }
+
+  html{overflow-x:hidden;}
+  body{overflow-x:hidden;}
+  .fit-outer{
+    position:relative;
+    margin:0 auto;
+  }
+  .game{
+    position:relative;
+    width:1040px;
+    border-radius:24px;
+    overflow:hidden;
+    box-shadow:0 30px 70px -20px rgba(20,22,18,.45), 0 4px 14px rgba(20,22,18,.15);
+    background:var(--cream);
+    transform-origin:top left;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 22px;
+    background:#1C2019;
+    border-bottom:3px solid #0F110D;
+  }
+  .hud-brand{
+    display:flex;align-items:center;gap:10px;
+    color:var(--cream);
+    font-weight:800;
+    font-size:1.05rem;
+    letter-spacing:.2px;
+  }
+  .hud-brand .cart-icon{font-size:1.3rem;}
+  .hud-stats{display:flex;align-items:center;gap:26px;}
+  .stat{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;}
+  .stat-label{font-size:.63rem;color:#A9B3A5;letter-spacing:.3px;}
+  .stat-value{font-size:1.02rem;font-weight:700;color:var(--cream);}
+  .sound-toggle{
+    border:none;
+    background:rgba(255,255,255,.08);
+    color:var(--cream);
+    width:36px; height:36px;
+    border-radius:50%;
+    font-size:1.05rem;
+    line-height:1;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s ease, transform .12s ease;
+  }
+  .sound-toggle:hover{background:rgba(255,255,255,.16);}
+  .sound-toggle:active{transform:scale(.92);}
+  .sound-toggle.muted{opacity:.55;}
+
+  /* ================= SCENE ================= */
+  .stage-wrapper{
+    width:100%;
+    padding:16px;
+  }
+  .scene{
+    position:relative;
+    width:100%;
+    aspect-ratio:1000/640;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+
+  /* -- Background: shelves with simple bottle silhouettes -- */
+  .scene-bg{
+    position:absolute; inset:0;
+    background-color:#C9AE86;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='120'><rect x='0' y='106' width='100' height='14' fill='%23A47F4E'/><g fill='%23ffffff' fill-opacity='0.22'><rect x='6' y='62' width='22' height='44' rx='2'/><rect x='34' y='36' width='24' height='70' rx='2'/><rect x='64' y='48' width='24' height='58' rx='2'/></g></svg>");
+    background-size: 100px 120px;
+    background-position: 0 0;
+  }
+
+  .hint-banner{
+    position:absolute;
+    top:16px; left:16px;
+    max-width:42%;
+    background:rgba(20,22,18,.6);
+    color:#fff;
+    padding:8px 14px;
+    border-radius:10px;
+    font-size:13px;
+    font-weight:600;
+    line-height:1.4;
+    backdrop-filter:blur(2px);
+    z-index:2;
+    transition:opacity .2s ease;
+  }
+
+  /* -- Customer stage -- */
+  .customer-stage{
+    position:absolute; inset:0;
+    overflow:hidden;
+    pointer-events:none;
+    z-index:1;
+  }
+  .customer{
+    position:absolute;
+    left:16%;
+    bottom:44%;
+    width:clamp(90px, 20%, 210px);
+    transform:translateX(-380%);
+    transition:transform .9s cubic-bezier(.4,.05,.2,1);
+    filter:drop-shadow(0 10px 8px rgba(0,0,0,.22));
+  }
+  .customer.onstage{transform:translateX(0);}
+  .customer.exiting{transform:translateX(380%); transition:transform .9s cubic-bezier(.6,0,.9,.4);}
+  .customer-svg{display:block; width:100%; height:auto;}
+  .customer-svg .c-shirt{fill:var(--shirt,#E8834A);}
+  .customer-svg .c-shirt-shade{fill:#000;}
+  .customer-svg .c-skin{fill:var(--skin,#F4C9A8);}
+  .customer-svg .c-hair{fill:var(--hair,#2B2320);}
+  .customer .hair-variant{display:none;}
+  .customer[data-hair="bun"] .hair-bun-g{display:block;}
+  .customer[data-hair="short"] .hair-short-g{display:block;}
+
+  .qc-cash{
+    position:absolute; top:-6%; right:-22%;
+    font-size:64px;
+    transform:rotate(-12deg) translateY(2px);
+    filter:drop-shadow(0 5px 5px rgba(0,0,0,.3));
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .3s ease, transform .3s ease;
+    border:none;
+    background:none;
+    padding:0;
+  }
+  .qc-cash.visible{opacity:1; transform:rotate(-12deg) translateY(-10px); pointer-events:auto; cursor:pointer;}
+  .qc-cash.visible:hover{transform:rotate(-12deg) translateY(-14px) scale(1.06);}
+  .qc-cash.visible:active{transform:rotate(-12deg) translateY(-8px) scale(.96);}
+  .qc-bubble{
+    background:#fff; color:var(--ink);
+    padding:.45em .8em; border-radius:1em;
+    font-size:15px;
+    font-weight:600;
+    box-shadow:0 3px 8px rgba(0,0,0,.18);
+    position:absolute;
+    bottom:100%; left:50%;
+    margin-bottom:10px;
+    white-space:nowrap;
+    opacity:0; pointer-events:none;
+    transform:translate(-50%,8px);
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:6;
+  }
+  .qc-bubble::after{
+    content:"";
+    position:absolute; left:50%; top:100%; transform:translateX(-50%);
+    border-width:6px 6px 0 6px; border-style:solid;
+    border-color:#fff transparent transparent transparent;
+  }
+  .qc-bubble.visible{opacity:1; transform:translate(-50%,0);}
+
+  /* -- Counter -- */
+  .counter{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:44%;
+    border-radius:4% 4% 0 0;
+    background:linear-gradient(180deg,
+      #14171B 0%, #14171B 66%,
+      #3C4B58 66%, #3C4B58 82%,
+      #6FAE6F 82%, #5C9A5C 100%);
+    box-shadow:0 -10px 24px rgba(0,0,0,.25);
+    z-index:2;
+  }
+
+  .counter-items{
+    position:absolute;
+    left:0; right:0; bottom:13%;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+    gap:2%;
+    padding:0 3%;
+    z-index:3;
+  }
+
+  /* -- Belt lane -- */
+  .belt-lane{
+    flex:1 1 auto;
+    min-width:0;
+    height:var(--table-h);
+    border-radius:1.1em;
+    padding:0 2%;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-end;
+    gap:1.4%;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 26px),
+      var(--belt);
+    box-shadow:inset 0 3px 10px rgba(0,0,0,.5), inset 0 -3px 6px rgba(0,0,0,.4);
+    position:relative;
+    overflow-x:auto;
+    overflow-y:hidden;
+    font-size:16px;
+  }
+
+  .belt-slot{
+    width:120px;
+    height:120px;
+    flex-shrink:0;
+    position:relative;
+  }
+  .belt-item{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background:none;
+    border:none;
+    padding:8px;
+    cursor:grab;
+    touch-action:none;
+    user-select:none;
+    -webkit-user-select:none;
+    filter:drop-shadow(0 7px 5px rgba(0,0,0,.4));
+    transition:filter .15s ease, transform .15s ease;
+  }
+  .belt-item img{
+    width:100%; height:100%;
+    object-fit:contain;
+    pointer-events:none;
+    -webkit-user-drag:none;
+  }
+  .belt-item:active{cursor:grabbing;}
+  .belt-item.dragging{
+    filter:drop-shadow(0 16px 12px rgba(0,0,0,.45));
+    transform:scale(1.1);
+  }
+  .belt-item.scanned::after{
+    content:"✓";
+    position:absolute; top:-2px; right:4px;
+    width:22%;height:22%;border-radius:50%;
+    background:var(--accent-green); color:#fff;
+    font-size:15px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 0 0 2px #fff;
+  }
+  .belt-item.shake{animation:shakeItem .35s ease;}
+  .shake{animation:shakeItem .35s ease;}
+  @keyframes shakeItem{
+    10%,90%{transform:translateX(-3px);}
+    20%,80%{transform:translateX(4px);}
+    30%,50%,70%{transform:translateX(-7px);}
+    40%,60%{transform:translateX(7px);}
+  }
+
+  /* -- Register column: till stacked above the flatbed scanner -- */
+  .register-column{
+    flex:0 0 clamp(150px, 25%, 260px);
+    min-width:0;
+    display:flex; flex-direction:column; align-items:center; gap:.5em;
+    font-size:18px;
+    z-index:3;
+  }
+  .till{
+    width:100%;
+    min-width:0;
+    display:flex; flex-direction:column; align-items:center; gap:.5em;
+    background:linear-gradient(180deg, var(--steel-light), var(--steel-dark));
+    border-radius:1em;
+    padding:.75em;
+    box-shadow:0 .4em 1em rgba(0,0,0,.18), inset 0 .08em 0 rgba(255,255,255,.5);
+  }
+  .vfd{
+    position:relative;
+    width:100%;
+    min-width:0;
+    background:var(--vfd-bg);
+    border-radius:.55em;
+    padding:.5em .7em;
+    overflow:hidden;
+    font-family:'VT323', monospace;
+    color:var(--vfd-glow);
+    animation:flicker 4s infinite;
+  }
+  .vfd::before{
+    content:"";
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(rgba(0,0,0,0) 0 2px, rgba(0,0,0,.35) 2px 4px);
+    pointer-events:none;
+  }
+  @keyframes flicker{
+    0%,96%,100%{opacity:1;}
+    97%{opacity:.88;}
+    98%{opacity:1;}
+    99%{opacity:.93;}
+  }
+  .vfd-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:1.35em; letter-spacing:.06em; text-shadow:0 0 6px currentColor;
+    gap:.4em;
+    min-width:0;
+  }
+  .vfd-row span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap; min-width:0;}
+  .vfd-total{font-size:1.65em; margin-top:.1em; border-top:1px dashed rgba(60,242,192,.35); padding-top:.2em;}
+  .vfd-sub{
+    font-family:'Sora',sans-serif;
+    font-size:.62em;
+    color:rgba(60,242,192,.75);
+    margin-top:.3em;
+    letter-spacing:.2px;
+  }
+  .register-keys{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:.35em;
+    width:100%;
+  }
+  .register-keys span{
+    display:block; height:.6em; border-radius:.2em;
+    background:linear-gradient(180deg,#9BA2A6,#7D858A);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  .drawer-btn{
+    width:100%;
+    padding:.65em;
+    border:none;
+    border-radius:.55em;
+    background:linear-gradient(180deg, var(--accent-green), var(--accent-green-dark));
+    color:#fff;
+    font-weight:700;
+    font-size:.85em;
+    letter-spacing:.2px;
+    cursor:pointer;
+    box-shadow:0 .18em 0 #1c5029, 0 .25em .45em rgba(0,0,0,.2);
+    transition:transform .12s ease, box-shadow .12s ease, opacity .2s ease;
+  }
+  .drawer-btn:not(:disabled):active{transform:translateY(2px); box-shadow:0 .05em 0 #1c5029;}
+  .drawer-btn:disabled{opacity:.45; cursor:not-allowed; box-shadow:none;}
+  .drawer-btn.pulse{animation:pulseBtn 1.1s ease-in-out infinite;}
+  @keyframes pulseBtn{
+    0%,100%{box-shadow:0 .18em 0 #1c5029, 0 0 0 0 rgba(47,143,70,.5);}
+    50%{box-shadow:0 .18em 0 #1c5029, 0 0 0 .5em rgba(47,143,70,0);}
+  }
+  .drawer{
+    width:100%; height:1.15em;
+    margin-top:-.25em;
+    border-radius:0 0 .55em .55em;
+    background:linear-gradient(180deg,#6B7075,#454A4E);
+    box-shadow:inset 0 3px 6px rgba(0,0,0,.5);
+    transform:translateY(0);
+    transition:transform .35s cubic-bezier(.3,.7,.3,1), box-shadow .35s;
+    position:relative;
+    overflow:hidden;
+  }
+  .drawer::before{
+    content:"";
+    position:absolute; left:8px; right:8px; top:5px; height:5px;
+    background:repeating-linear-gradient(90deg,#B9410F 0 22%, #2E7D4F 22% 44%, #C9A227 44% 66%, #B9410F 66% 88%, #2E7D4F 88% 100%);
+    border-radius:2px;
+    opacity:0;
+    transition:opacity .3s ease .1s;
+  }
+  .drawer.open{transform:translateY(16px); box-shadow:0 10px 14px rgba(0,0,0,.35);}
+  .drawer.open::before{opacity:1;}
+
+  .scanner-flatbed{
+    position:relative;
+    width:100%;
+    height:var(--table-h);
+    border-radius:.8em;
+    background:linear-gradient(160deg,#D3D7DA,#9AA1A6);
+    border:.42em solid #9AA1A6;
+    border-image:linear-gradient(135deg, #F6F8F9 0%, #C3C9CC 18%, #82898E 38%, #F0F2F3 52%, #8890 68%, #DDE1E2 84%, #A6ACB0 100%) 1;
+    box-shadow:0 .4em 1em rgba(0,0,0,.22), inset 0 0 0 1px rgba(255,255,255,.4), inset 0 -.15em .3em rgba(0,0,0,.2);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .scan-glass{
+    position:relative;
+    width:min(72%, calc(var(--table-h) * 0.72));
+    aspect-ratio:1;
+    background:linear-gradient(160deg,#0B0F12,#000);
+    border-radius:.35em;
+    box-shadow:inset 0 0 0 2px #000, inset 0 .15em .4em rgba(255,255,255,.06), 0 .1em .25em rgba(0,0,0,.5);
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .scan-glass::before{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(135deg, rgba(255,255,255,.1) 0%, rgba(255,255,255,0) 45%);
+    pointer-events:none;
+  }
+  .scan-glow{
+    position:absolute; inset:8%;
+    border-radius:.5em;
+    background:radial-gradient(ellipse at center, rgba(255,86,66,.4), rgba(255,86,66,0) 72%);
+    opacity:.3;
+    animation:scanPulse 2.6s ease-in-out infinite;
+    pointer-events:none;
+    transition:opacity .18s ease, background .18s ease, box-shadow .18s ease;
+  }
+  @keyframes scanPulse{
+    0%,100%{opacity:.22;}
+    50%{opacity:.55;}
+  }
+  .scanner-flatbed.flash .scan-glow{
+    animation:none;
+    opacity:1;
+    background:radial-gradient(ellipse at center, rgba(255,180,160,.95), rgba(255,86,66,.3) 72%);
+    box-shadow:0 0 1.6em .7em rgba(255,90,70,.55);
+  }
+
+  /* -- Bag -- */
+  .bag-zone{
+    flex:0 0 128px;
+    height:var(--table-h);
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  .bag-zone.shake{animation:bagShake .4s ease;}
+  @keyframes bagShake{
+    0%,100%{transform:rotate(0deg);}
+    20%{transform:rotate(-4deg);}
+    40%{transform:rotate(3.5deg);}
+    60%{transform:rotate(-2.5deg);}
+    80%{transform:rotate(1.5deg);}
+  }
+  .bag-svg{
+    width:100%; height:100%;
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.3));
+  }
+  .bag-handle{
+    fill:none;
+    stroke:#E4E2DC;
+    stroke-width:6;
+  }
+  .bag-body{
+    fill:#F7F6F2;
+  }
+  .bag-crease{
+    stroke:#D9D7CF;
+    stroke-width:2;
+    fill:none;
+    opacity:.8;
+  }
+  .bag-shine{
+    fill:#ffffff;
+    opacity:.55;
+  }
+  .bag-opening-marker{
+    position:absolute;
+    left:50%; top:24.5%;
+    width:10px; height:10px;
+    transform:translate(-50%,-50%);
+    pointer-events:none;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(14px);
+    background:#1F2421; color:#fff;
+    padding:10px 20px; border-radius:30px;
+    font-size:.85rem; font-weight:600;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:400;
+    box-shadow:0 8px 20px rgba(0,0,0,.3);
+  }
+  .toast.visible{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Overlays ---------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(18,20,16,.62);
+    backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:300;
+    padding:16px;
+  }
+  .overlay.visible{opacity:1; pointer-events:auto;}
+  .card{
+    background:#fff;
+    border-radius:18px;
+    padding:30px 28px;
+    width:min(430px,94vw);
+    box-shadow:0 24px 60px rgba(0,0,0,.4);
+    max-height:90vh;
+    overflow-y:auto;
+  }
+  .card h2{margin:0 0 6px; font-size:1.4rem; color:var(--ink);}
+  .card p.lead{margin:0 0 20px; color:var(--ink-soft); font-size:.9rem; line-height:1.5;}
+
+  .steps-list{
+    margin:0 0 20px;
+    padding-left:20px;
+    color:var(--ink-soft);
+    font-size:.87rem;
+    line-height:1.75;
+  }
+  .steps-list li{margin-bottom:2px;}
+
+  .mode-select{
+    display:flex; gap:6px;
+    background:#F0EEE3;
+    padding:4px;
+    border-radius:11px;
+    margin-bottom:8px;
+  }
+  .mode-btn{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:10px;
+    border-radius:8px;
+    font-weight:700;
+    font-size:.85rem;
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .15s ease, color .15s ease;
+  }
+  .mode-btn.active{
+    background:var(--accent-green);
+    color:#fff;
+    box-shadow:0 2px 6px rgba(0,0,0,.18);
+  }
+  .mode-desc{
+    font-size:.78rem;
+    color:var(--ink-soft);
+    margin:0 0 20px;
+    line-height:1.45;
+    min-height:2.2em;
+  }
+
+  .modal-figures{display:flex; gap:10px; margin-bottom:18px;}
+  .figure{flex:1; background:#F3F1E9; border-radius:10px; padding:10px 8px; text-align:center; position:relative;}
+  .figure span{display:block; font-size:.66rem; color:#79806F; margin-bottom:4px;}
+  .figure strong{font-size:1.12rem; color:#8A8F84;}
+  .figure.change{
+    background:#FBEAE2;
+    box-shadow:0 0 0 2px #8B1E12;
+    animation:changePulse 1.3s ease-in-out infinite;
+  }
+  .figure.change strong{color:#8B1E12; font-weight:800;}
+  @keyframes changePulse{
+    0%,100%{box-shadow:0 0 0 2px #8B1E12, 0 0 0 0 rgba(139,30,18,.35);}
+    50%{box-shadow:0 0 0 2px #8B1E12, 0 0 0 7px rgba(139,30,18,0);}
+  }
+
+  .given-tray{margin-bottom:16px;}
+  .tray-label{font-size:.72rem; color:#79806F; font-weight:600;}
+  .tray-items{
+    display:flex; flex-wrap:wrap; gap:8px;
+    min-height:44px; padding:8px;
+    background:#F7F5EE; border-radius:10px; margin-top:6px;
+  }
+  .tray-hint{font-size:.75rem; color:#9BA097; align-self:center;}
+  .tray-chip{
+    border:none; cursor:pointer; background:#fff; padding:4px;
+    border-radius:8px;
+    box-shadow:0 2px 5px rgba(0,0,0,.18);
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s ease;
+  }
+  .tray-chip:hover{transform:translateY(-2px);}
+  .tray-chip img{display:block; height:34px; width:auto; max-width:56px; object-fit:contain;}
+  .remaining{margin-top:8px; font-size:.82rem; color:var(--ink);}
+
+  .denom-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px;}
+  .denom{
+    border:none; cursor:pointer; background:#fff;
+    border-radius:10px;
+    padding:8px 6px;
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    transition:transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+    box-shadow:0 3px 6px rgba(0,0,0,.18);
+  }
+  .denom img{display:block; width:100%; height:44px; object-fit:contain;}
+  .denom-label{font-size:.72rem; font-weight:700; color:var(--ink);}
+  .denom:disabled{opacity:.28; cursor:not-allowed; box-shadow:none;}
+  .denom:not(:disabled):hover{transform:translateY(-2px);}
+  .denom:not(:disabled):active{transform:translateY(0) scale(.96);}
+
+  .modal-actions{display:flex; gap:10px;}
+  .btn-secondary, .btn-primary{
+    flex:1; border:none; border-radius:9px; padding:13px; font-weight:700; font-size:.9rem; cursor:pointer;
+  }
+  .btn-secondary{background:#EDEBE1; color:var(--ink);}
+  .btn-secondary:hover{background:#E3E0D3;}
+  .btn-primary{background:var(--accent-green); color:#fff;}
+  .btn-primary:disabled{opacity:.4; cursor:not-allowed;}
+  .btn-primary:not(:disabled):hover{background:var(--accent-green-dark);}
+
+  .end-stats{display:flex; gap:10px; margin:18px 0 22px;}
+  .end-stats .figure strong{font-size:1.3rem; color:#1A1A1A;}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001s !important; transition-duration:.001s !important;}
+  }
+</style>
+</head>
+<body>
+
+<div class="fit-outer" id="fitOuter">
+<div class="game" id="game">
+
+  <header class="hud">
+    <div class="hud-brand"><span class="cart-icon">🛒</span> Kampung Corner Mart</div>
+    <div class="hud-stats">
+      <div class="stat">
+        <span class="stat-label">Customer</span>
+        <span class="stat-value" id="roundIndicator">1 / 5</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Shift sales</span>
+        <span class="stat-value" id="salesTotal">$0.00</span>
+      </div>
+      <button class="sound-toggle" id="soundToggleBtn" type="button" aria-label="Mute sound" aria-pressed="false">🔊</button>
+    </div>
+  </header>
+
+  <div class="stage-wrapper">
+    <div class="scene">
+      <div class="scene-bg"></div>
+      <div class="hint-banner" id="hintBanner">Drag items to the scanner, then put them in the bag.</div>
+
+      <div class="customer-stage">
+        <div class="customer" id="customerEl" data-hair="bun">
+          <div class="qc-bubble" id="customerBubble"></div>
+          <button type="button" class="qc-cash" id="customerCash" aria-label="Open drawer and pay">💵</button>
+          <svg class="customer-svg" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path class="c-shirt" d="M28 230 V156 C28 118 58 96 100 96 C142 96 172 118 172 156 V230 Z"></path>
+            <path class="c-shirt-shade" d="M28 230 V156 C28 128 44 108 68 100 C58 118 54 140 54 230 Z" opacity="0.14"></path>
+            <rect class="c-skin" x="82" y="78" width="36" height="34" rx="10"></rect>
+            <g class="hair-variant hair-bun-g">
+              <circle class="c-hair" cx="100" cy="50" r="58"></circle>
+              <circle class="c-hair" cx="100" cy="2" r="16"></circle>
+            </g>
+            <g class="hair-variant hair-short-g">
+              <ellipse class="c-hair" cx="92" cy="42" rx="54" ry="48"></ellipse>
+              <ellipse class="c-hair" cx="146" cy="58" rx="16" ry="24"></ellipse>
+            </g>
+            <circle class="c-skin" cx="100" cy="60" r="46"></circle>
+            <ellipse class="c-skin" cx="52" cy="64" rx="8" ry="11"></ellipse>
+            <ellipse class="c-skin" cx="148" cy="64" rx="8" ry="11"></ellipse>
+            <ellipse cx="72" cy="78" rx="9" ry="6" fill="#F08C6C" opacity="0.45"></ellipse>
+            <ellipse cx="128" cy="78" rx="9" ry="6" fill="#F08C6C" opacity="0.45"></ellipse>
+            <circle cx="82" cy="60" r="4.4" fill="#2B2320"></circle>
+            <circle cx="118" cy="60" r="4.4" fill="#2B2320"></circle>
+            <path d="M88 78 Q100 86 112 78" fill="none" stroke="#2B2320" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        </div>
+      </div>
+
+      <div class="counter"></div>
+
+      <div class="counter-items">
+        <div class="belt-lane" id="beltTrack"></div>
+
+        <div class="register-column">
+          <div class="till">
+            <div class="vfd" id="vfd">
+              <div class="vfd-row">
+                <span id="vfdItemName">SCAN ITEMS</span>
+                <span id="vfdItemPrice"></span>
+              </div>
+              <div class="vfd-row vfd-total">
+                <span>TOTAL</span>
+                <span id="vfdTotal">$0.00</span>
+              </div>
+              <div class="vfd-sub" id="vfdSub">Drag an item onto the scanner</div>
+            </div>
+            <div class="register-keys" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span>
+            </div>
+            <button class="drawer-btn" id="drawerBtn" disabled>Open Drawer</button>
+            <div class="drawer" id="drawer"></div>
+          </div>
+          <div class="scanner-flatbed" id="scanZone">
+            <div class="scan-glass">
+              <div class="scan-glow"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bag-zone" id="bagZone">
+          <svg class="bag-svg" viewBox="0 0 140 170" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax meet" aria-hidden="true">
+            <ellipse class="bag-handle" cx="57" cy="30" rx="15" ry="19" transform="rotate(-8 57 30)"></ellipse>
+            <ellipse class="bag-handle" cx="85" cy="30" rx="15" ry="19" transform="rotate(8 85 30)"></ellipse>
+            <path class="bag-body" d="M38 42 L104 42 L128 158 Q128 164 122 164 L20 164 Q14 164 14 158 Z"></path>
+            <path class="bag-shine" d="M42 46 L36 150 L46 150 L50 46 Z" opacity="0.5"></path>
+            <path class="bag-crease" d="M58 46 L51 160"></path>
+            <path class="bag-crease" d="M84 46 L91 160"></path>
+          </svg>
+          <div class="bag-opening-marker" id="bagOpeningMarker"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Start overlay -->
+<div class="overlay visible" id="startOverlay">
+  <div class="card">
+    <h2>Welcome to your shift</h2>
+    <ul class="steps-list">
+      <li>Tap or drag each item onto the register</li>
+      <li>Drop scanned items in the bag</li>
+      <li>Open the drawer and give exact change</li>
+      <li>Serve 5 customers to finish your shift</li>
+    </ul>
+
+    <div class="mode-select" role="group" aria-label="Change-giving mode">
+      <button type="button" class="mode-btn active" id="modeGuidedBtn" data-mode="guided" aria-pressed="true">Guided</button>
+      <button type="button" class="mode-btn" id="modeUnguidedBtn" data-mode="unguided" aria-pressed="false">Unguided</button>
+    </div>
+    <p class="mode-desc" id="modeDesc">Guided: see the remaining change as you count it out.</p>
+
+    <button class="btn-primary" id="startBtn" style="width:100%;">Start Shift</button>
+  </div>
+</div>
+
+<!-- Payment modal -->
+<div class="overlay" id="paymentModal">
+  <div class="card">
+    <h2>Tap coins to give change</h2>
+    <div class="modal-figures">
+      <div class="figure"><span>Cash received</span><strong id="modalReceived">$0.00</strong></div>
+      <div class="figure"><span>Total due</span><strong id="modalTotal">$0.00</strong></div>
+      <div class="figure change">
+        <span>Change due</span><strong id="modalChange">$0.00</strong>
+      </div>
+    </div>
+    <div class="given-tray" id="givenTray">
+      <span class="tray-label">Change given (tap to remove)</span>
+      <div class="tray-items" id="trayItems"><span class="tray-hint">Nothing given yet</span></div>
+      <div class="remaining" id="remainingRow">Remaining: <strong id="remainingAmount">$0.00</strong></div>
+    </div>
+    <div class="denom-grid" id="denomGrid"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="clearChangeBtn">Clear</button>
+      <button class="btn-primary" id="giveChangeBtn" disabled>Give Change</button>
+    </div>
+  </div>
+</div>
+
+<!-- End overlay -->
+<div class="overlay" id="endOverlay">
+  <div class="card">
+    <h2>Shift complete 🎉</h2>
+    <p class="lead">Nice work — here's how your shift went.</p>
+    <div class="end-stats">
+      <div class="figure"><span>Customers served</span><strong id="endCustomers">5</strong></div>
+      <div class="figure"><span>Items scanned</span><strong id="endItems">0</strong></div>
+      <div class="figure"><span>Total sales</span><strong id="endSales">$0.00</strong></div>
+    </div>
+    <button class="btn-primary" id="restartBtn" style="width:100%;">Start New Shift</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Data ---------------- */
+  var ITEM_CATALOG = [
+    {id:'apple',    img:'assets/apple.png',     name:'Apple',            price:0.80},
+    {id:'bread',    img:'assets/bread.png',     name:'Bread Loaf',       price:2.50},
+    {id:'milk',     img:'assets/milk.png',      name:'Milk 1L',          price:2.20},
+    {id:'cheese',   img:'assets/cheese.png',    name:'Cheese Block',     price:4.50},
+    {id:'eggs',     img:'assets/eggs.png',      name:'Eggs (12)',        price:3.20},
+    {id:'banana',   img:'assets/bananas.png',   name:'Bananas',          price:1.50},
+    {id:'soda',     img:'assets/soda.png',      name:'Soda Can',         price:1.80},
+    {id:'chocolate',img:'assets/chocolate.png', name:'Chocolate Bar',    price:2.00},
+    {id:'tissue',   img:'assets/tissue.png',    name:'Tissue Pack',      price:3.50},
+    {id:'noodles',  img:'assets/noodles.png',   name:'Instant Noodles',  price:1.20}
+  ];
+
+  var DENOMS = [
+    {value:10,  label:'$10',  type:'note', img:'assets/10d.png'},
+    {value:5,   label:'$5',   type:'note', img:'assets/5d.png'},
+    {value:2,   label:'$2',   type:'note', img:'assets/2d.png'},
+    {value:1,   label:'$1',   type:'coin', img:'assets/1d.png'},
+    {value:0.5, label:'50¢',  type:'coin', img:'assets/50c.png'},
+    {value:0.2, label:'20¢',  type:'coin', img:'assets/20c.png'},
+    {value:0.1, label:'10¢',  type:'coin', img:'assets/10c.png'},
+    {value:0.05,label:'5¢',   type:'coin', img:'assets/5c.png'}
+  ];
+
+  var TOTAL_ROUNDS = 5;
+
+  var CUSTOMER_DEFS = [
+    {skin:'#F4C9A8', hair:'#2B2320', shirt:'#E8834A', hairStyle:'bun'},
+    {skin:'#E8B48C', hair:'#5B3A29', shirt:'#4A90D9', hairStyle:'short'},
+    {skin:'#F6D5B0', hair:'#B8B8B8', shirt:'#7FB069', hairStyle:'bun'},
+    {skin:'#C98A5E', hair:'#1A1A1A', shirt:'#C76B9C', hairStyle:'short'},
+    {skin:'#F1C6A0', hair:'#8B5A2B', shirt:'#F2C744', hairStyle:'bun'}
+  ];
+
+  /* ---------------- State ---------------- */
+  var round = 1;
+  var salesTotalValue = 0;
+  var itemsScannedTotal = 0;
+  var idCounter = 0;
+  var roundState = null; // {items:[...], total, baggedCount}
+  var payment = {total:0, received:0, change:0, given:[]};
+  var scanZoneEl, bagZoneEl, bagOpeningMarkerEl, beltTrackEl, drawerBtn, drawerEl, hintBannerEl;
+  var customerEl, customerBubbleEl, customerCashEl;
+
+  /* ---------------- Utilities ---------------- */
+  function round2(n){ return Math.round((n + Number.EPSILON) * 100) / 100; }
+  function money(n){ return '$' + n.toFixed(2); }
+  function moneySpoken(n){
+    // Whole-dollar amounts read as "$10" rather than "$10.00".
+    if (Math.abs(n - Math.round(n)) < 0.001) return '$' + Math.round(n);
+    return money(n);
+  }
+  function rectsOverlap(a,b){
+    return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+  }
+  function randInt(min,max){ return min + Math.floor(Math.random()*(max-min+1)); }
+
+  function computeCashReceived(total){
+    var steps = [1,2,5,10,20,50];
+    var candidates = [];
+    steps.forEach(function(step){
+      var val = Math.ceil((total + 0.01) / step) * step;
+      val = round2(val);
+      if (val > total + 0.001 && (val - total) <= 20.001) {
+        candidates.push(val);
+      }
+    });
+    var unique = candidates.filter(function(v,i){ return candidates.indexOf(v) === i; });
+    if (unique.length === 0) {
+      var extra = round2(Math.random() * 20);
+      var val2 = Math.round((total + extra) / 0.05) * 0.05;
+      if (val2 <= total) val2 = total + 0.05;
+      unique = [round2(val2)];
+    }
+    return unique[randInt(0, unique.length - 1)];
+  }
+
+  /* ---------------- Sound (Web Audio, synthesized) ---------------- */
+  var audioCtx = null;
+  var soundOn = true;
+  function ensureAudio(){
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  }
+  function tone(freq, start, dur, type, gainPeak, glideTo){
+    if (!audioCtx) return;
+    var t0 = audioCtx.currentTime + start;
+    var osc = audioCtx.createOscillator();
+    var gain = audioCtx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t0);
+    if (glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, t0 + dur);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.linearRampToValueAtTime(gainPeak || 0.15, t0 + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.03);
+  }
+  function noiseBurst(start, dur, gainPeak, filterFreq){
+    if (!audioCtx) return;
+    var t0 = audioCtx.currentTime + start;
+    var bufferSize = Math.max(1, Math.floor(audioCtx.sampleRate * dur));
+    var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize);
+    var src = audioCtx.createBufferSource();
+    src.buffer = buffer;
+    var filter = audioCtx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = filterFreq || 1000;
+    var gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(gainPeak || 0.1, t0);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(filter).connect(gain).connect(audioCtx.destination);
+    src.start(t0);
+  }
+  function playSound(name){
+    if (!soundOn) return;
+    ensureAudio();
+    if (!audioCtx) return;
+    switch(name){
+      case 'beep': tone(1850, 0, 0.09, 'square', 0.14); break;
+      case 'plop': tone(520, 0, 0.11, 'sine', 0.18, 200); break;
+      case 'drawer':
+        noiseBurst(0, 0.16, 0.09, 2400);
+        tone(1568, 0.08, 0.12, 'triangle', 0.13);
+        tone(2093, 0.16, 0.20, 'triangle', 0.14);
+        break;
+      case 'coin':
+      case 'note':
+        noiseBurst(0, 0.13, 0.07, 900);
+        break;
+      case 'success':
+        tone(784, 0, 0.12, 'triangle', 0.16);
+        tone(988, 0.1, 0.12, 'triangle', 0.16);
+        tone(1319, 0.2, 0.2, 'triangle', 0.18);
+        break;
+      case 'error': tone(160, 0, 0.16, 'sawtooth', 0.13); break;
+      case 'arrival':
+        tone(1046, 0, 0.1, 'sine', 0.13);
+        tone(1568, 0.09, 0.16, 'sine', 0.13);
+        break;
+      case 'tick': tone(2200, 0, 0.04, 'square', 0.08); break;
+      case 'walk':
+        tone(300, 0, 0.06, 'sine', 0.06, 260);
+        break;
+    }
+  }
+
+  /* ---------------- UI refs ---------------- */
+  var roundIndicatorEl, salesTotalEl, vfdItemName, vfdItemPrice, vfdTotal, vfdSub;
+  var startOverlay, startBtn, paymentModal, endOverlay, restartBtn;
+  var modalTotal, modalReceived, modalChange, trayItems, remainingAmount, remainingRow, givenTray, denomGrid, clearChangeBtn, giveChangeBtn;
+  var endCustomers, endItems, endSales, toastEl, toastTimer;
+  var soundToggleBtn;
+  var modeGuidedBtn, modeUnguidedBtn, modeDesc;
+  var gameMode = 'guided';
+
+  var MODE_DESC = {
+    guided: 'Guided: see the remaining change as you count it out.',
+    unguided: 'Unguided: no running total shown — count the exact change yourself.'
+  };
+
+  function cacheRefs(){
+    roundIndicatorEl = document.getElementById('roundIndicator');
+    salesTotalEl = document.getElementById('salesTotal');
+    vfdItemName = document.getElementById('vfdItemName');
+    vfdItemPrice = document.getElementById('vfdItemPrice');
+    vfdTotal = document.getElementById('vfdTotal');
+    vfdSub = document.getElementById('vfdSub');
+    beltTrackEl = document.getElementById('beltTrack');
+    scanZoneEl = document.getElementById('scanZone');
+    bagZoneEl = document.getElementById('bagZone');
+    bagOpeningMarkerEl = document.getElementById('bagOpeningMarker');
+    drawerBtn = document.getElementById('drawerBtn');
+    drawerEl = document.getElementById('drawer');
+    toastEl = document.getElementById('toast');
+    hintBannerEl = document.getElementById('hintBanner');
+    soundToggleBtn = document.getElementById('soundToggleBtn');
+
+    customerEl = document.getElementById('customerEl');
+    customerBubbleEl = document.getElementById('customerBubble');
+    customerCashEl = document.getElementById('customerCash');
+
+    startOverlay = document.getElementById('startOverlay');
+    startBtn = document.getElementById('startBtn');
+    paymentModal = document.getElementById('paymentModal');
+    endOverlay = document.getElementById('endOverlay');
+    restartBtn = document.getElementById('restartBtn');
+    modeGuidedBtn = document.getElementById('modeGuidedBtn');
+    modeUnguidedBtn = document.getElementById('modeUnguidedBtn');
+    modeDesc = document.getElementById('modeDesc');
+
+    modalTotal = document.getElementById('modalTotal');
+    modalReceived = document.getElementById('modalReceived');
+    modalChange = document.getElementById('modalChange');
+    trayItems = document.getElementById('trayItems');
+    remainingAmount = document.getElementById('remainingAmount');
+    remainingRow = document.getElementById('remainingRow');
+    givenTray = document.getElementById('givenTray');
+    denomGrid = document.getElementById('denomGrid');
+    clearChangeBtn = document.getElementById('clearChangeBtn');
+    giveChangeBtn = document.getElementById('giveChangeBtn');
+
+    endCustomers = document.getElementById('endCustomers');
+    endItems = document.getElementById('endItems');
+    endSales = document.getElementById('endSales');
+  }
+
+  function showToast(msg, duration){
+    toastEl.textContent = msg;
+    toastEl.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toastEl.classList.remove('visible'); }, duration || 1600);
+  }
+
+  function shake(el){
+    el.classList.remove('shake');
+    void el.offsetWidth;
+    el.classList.add('shake');
+  }
+
+  /* ---------------- VFD ---------------- */
+  function updateVFD(name, price, total, scannedCount, totalCount){
+    vfdItemName.textContent = name.toUpperCase();
+    vfdItemPrice.textContent = money(price);
+    vfdTotal.textContent = money(total);
+    vfdSub.textContent = scannedCount + ' of ' + totalCount + ' items scanned';
+  }
+  function resetVFDIdle(totalCount){
+    vfdItemName.textContent = 'SCAN ITEMS';
+    vfdItemPrice.textContent = '';
+    vfdTotal.textContent = '$0.00';
+    vfdSub.textContent = '0 of ' + totalCount + ' items scanned';
+  }
+
+  /* ---------------- Customer walk-in / walk-out ---------------- */
+  function setupCustomerForRound(r){
+    var def = CUSTOMER_DEFS[(r - 1) % CUSTOMER_DEFS.length];
+    customerEl.style.transition = 'none';
+    customerEl.classList.remove('onstage', 'exiting');
+    customerEl.style.setProperty('--skin', def.skin);
+    customerEl.style.setProperty('--hair', def.hair);
+    customerEl.style.setProperty('--shirt', def.shirt);
+    customerEl.dataset.hair = def.hairStyle;
+    customerBubbleEl.classList.remove('visible');
+    customerBubbleEl.textContent = '';
+    customerCashEl.classList.remove('visible');
+    void customerEl.offsetWidth; // force reflow before re-enabling transition
+    customerEl.style.transition = '';
+  }
+
+  function walkInCustomer(){
+    playSound('walk');
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        customerEl.classList.add('onstage');
+      });
+    });
+  }
+
+  function walkOutCustomer(){
+    playSound('walk');
+    customerEl.classList.remove('onstage');
+    customerEl.classList.add('exiting');
+  }
+
+  /* ---------------- Round setup ---------------- */
+  function pickRoundItems(){
+    var n = randInt(4, 6);
+    var picks = [];
+    for (var i = 0; i < n; i++) {
+      var base = ITEM_CATALOG[randInt(0, ITEM_CATALOG.length - 1)];
+      picks.push({
+        uid: 'it' + (idCounter++),
+        img: base.img,
+        name: base.name,
+        price: base.price,
+        scanned: false,
+        bagged: false
+      });
+    }
+    return picks;
+  }
+
+  function startRound(){
+    roundState = { items: pickRoundItems(), total: 0, baggedCount: 0 };
+    roundIndicatorEl.textContent = round + ' / ' + TOTAL_ROUNDS;
+    resetVFDIdle(roundState.items.length);
+
+    beltTrackEl.innerHTML = '';
+    drawerBtn.disabled = true;
+    drawerBtn.classList.remove('pulse');
+    drawerEl.classList.remove('open');
+    hintBannerEl.textContent = 'Drag items to the scanner, then put them in the bag.';
+
+    setupCustomerForRound(round);
+    walkInCustomer();
+
+    // Items appear on the belt once the customer has arrived.
+    setTimeout(renderBelt, 950);
+  }
+
+  function renderBelt(){
+    beltTrackEl.innerHTML = '';
+    roundState.items.forEach(function(item){
+      var slot = document.createElement('div');
+      slot.className = 'belt-slot';
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'belt-item';
+      btn.setAttribute('aria-label', item.name + ', not scanned');
+      var img = document.createElement('img');
+      img.src = item.img;
+      img.alt = item.name;
+      btn.appendChild(img);
+
+      slot.appendChild(btn);
+      beltTrackEl.appendChild(slot);
+
+      makeItemInteractive(item, btn, slot);
+    });
+  }
+
+  /* ---------------- Item interaction (tap + drag) ---------------- */
+  function makeItemInteractive(item, itemEl, slotEl){
+    var startX = 0, startY = 0, offsetX = 0, offsetY = 0, dragging = false, origRect = null, pointerId = null;
+
+    itemEl.addEventListener('pointerdown', function(e){
+      if (item.bagged) return;
+      ensureAudio();
+      pointerId = e.pointerId;
+      try { itemEl.setPointerCapture(pointerId); } catch(err){}
+      startX = e.clientX; startY = e.clientY;
+      origRect = itemEl.getBoundingClientRect();
+      offsetX = startX - origRect.left;
+      offsetY = startY - origRect.top;
+      dragging = false;
+      itemEl.addEventListener('pointermove', onMove);
+      itemEl.addEventListener('pointerup', onUp, {once:true});
+      itemEl.addEventListener('pointercancel', onUp, {once:true});
+    });
+
+    function activateDrag(){
+      dragging = true;
+      itemEl.style.position = 'fixed';
+      itemEl.style.left = origRect.left + 'px';
+      itemEl.style.top = origRect.top + 'px';
+      itemEl.style.width = origRect.width + 'px';
+      itemEl.style.height = origRect.height + 'px';
+      itemEl.style.margin = '0';
+      itemEl.style.zIndex = '999';
+      itemEl.style.transition = 'none';
+      itemEl.classList.add('dragging');
+      document.body.appendChild(itemEl);
+    }
+
+    function onMove(e){
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!dragging && Math.hypot(dx, dy) > 6) activateDrag();
+      if (dragging) {
+        itemEl.style.left = (e.clientX - offsetX) + 'px';
+        itemEl.style.top = (e.clientY - offsetY) + 'px';
+        if (!item.scanned) {
+          var r = itemEl.getBoundingClientRect();
+          var sz = scanZoneEl.getBoundingClientRect();
+          if (rectsOverlap(r, sz)) scanItem(item, itemEl);
+        }
+      }
+    }
+
+    function onUp(){
+      itemEl.removeEventListener('pointermove', onMove);
+      try { itemEl.releasePointerCapture(pointerId); } catch(err){}
+
+      if (!dragging) {
+        handleTap(item, itemEl, slotEl);
+        return;
+      }
+      itemEl.classList.remove('dragging');
+      var r = itemEl.getBoundingClientRect();
+      if (item.scanned) {
+        // Once scanned, letting go anywhere sends it into the bag automatically.
+        finalizeBag(item, itemEl, slotEl, r, false);
+      } else {
+        var bz = bagZoneEl.getBoundingClientRect();
+        if (rectsOverlap(r, bz)) {
+          playSound('error');
+          showToast('Scan it first!');
+          shake(itemEl);
+        }
+        snapBack(item, itemEl, slotEl);
+      }
+    }
+  }
+
+  function handleTap(item, itemEl, slotEl){
+    if (!item.scanned) {
+      scanItem(item, itemEl);
+    } else {
+      var r = itemEl.getBoundingClientRect();
+      finalizeBag(item, itemEl, slotEl, r, true);
+    }
+  }
+
+  var scanFlashTimer = null;
+  function flashScanner(){
+    scanZoneEl.classList.add('flash');
+    clearTimeout(scanFlashTimer);
+    scanFlashTimer = setTimeout(function(){
+      scanZoneEl.classList.remove('flash');
+    }, 380);
+  }
+
+  function scanItem(item, itemEl){
+    if (item.scanned) return;
+    item.scanned = true;
+    playSound('beep');
+    flashScanner();
+    roundState.total = round2(roundState.total + item.price);
+    var scannedCount = roundState.items.filter(function(i){ return i.scanned; }).length;
+    updateVFD(item.name, item.price, roundState.total, scannedCount, roundState.items.length);
+    itemEl.classList.add('scanned');
+    itemEl.setAttribute('aria-label', item.name + ', scanned');
+  }
+
+  function snapBack(item, itemEl, slotEl){
+    var target = slotEl.getBoundingClientRect();
+    requestAnimationFrame(function(){
+      itemEl.style.transition = 'left .28s cubic-bezier(.3,.7,.4,1), top .28s cubic-bezier(.3,.7,.4,1)';
+      itemEl.style.left = target.left + 'px';
+      itemEl.style.top = target.top + 'px';
+    });
+    itemEl.addEventListener('transitionend', function done(){
+      itemEl.removeEventListener('transitionend', done);
+      itemEl.style.cssText = '';
+      if (item.scanned) itemEl.classList.add('scanned');
+      slotEl.appendChild(itemEl);
+    }, {once:true});
+  }
+
+  function finalizeBag(item, itemEl, slotEl, r, fromStatic){
+    if (fromStatic) {
+      itemEl.style.position = 'fixed';
+      itemEl.style.left = r.left + 'px';
+      itemEl.style.top = r.top + 'px';
+      itemEl.style.width = r.width + 'px';
+      itemEl.style.height = r.height + 'px';
+      itemEl.style.margin = '0';
+      itemEl.style.zIndex = '999';
+      document.body.appendChild(itemEl);
+      r = itemEl.getBoundingClientRect();
+    }
+    var openingRect = bagOpeningMarkerEl.getBoundingClientRect();
+    var targetX = openingRect.left + openingRect.width / 2 - r.width / 2 + (Math.random() * 14 - 7);
+    var targetY = openingRect.top + openingRect.height / 2 - r.height / 2;
+    var rot = Math.random() * 26 - 13;
+    requestAnimationFrame(function(){
+      itemEl.style.transition = 'left .3s cubic-bezier(.4,.3,.6,1), top .3s cubic-bezier(.4,.3,.6,1), transform .3s ease-in, opacity .3s ease-in';
+      itemEl.style.left = targetX + 'px';
+      itemEl.style.top = targetY + 'px';
+      itemEl.style.transform = 'scale(0.1) rotate(' + rot + 'deg)';
+      itemEl.style.opacity = '0';
+    });
+    itemEl.addEventListener('transitionend', function done(){
+      itemEl.removeEventListener('transitionend', done);
+      itemEl.remove();
+      if (slotEl && slotEl.parentNode) slotEl.remove();
+      playSound('plop');
+      shake(bagZoneEl);
+      item.bagged = true;
+      roundState.baggedCount++;
+      checkRoundReadyForPayment();
+    }, {once:true});
+  }
+
+  function checkRoundReadyForPayment(){
+    if (roundState.baggedCount >= roundState.items.length) {
+      triggerPaymentReady();
+    }
+  }
+
+  function openDrawerAndPay(){
+    if (drawerBtn.disabled) return;
+    drawerBtn.disabled = true;
+    drawerBtn.classList.remove('pulse');
+    playSound('drawer');
+    drawerEl.classList.add('open');
+    openPaymentModal();
+  }
+
+  function triggerPaymentReady(){
+    vfdSub.textContent = 'Ready for payment';
+    drawerBtn.disabled = false;
+    drawerBtn.classList.add('pulse');
+    hintBannerEl.textContent = 'Tap on money or open drawer.';
+
+    payment.total = roundState.total;
+    payment.received = computeCashReceived(payment.total);
+    payment.change = round2(payment.received - payment.total);
+    payment.given = [];
+
+    customerBubbleEl.textContent = "Here's " + moneySpoken(payment.received) + '!';
+    customerBubbleEl.classList.add('visible');
+    customerCashEl.classList.add('visible');
+    playSound('arrival');
+  }
+
+  /* ---------------- Payment modal ---------------- */
+  function openPaymentModal(){
+    modalTotal.textContent = money(payment.total);
+    modalReceived.textContent = money(payment.received);
+    modalChange.textContent = money(payment.change);
+
+    remainingRow.style.display = (gameMode === 'guided') ? '' : 'none';
+
+    renderDenomGrid();
+    renderTray();
+    paymentModal.classList.add('visible');
+  }
+
+  function sumGiven(){
+    return round2(payment.given.reduce(function(a,b){ return a+b; }, 0));
+  }
+
+  function renderDenomGrid(){
+    denomGrid.innerHTML = '';
+    var remaining = round2(payment.change - sumGiven());
+    DENOMS.forEach(function(d){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'denom ' + d.type;
+      if (gameMode === 'guided') {
+        btn.disabled = d.value > remaining + 0.001;
+      }
+      var img = document.createElement('img');
+      img.src = d.img;
+      img.alt = d.label;
+      btn.appendChild(img);
+      var lbl = document.createElement('span');
+      lbl.className = 'denom-label';
+      lbl.textContent = d.label;
+      btn.appendChild(lbl);
+      btn.addEventListener('click', function(){
+        payment.given.push(d.value);
+        playSound(d.type === 'note' ? 'note' : 'coin');
+        renderDenomGrid();
+        renderTray();
+      });
+      denomGrid.appendChild(btn);
+    });
+  }
+
+  function renderTray(){
+    trayItems.innerHTML = '';
+    if (payment.given.length === 0) {
+      var hint = document.createElement('span');
+      hint.className = 'tray-hint';
+      hint.textContent = 'Nothing given yet';
+      trayItems.appendChild(hint);
+    } else {
+      payment.given.forEach(function(v, idx){
+        var d = DENOMS.filter(function(x){ return x.value === v; })[0];
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'tray-chip ' + d.type;
+        chip.title = 'Remove';
+        var img = document.createElement('img');
+        img.src = d.img;
+        img.alt = d.label;
+        chip.appendChild(img);
+        chip.addEventListener('click', function(){
+          payment.given.splice(idx, 1);
+          playSound('tick');
+          renderDenomGrid();
+          renderTray();
+        });
+        trayItems.appendChild(chip);
+      });
+    }
+    var remaining = round2(payment.change - sumGiven());
+    if (gameMode === 'guided') {
+      remainingAmount.textContent = money(remaining);
+      giveChangeBtn.disabled = Math.abs(remaining) > 0.001;
+    } else {
+      giveChangeBtn.disabled = payment.given.length === 0;
+    }
+  }
+
+  function clearChangeHandler(){
+    payment.given = [];
+    renderDenomGrid();
+    renderTray();
+  }
+
+  function giveChangeHandler(){
+    var remaining = round2(payment.change - sumGiven());
+    if (Math.abs(remaining) > 0.001) {
+      playSound('error');
+      showToast(remaining > 0 ? 'Not enough change — try again.' : 'Too much change — try again.');
+      shake(givenTray);
+      return;
+    }
+
+    playSound('success');
+    paymentModal.classList.remove('visible');
+    drawerEl.classList.remove('open');
+
+    salesTotalValue = round2(salesTotalValue + payment.total);
+    salesTotalEl.textContent = money(salesTotalValue);
+    itemsScannedTotal += roundState.items.length;
+
+    customerBubbleEl.textContent = 'Thanks!';
+
+    setTimeout(function(){
+      customerBubbleEl.classList.remove('visible');
+      customerCashEl.classList.remove('visible');
+      walkOutCustomer();
+    }, 900);
+
+    setTimeout(afterPaymentComplete, 1800);
+  }
+
+  function afterPaymentComplete(){
+    if (round >= TOTAL_ROUNDS) {
+      showEndScreen();
+    } else {
+      round++;
+      startRound();
+    }
+  }
+
+  /* ---------------- End / Start screens ---------------- */
+  function showEndScreen(){
+    endCustomers.textContent = String(TOTAL_ROUNDS);
+    endItems.textContent = String(itemsScannedTotal);
+    endSales.textContent = money(salesTotalValue);
+    endOverlay.classList.add('visible');
+  }
+
+  function restartShift(){
+    round = 1;
+    salesTotalValue = 0;
+    itemsScannedTotal = 0;
+    salesTotalEl.textContent = '$0.00';
+    endOverlay.classList.remove('visible');
+    startRound();
+  }
+
+  /* ---------------- Wire up ---------------- */
+  function init(){
+    cacheRefs();
+
+    drawerBtn.addEventListener('click', openDrawerAndPay);
+    customerCashEl.addEventListener('click', openDrawerAndPay);
+
+    clearChangeBtn.addEventListener('click', function(){ clearChangeHandler(); });
+    giveChangeBtn.addEventListener('click', function(){
+      if (giveChangeBtn.disabled) return;
+      giveChangeHandler();
+    });
+
+    modeGuidedBtn.addEventListener('click', function(){ setGameMode('guided'); });
+    modeUnguidedBtn.addEventListener('click', function(){ setGameMode('unguided'); });
+
+    startBtn.addEventListener('click', function(){
+      ensureAudio();
+      startOverlay.classList.remove('visible');
+      startRound();
+    });
+
+    restartBtn.addEventListener('click', restartShift);
+
+    soundToggleBtn.addEventListener('click', function(){
+      soundOn = !soundOn;
+      ensureAudio();
+      soundToggleBtn.textContent = soundOn ? '🔊' : '🔇';
+      soundToggleBtn.classList.toggle('muted', !soundOn);
+      soundToggleBtn.setAttribute('aria-pressed', soundOn ? 'false' : 'true');
+      soundToggleBtn.setAttribute('aria-label', soundOn ? 'Mute sound' : 'Unmute sound');
+      if (soundOn) playSound('tick');
+    });
+  }
+
+  function setGameMode(mode){
+    gameMode = mode;
+    modeGuidedBtn.classList.toggle('active', mode === 'guided');
+    modeGuidedBtn.setAttribute('aria-pressed', mode === 'guided' ? 'true' : 'false');
+    modeUnguidedBtn.classList.toggle('active', mode === 'unguided');
+    modeUnguidedBtn.setAttribute('aria-pressed', mode === 'unguided' ? 'true' : 'false');
+    modeDesc.textContent = MODE_DESC[mode];
+  }
+
+  /* ---------------- Fit the game to the viewport (never scale up, only down) ---------------- */
+  function fitGameToViewport(){
+    var game = document.getElementById('game');
+    var outer = document.getElementById('fitOuter');
+    if (!game || !outer) return;
+    game.style.transform = 'none';
+    var naturalW = game.offsetWidth;
+    var naturalH = game.offsetHeight;
+    var margin = 36; // roughly matches body padding, plus a small buffer
+    var availW = window.innerWidth - margin;
+    var availH = window.innerHeight - margin;
+    var scale = Math.min(1, availW / naturalW, availH / naturalH);
+    if (!isFinite(scale) || scale <= 0) scale = 1;
+    game.style.transform = 'scale(' + scale + ')';
+    outer.style.width = (naturalW * scale) + 'px';
+    outer.style.height = (naturalH * scale) + 'px';
+  }
+  window.addEventListener('resize', fitGameToViewport);
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fitGameToViewport);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+  document.addEventListener('DOMContentLoaded', fitGameToViewport);
+})();
+</script>
+</body>
+</html>
