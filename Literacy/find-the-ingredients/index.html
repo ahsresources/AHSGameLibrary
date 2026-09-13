@@ -1,0 +1,1419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Where Is It? — Kitchen Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wall:#EFD9A8;
+    --wall-dark:#E4C688;
+    --floor-a:#F4EAD5;
+    --floor-b:#254B54;
+    --wood:#835F3B;
+    --wood-dark:#5C4028;
+    --wood-panel:#96714B;
+    --brass:#D6AE4A;
+    --mint:#9FC7B8;
+    --mint-dark:#6FA491;
+    --chrome:#EEF3F1;
+    --teal:#2F6E6A;
+    --teal-dark:#204E4B;
+    --cherry:#B23A2E;
+    --cherry-dark:#8E2C22;
+    --cream:#FBF3E3;
+    --ink:#2B2320;
+    --muted-ink:#6B5D48;
+    --page-bg:#FBF5E6;
+    --page-bg-2:#F3EAD3;
+    --panel-bg:#FFFFFF;
+    --panel-border:#E9DCBC;
+    --success:#3C8F6C;
+    --postit:#FFEB7A;
+    --postit-ink:#5A4E17;
+    --steel:#B7C4C6;
+    --steel-dark:#7C8A8C;
+    font-family:'Nunito',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0; height:100%;}
+  body{
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255,255,255,0.7), transparent 45%),
+      radial-gradient(circle at 88% 92%, rgba(255,255,255,0.5), transparent 50%),
+      linear-gradient(160deg, var(--page-bg), var(--page-bg-2));
+    color:var(--ink);
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:14px 14px 10px;
+  }
+  @media (max-width:840px){
+    body{height:auto; min-height:100vh; padding:18px 14px 40px;}
+  }
+  h1,h2,h3{font-family:'Poppins',sans-serif; margin:0;}
+
+  /* ---------- Header ---------- */
+  .topbar{
+    width:100%;
+    max-width:1180px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{
+    font-size:34px;
+    filter:drop-shadow(0 2px 0 rgba(0,0,0,0.12));
+  }
+  .brand h1{font-size:24px; color:var(--ink); letter-spacing:0.2px;}
+
+  .new-recipe-btn{
+    background:var(--cherry);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:11px 20px;
+    font-family:'Poppins',sans-serif;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--cherry-dark);
+    transition:transform .08s ease;
+  }
+  .new-recipe-btn:hover{transform:translateY(-1px);}
+  .new-recipe-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--cherry-dark);}
+
+  .topbar-actions{display:flex; align-items:center; gap:8px;}
+  .icon-btn{
+    width:40px;
+    height:40px;
+    border-radius:50%;
+    border:2px solid var(--panel-border);
+    background:var(--panel-bg);
+    color:var(--ink);
+    font-size:17px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .1s ease, background .15s ease;
+    box-shadow:0 2px 6px rgba(90,70,30,0.08);
+  }
+  .icon-btn:hover{transform:translateY(-1px); background:#FBF5E6;}
+  .icon-btn:active{transform:translateY(1px);}
+
+  .mode-select{
+    display:flex;
+    gap:10px;
+    margin:2px 0 18px;
+  }
+  .mode-option{
+    flex:1;
+    background:#fff;
+    border:2px solid #EADFC5;
+    border-radius:12px;
+    padding:14px 8px;
+    text-align:center;
+    cursor:pointer;
+    font-family:'Poppins',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    color:var(--muted-ink);
+    transition:transform .1s ease, border-color .15s ease, background .15s ease;
+  }
+  .mode-option .mode-emoji{display:block; font-size:26px; margin-bottom:6px;}
+  .mode-option:hover{transform:translateY(-1px);}
+  .mode-option.selected{border-color:var(--teal); background:#EAF6F2; color:var(--teal-dark);}
+
+  .instructions-list{
+    list-style:none;
+    margin:0 0 20px;
+    padding:0;
+    text-align:left;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .instructions-list li{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    font-size:14.5px;
+    font-weight:700;
+    color:#5C4E3D;
+    background:#fff;
+    border-radius:10px;
+    padding:9px 12px;
+  }
+  .instructions-list .num{
+    flex-shrink:0;
+    width:22px; height:22px;
+    border-radius:50%;
+    background:var(--teal);
+    color:#fff;
+    font-size:12px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Poppins',sans-serif;
+  }
+
+  .recipe-banner{
+    width:100%;
+    max-width:1180px;
+    background:var(--panel-bg);
+    border:2px solid var(--panel-border);
+    border-radius:14px;
+    padding:12px 18px;
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+    box-shadow:0 2px 10px rgba(90,70,30,0.05);
+  }
+  .recipe-banner .recipe-title{font-size:17px; font-weight:600; font-family:'Poppins',sans-serif;}
+  .recipe-banner .recipe-title span{color:var(--teal-dark);}
+  .progress-track{
+    width:150px; height:10px; border-radius:6px; background:#EEE3C8;
+    overflow:hidden; flex-shrink:0;
+  }
+  .progress-fill{
+    height:100%; background:var(--success); width:0%;
+    transition:width .35s ease;
+  }
+  .progress-label{font-size:13px; font-weight:700; color:var(--teal-dark); white-space:nowrap;}
+
+  /* ---------- Main layout ---------- */
+  .game-wrap{
+    width:100%;
+    max-width:1180px;
+    display:grid;
+    grid-template-columns:320px 1fr;
+    grid-template-rows:1fr;
+    gap:16px;
+    align-items:stretch;
+    flex:1 1 auto;
+    min-height:0;
+  }
+  @media (max-width:840px){
+    .game-wrap{grid-template-columns:1fr; grid-template-rows:auto; flex:none; min-height:0;}
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    background:var(--panel-bg);
+    border:2px solid var(--panel-border);
+    border-radius:16px;
+    padding:18px 16px;
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    box-shadow:0 2px 10px rgba(90,70,30,0.05);
+    overflow-y:auto;
+    min-height:0;
+  }
+  @media (max-width:840px){
+    .sidebar{overflow-y:visible;}
+  }
+
+  /* ---------- Post-it checklist ---------- */
+  .postit{
+    background:var(--postit);
+    border-radius:3px;
+    padding:22px 16px 18px;
+    transform:rotate(-1.1deg);
+    box-shadow:0 12px 20px rgba(60,45,10,0.16), 0 1px 0 rgba(255,255,255,0.4) inset;
+    position:relative;
+  }
+  .postit::before{
+    content:"";
+    position:absolute;
+    top:-9px; left:50%;
+    transform:translateX(-50%);
+    width:16px; height:16px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #E85B4A, #9A2A1D);
+    box-shadow:0 2px 3px rgba(0,0,0,0.35);
+  }
+  .checklist{
+    list-style:none;
+    margin:0; padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .checklist li{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    font-weight:700;
+    font-size:14.5px;
+    color:var(--postit-ink);
+  }
+  .checklist .box{
+    width:19px; height:19px;
+    border:2.5px solid #8A7A2E;
+    border-radius:4px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    background:rgba(255,255,255,0.55);
+    color:transparent;
+  }
+  .checklist li.done{color:#8C7F49;}
+  .checklist li.done .box{background:#7A6C22; border-color:#7A6C22; color:#FFF9D9;}
+  .checklist li.done .label{text-decoration:line-through; text-decoration-thickness:2px;}
+  .checklist .emoji{font-size:17px;}
+
+  /* ---------- Ask box ---------- */
+  .ask-box{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .input-row{display:flex; gap:8px;}
+  .sentence-input{
+    flex:1;
+    min-height:44px;
+    background:#FDFBF5;
+    border:2px solid #EADFC5;
+    border-radius:11px;
+    padding:10px 12px;
+    font-size:15px;
+    font-weight:600;
+    color:var(--ink);
+    font-family:'Poppins',sans-serif;
+    outline:none;
+    transition:border-color .15s ease;
+  }
+  .sentence-input:focus{border-color:var(--teal);}
+
+  .hidden{display:none !important;}
+
+  /* ---------- Drag-the-words UI ---------- */
+  .drag-ui{display:flex; flex-direction:column; gap:10px;}
+  .sentence-drop{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+    min-height:48px;
+    background:#FFF7E6;
+    border:2px solid var(--brass);
+    border-radius:11px;
+    padding:9px 10px;
+  }
+  .sentence-drop.drag-over{background:#FFF0CC;}
+  .drop-placeholder{
+    color:#B9AC8C;
+    font-weight:700;
+    font-size:13px;
+    font-family:'Nunito',sans-serif;
+  }
+  .word-bank{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    min-height:44px;
+    background:#FDFBF5;
+    border:2px dashed #EADFC5;
+    border-radius:11px;
+    padding:9px 10px;
+  }
+  .word-bank.drag-over{border-color:var(--teal);}
+  .word-tile{
+    background:#fff;
+    border:2px solid var(--teal);
+    color:var(--teal-dark);
+    font-family:'Poppins',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    padding:7px 12px;
+    border-radius:9px;
+    cursor:grab;
+    user-select:none;
+  }
+  .word-tile:active{cursor:grabbing;}
+  .word-tile.grammar{border-color:var(--brass); color:#8A6B1E; background:#FFFBEA;}
+  .sentence-drop .word-tile{cursor:pointer;}
+
+  .button-row{display:flex; gap:8px;}
+  .ask-btn, .help-btn{
+    flex:1 1 auto;
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:10px 12px;
+    font-family:'Poppins',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition:transform .08s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+  .ask-btn{background:var(--teal); box-shadow:0 3px 0 var(--teal-dark);}
+  .ask-btn:hover{transform:translateY(-1px);}
+  .ask-btn:active{transform:translateY(2px); box-shadow:0 1px 0 var(--teal-dark);}
+
+  .help-btn{background:var(--brass); box-shadow:0 3px 0 #a5822c; color:var(--ink);}
+  .clear-btn{background:#EADFC5; box-shadow:0 3px 0 #cbbf9e; color:var(--ink);}
+  .help-btn:hover{transform:translateY(-1px);}
+  .help-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #a5822c;}
+  .clear-btn:active{box-shadow:0 1px 0 #cbbf9e;}
+
+  .reply-bubble{
+    position:absolute;
+    box-sizing:border-box;
+    background:linear-gradient(135deg,#EAF9EF,#CFF0DC);
+    border:3px solid var(--success);
+    border-radius:18px;
+    padding:14px 22px;
+    font-family:'Poppins',sans-serif;
+    font-size:19px;
+    font-weight:700;
+    color:#1F5C42;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    gap:14px;
+    text-align:center;
+    line-height:1.3;
+    box-shadow:0 10px 24px rgba(60,143,108,0.35), 0 0 0 6px rgba(60,143,108,0.10);
+    z-index:6;
+    overflow:visible;
+  }
+  .reply-bubble.show{display:flex; animation:replyPulse 1.7s ease-in-out infinite;}
+  .reply-bubble .reply-body{flex:1; min-width:0;}
+  @keyframes replyPulse{
+    0%,100%{box-shadow:0 10px 24px rgba(60,143,108,0.35), 0 0 0 6px rgba(60,143,108,0.10); transform:scale(1);}
+    50%{box-shadow:0 14px 30px rgba(60,143,108,0.5), 0 0 0 11px rgba(60,143,108,0.05); transform:scale(1.015);}
+  }
+  .voice-btn{
+    flex-shrink:0;
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:2px solid var(--success);
+    background:#fff;
+    color:var(--teal-dark);
+    font-size:19px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:transform .1s ease, background .15s ease;
+  }
+  .voice-btn:hover{background:#E4F5EA; transform:scale(1.06);}
+  .voice-btn.speaking{background:var(--success); color:#fff; border-color:#2E7256;}
+
+  /* ---------- Kitchen stage ---------- */
+  .stage{
+    background:linear-gradient(180deg,#FFFFFF,#F3ECDA);
+    border-radius:18px;
+    padding:14px;
+    border:2px solid var(--panel-border);
+    position:relative;
+    overflow:hidden;
+    box-shadow:0 2px 14px rgba(90,70,30,0.06);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:0;
+  }
+  .stage svg{
+    display:block;
+    border-radius:10px;
+    aspect-ratio:1100/620;
+    height:100%;
+    width:auto;
+    max-width:100%;
+  }
+  @media (max-width:840px){
+    .stage svg{width:100%; height:auto;}
+  }
+
+  .zone{cursor:pointer; outline:none;}
+  .zone:hover .zone-hitbox, .zone:focus-visible .zone-hitbox{
+    filter:brightness(1.08);
+  }
+  .zone.wrong .zone-hitbox{animation:shake .35s ease;}
+  .zone.correct-pulse .zone-hitbox{animation:pulseGood .5s ease;}
+
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-6px);}
+    40%{transform:translateX(6px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+  @keyframes pulseGood{
+    0%{transform:scale(1);}
+    50%{transform:scale(1.03);}
+    100%{transform:scale(1);}
+  }
+
+  .found-pop{
+    position:absolute;
+    font-size:34px;
+    pointer-events:none;
+    animation:popUp .9s ease forwards;
+    z-index:5;
+  }
+  @keyframes popUp{
+    0%{transform:translateY(0) scale(0.5); opacity:0;}
+    15%{transform:translateY(-6px) scale(1.15); opacity:1;}
+    75%{transform:translateY(-38px) scale(1); opacity:1;}
+    100%{transform:translateY(-58px) scale(0.85); opacity:0;}
+  }
+
+  /* ---------- Toast ---------- */
+  .toast{
+    position:fixed;
+    bottom:22px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);
+    color:#fff;
+    padding:11px 20px;
+    border-radius:999px;
+    font-family:'Poppins',sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    opacity:0;
+    transition:opacity .25s ease, transform .25s ease;
+    pointer-events:none;
+    z-index:50;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
+    max-width:90vw;
+    text-align:center;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- Modals (victory + help) ---------- */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(60,48,30,0.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index:60;
+    padding:20px;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-card{
+    background:var(--cream);
+    color:var(--ink);
+    border-radius:20px;
+    padding:30px 28px;
+    max-width:380px;
+    text-align:center;
+    border:3px solid var(--brass);
+    position:relative;
+  }
+  .modal-card .big-emoji{font-size:54px; margin-bottom:6px;}
+  .modal-card h2{font-size:21px; color:var(--teal-dark); margin-bottom:8px;}
+  .modal-card p{font-size:14.5px; font-weight:600; color:#5C4E3D; margin:0 0 18px;}
+  .modal-card button.primary{
+    background:var(--cherry);
+    color:#fff;
+    border:none;
+    border-radius:999px;
+    padding:12px 24px;
+    font-family:'Poppins',sans-serif;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    box-shadow:0 3px 0 var(--cherry-dark);
+  }
+  .modal-close{
+    position:absolute;
+    top:12px; right:14px;
+    background:none;
+    border:none;
+    font-size:18px;
+    color:var(--muted-ink);
+    cursor:pointer;
+    line-height:1;
+  }
+  .help-line{
+    font-family:'Poppins',sans-serif;
+    font-size:17px;
+    font-weight:600;
+    color:var(--teal-dark);
+    background:#fff;
+    border-radius:10px;
+    padding:10px 14px;
+    margin:0 0 10px;
+  }
+  .help-line em{color:var(--cherry-dark); font-style:normal;}
+
+  .confetti{
+    position:absolute;
+    top:-10px;
+    width:8px; height:14px;
+    border-radius:2px;
+    animation:fall linear forwards;
+    z-index:70;
+  }
+  @keyframes fall{
+    to{transform:translateY(110vh) rotate(360deg); opacity:0.2;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="mark">🍳</div>
+      <h1>Where Is It? Kitchen Quest</h1>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="infoBtn" title="How to play" aria-label="How to play">❓</button>
+      <button class="icon-btn" id="soundToggleBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+      <button class="new-recipe-btn" id="newRecipeBtn">🔀 New Recipe</button>
+    </div>
+  </div>
+
+  <div class="recipe-banner">
+    <div class="recipe-title">Cooking: <span id="recipeName">—</span></div>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span class="progress-label" id="progressLabel">0 / 0</span>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    </div>
+  </div>
+
+  <div class="game-wrap">
+    <div class="sidebar">
+      <div class="postit">
+        <ul class="checklist" id="ingredientList"></ul>
+      </div>
+
+      <div class="ask-box">
+        <div class="input-row type-ui" id="typeUi">
+          <input type="text" class="sentence-input" id="sentenceInput" placeholder="Where is the…?" autocomplete="off">
+        </div>
+        <div class="drag-ui hidden" id="dragUi">
+          <div class="sentence-drop" id="sentenceDrop"></div>
+          <div class="word-bank" id="wordBank"></div>
+        </div>
+        <div class="button-row">
+          <button class="ask-btn" id="askBtn">💬 Ask</button>
+          <button class="help-btn" id="helpBtn">💡 Help</button>
+          <button class="clear-btn help-btn hidden" id="clearDragBtn" type="button">↺ Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stage">
+      <svg id="kitchenSvg" viewBox="0 0 1100 620" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="floorCheck" width="100" height="100" patternUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="var(--floor-a)"></rect>
+            <rect width="50" height="50" fill="var(--floor-b)"></rect>
+            <rect x="50" y="50" width="50" height="50" fill="var(--floor-b)"></rect>
+          </pattern>
+        </defs>
+
+        <!-- Wall -->
+        <rect x="0" y="0" width="1100" height="420" fill="var(--wall)"></rect>
+        <rect x="0" y="0" width="1100" height="12" fill="var(--wall-dark)"></rect>
+        <!-- Floor -->
+        <rect x="0" y="420" width="1100" height="200" fill="url(#floorCheck)"></rect>
+        <rect x="0" y="416" width="1100" height="8" fill="#1B3238"></rect>
+
+        <!-- decorative window above fridge -->
+        <g opacity="0.9">
+          <rect x="70" y="35" width="110" height="80" rx="6" fill="#DCEEF0" stroke="var(--wood-dark)" stroke-width="5"></rect>
+          <line x1="125" y1="35" x2="125" y2="115" stroke="var(--wood-dark)" stroke-width="4"></line>
+          <line x1="70" y1="75" x2="180" y2="75" stroke="var(--wood-dark)" stroke-width="4"></line>
+        </g>
+
+        <!-- decorative clock -->
+        <g opacity="0.95">
+          <circle cx="705" cy="68" r="24" fill="#FBF3E3" stroke="var(--wood-dark)" stroke-width="4"></circle>
+          <line x1="705" y1="68" x2="705" y2="55" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"></line>
+          <line x1="705" y1="68" x2="714" y2="68" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"></line>
+        </g>
+
+        <!-- ========== FREEZER ========== -->
+        <g class="zone" data-zone="freezer" tabindex="0" role="button" aria-label="Freezer">
+          <g class="zone-hitbox">
+            <rect x="40" y="140" width="170" height="90" rx="8" fill="var(--mint)" stroke="var(--mint-dark)" stroke-width="4"></rect>
+            <rect x="55" y="153" width="140" height="64" rx="5" fill="none" stroke="var(--mint-dark)" stroke-width="2.5" opacity="0.6"></rect>
+            <rect x="185" y="175" width="6" height="30" rx="3" fill="var(--chrome)"></rect>
+          </g>
+        </g>
+
+        <!-- ========== FRIDGE ========== -->
+        <g class="zone" data-zone="fridge" tabindex="0" role="button" aria-label="Refrigerator">
+          <g class="zone-hitbox">
+            <rect x="40" y="230" width="170" height="190" rx="8" fill="var(--mint)" stroke="var(--mint-dark)" stroke-width="4"></rect>
+            <rect x="55" y="245" width="140" height="160" rx="5" fill="none" stroke="var(--mint-dark)" stroke-width="2.5" opacity="0.6"></rect>
+            <rect x="185" y="300" width="6" height="34" rx="3" fill="var(--chrome)"></rect>
+            <circle cx="70" cy="270" r="4" fill="#fff" opacity="0.5"></circle>
+            <circle cx="82" cy="270" r="4" fill="#F2C14E" opacity="0.6"></circle>
+          </g>
+        </g>
+
+        <!-- ========== TOP SHELF ========== -->
+        <g class="zone" data-zone="top-shelf" tabindex="0" role="button" aria-label="Top shelf">
+          <g class="zone-hitbox">
+            <rect x="230" y="85" width="350" height="80" fill="none"></rect>
+            <rect x="230" y="152" width="350" height="12" fill="var(--wood-dark)"></rect>
+            <rect x="230" y="160" width="350" height="5" fill="#3C2A18"></rect>
+            <g>
+              <rect x="248" y="98" width="24" height="52" rx="3" fill="#E7C766" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="282" y="92" width="24" height="58" rx="3" fill="#D97A6C" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="316" y="100" width="24" height="50" rx="3" fill="#8FBFA5" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="350" y="94" width="24" height="56" rx="3" fill="#E7C766" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="384" y="98" width="24" height="52" rx="3" fill="#D97A6C" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="418" y="92" width="24" height="58" rx="3" fill="#8FBFA5" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="452" y="100" width="24" height="50" rx="3" fill="#E7C766" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="486" y="94" width="24" height="56" rx="3" fill="#D97A6C" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="520" y="98" width="24" height="52" rx="3" fill="#8FBFA5" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+            </g>
+          </g>
+        </g>
+
+        <!-- ========== BOTTOM SHELF ========== -->
+        <g class="zone" data-zone="bottom-shelf" tabindex="0" role="button" aria-label="Bottom shelf">
+          <g class="zone-hitbox">
+            <rect x="230" y="175" width="350" height="75" fill="none"></rect>
+            <rect x="230" y="237" width="350" height="12" fill="var(--wood-dark)"></rect>
+            <rect x="230" y="245" width="350" height="5" fill="#3C2A18"></rect>
+            <g>
+              <rect x="248" y="188" width="30" height="48" rx="3" fill="#C9C2A6" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="288" y="182" width="30" height="54" rx="3" fill="#E7C766" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="328" y="190" width="30" height="46" rx="3" fill="#C9C2A6" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="368" y="184" width="30" height="52" rx="3" fill="#D97A6C" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="408" y="190" width="30" height="46" rx="3" fill="#C9C2A6" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="448" y="184" width="30" height="52" rx="3" fill="#8FBFA5" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+              <rect x="488" y="190" width="30" height="46" rx="3" fill="#E7C766" stroke="var(--wood-dark)" stroke-width="1.5"></rect>
+            </g>
+          </g>
+        </g>
+
+        <!-- fridge/shelf area counter props sit between y=260-300 -->
+        <!-- bowl on the counter -->
+        <g class="zone" data-zone="counter-bowl" tabindex="0" role="button" aria-label="Bowl on the counter">
+          <g class="zone-hitbox">
+            <ellipse cx="320" cy="298" rx="72" ry="17" fill="#8A5637"></ellipse>
+            <path d="M258 286 Q320 318 382 286 L377 268 Q320 292 263 268 Z" fill="#B9764A"></path>
+            <circle cx="296" cy="266" r="13" fill="#D9463C"></circle>
+            <circle cx="319" cy="259" r="12" fill="#EFB13B"></circle>
+            <circle cx="343" cy="267" r="13" fill="#7FAE4A"></circle>
+          </g>
+        </g>
+
+        <!-- blue box on the counter -->
+        <g class="zone" data-zone="counter-blue-box" tabindex="0" role="button" aria-label="Blue box on the counter">
+          <g class="zone-hitbox">
+            <rect x="450" y="262" width="120" height="40" rx="8" fill="#3E7FB3" stroke="#2C5C82" stroke-width="3"></rect>
+            <rect x="458" y="258" width="104" height="12" rx="6" fill="#5C9CC9" stroke="#2C5C82" stroke-width="2"></rect>
+          </g>
+        </g>
+
+        <!-- family photo frame on the wall, above the orange box -->
+        <g opacity="1">
+          <rect x="655" y="120" width="120" height="95" rx="4" fill="#C9A227" stroke="var(--wood-dark)" stroke-width="4"></rect>
+          <rect x="666" y="130" width="98" height="75" rx="2" fill="#EAF3F4" stroke="#9FB8BA" stroke-width="2"></rect>
+          <!-- simple family illustration: three figures -->
+          <circle cx="688" cy="158" r="11" fill="#E7B98C"></circle>
+          <path d="M672 196 Q688 172 704 196 Z" fill="#4F7C9E"></path>
+          <circle cx="715" cy="162" r="10" fill="#E7B98C"></circle>
+          <path d="M701 196 Q715 178 729 196 Z" fill="#B24A5A"></path>
+          <circle cx="744" cy="168" r="8" fill="#E7B98C"></circle>
+          <path d="M733 196 Q744 182 755 196 Z" fill="#E7C766"></path>
+        </g>
+
+        <!-- orange box on the counter -->
+        <g class="zone" data-zone="counter-orange-box" tabindex="0" role="button" aria-label="Orange box on the counter">
+          <g class="zone-hitbox">
+            <rect x="655" y="262" width="120" height="40" rx="8" fill="#E28A2E" stroke="#A85F1A" stroke-width="3"></rect>
+            <rect x="663" y="258" width="104" height="12" rx="6" fill="#F0A554" stroke="#A85F1A" stroke-width="2"></rect>
+          </g>
+        </g>
+
+        <!-- full counter strip -->
+        <rect x="230" y="300" width="580" height="40" fill="var(--teal)" stroke="var(--teal-dark)" stroke-width="3"></rect>
+
+        <!-- unifying cabinet/drawer base (fills the gaps so it reads as one unit) -->
+        <rect x="228" y="338" width="584" height="84" rx="4" fill="#B08A5E" stroke="var(--wood-dark)" stroke-width="4"></rect>
+
+        <!-- ========== CABINET ON THE LEFT ========== -->
+        <g class="zone" data-zone="cabinet-left" tabindex="0" role="button" aria-label="Cabinet on the left">
+          <g class="zone-hitbox">
+            <rect x="230" y="340" width="180" height="80" fill="var(--wood)" stroke="var(--wood-dark)" stroke-width="4"></rect>
+            <rect x="242" y="350" width="76" height="60" rx="3" fill="var(--wood-panel)" stroke="var(--wood-dark)" stroke-width="2"></rect>
+            <rect x="322" y="350" width="76" height="60" rx="3" fill="var(--wood-panel)" stroke="var(--wood-dark)" stroke-width="2"></rect>
+            <circle cx="308" cy="380" r="5" fill="var(--brass)"></circle>
+            <circle cx="330" cy="380" r="5" fill="var(--brass)"></circle>
+          </g>
+        </g>
+
+        <!-- ========== TOP DRAWER ========== -->
+        <g class="zone" data-zone="top-drawer" tabindex="0" role="button" aria-label="Top drawer">
+          <g class="zone-hitbox">
+            <rect x="430" y="340" width="180" height="36" rx="4" fill="var(--wood-panel)" stroke="var(--wood-dark)" stroke-width="4"></rect>
+            <rect x="490" y="354" width="60" height="8" rx="4" fill="var(--brass)"></rect>
+          </g>
+        </g>
+
+        <!-- ========== BOTTOM DRAWER ========== -->
+        <g class="zone" data-zone="bottom-drawer" tabindex="0" role="button" aria-label="Bottom drawer">
+          <g class="zone-hitbox">
+            <rect x="430" y="382" width="180" height="38" rx="4" fill="var(--wood-panel)" stroke="var(--wood-dark)" stroke-width="4"></rect>
+            <rect x="490" y="397" width="60" height="8" rx="4" fill="var(--brass)"></rect>
+          </g>
+        </g>
+
+        <!-- ========== CABINET ON THE RIGHT ========== -->
+        <g class="zone" data-zone="cabinet-right" tabindex="0" role="button" aria-label="Cabinet on the right">
+          <g class="zone-hitbox">
+            <rect x="630" y="340" width="180" height="80" fill="var(--wood)" stroke="var(--wood-dark)" stroke-width="4"></rect>
+            <rect x="642" y="350" width="76" height="60" rx="3" fill="var(--wood-panel)" stroke="var(--wood-dark)" stroke-width="2"></rect>
+            <rect x="722" y="350" width="76" height="60" rx="3" fill="var(--wood-panel)" stroke="var(--wood-dark)" stroke-width="2"></rect>
+            <circle cx="708" cy="380" r="5" fill="var(--brass)"></circle>
+            <circle cx="730" cy="380" r="5" fill="var(--brass)"></circle>
+          </g>
+        </g>
+
+        <!-- ========== STOVE (body decorative, not clickable) ========== -->
+        <g opacity="1">
+          <rect x="850" y="270" width="200" height="150" fill="var(--steel)" stroke="var(--steel-dark)" stroke-width="4"></rect>
+          <rect x="850" y="270" width="200" height="34" fill="#8C9A9C"></rect>
+          <circle cx="890" cy="287" r="12" fill="#3A4547" stroke="#20282a" stroke-width="2"></circle>
+          <circle cx="935" cy="287" r="12" fill="#3A4547" stroke="#20282a" stroke-width="2"></circle>
+          <circle cx="1010" cy="287" r="10" fill="#5B6668" stroke="#20282a" stroke-width="2"></circle>
+          <rect x="865" y="315" width="170" height="90" rx="6" fill="#8C9A9C" stroke="var(--steel-dark)" stroke-width="3"></rect>
+          <rect x="880" y="328" width="140" height="50" rx="4" fill="#4A5557" opacity="0.6"></rect>
+          <rect x="940" y="386" width="20" height="8" rx="3" fill="var(--chrome)"></rect>
+        </g>
+
+        <!-- ========== POT ON THE STOVE ========== -->
+        <g class="zone" data-zone="stove-pot" tabindex="0" role="button" aria-label="Pot on the stove">
+          <g class="zone-hitbox">
+            <ellipse cx="950" cy="268" rx="58" ry="10" fill="#5B6668"></ellipse>
+            <rect x="892" y="238" width="116" height="34" rx="4" fill="#7C8A8C" stroke="#4A5557" stroke-width="3"></rect>
+            <ellipse cx="950" cy="238" rx="58" ry="9" fill="#9AA6A8" stroke="#4A5557" stroke-width="3"></ellipse>
+            <rect x="882" y="248" width="14" height="7" rx="3" fill="#4A5557"></rect>
+            <rect x="1004" y="248" width="14" height="7" rx="3" fill="#4A5557"></rect>
+            <circle cx="950" cy="232" r="6" fill="#4A5557"></circle>
+          </g>
+        </g>
+
+      </svg>
+
+      <div class="reply-bubble" id="replyBubble">
+        <div class="reply-body" id="replyText"></div>
+        <button class="voice-btn" id="voiceBtn" title="Read answer aloud" aria-label="Read answer aloud">🔊</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-overlay show" id="introOverlay">
+    <div class="modal-card">
+      <div class="big-emoji">🧑‍🍳</div>
+      <h2>How to Play</h2>
+      <div class="mode-select" id="modeSelect">
+        <button type="button" class="mode-option selected" data-mode="type">
+          <span class="mode-emoji">⌨️</span>Type the question
+        </button>
+        <button type="button" class="mode-option" data-mode="drag">
+          <span class="mode-emoji">🧩</span>Drag the words
+        </button>
+      </div>
+      <ul class="instructions-list">
+        <li><span class="num">1</span> Check the note pad for the ingredients you need.</li>
+        <li><span class="num">2</span> Ask a question, like "Where is the tomato?"</li>
+        <li><span class="num">3</span> Press Ask to hear where it is.</li>
+        <li><span class="num">4</span> Click the matching spot in the kitchen to collect it!</li>
+      </ul>
+      <button class="primary" id="startPlayBtn">Let's Cook! 🍳</button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="helpOverlay">
+    <div class="modal-card">
+      <button class="modal-close" id="helpCloseBtn" aria-label="Close">✕</button>
+      <h2>Ask it like this</h2>
+      <p class="help-line">Where is the <em>[ingredient]</em>?</p>
+      <p class="help-line">Where are the <em>[ingredients]</em>?</p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="big-emoji">🧑‍🍳🎉</div>
+      <h2>Dish complete!</h2>
+      <p id="modalText">You found every ingredient for the recipe.</p>
+      <button class="primary" id="playAgainBtn">Cook Something Else</button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  // ---------------- Data ----------------
+  // Every location below is something a player can directly see in the scene:
+  // freezer, fridge, top shelf, bottom shelf, cabinet on the left/right,
+  // top/bottom drawer, the bowl or blue box on the counter, the pot on the stove.
+  const INGREDIENTS = {
+    pasta: {name:"pasta", emoji:"🍝", zone:"cabinet-left", plural:false, reply:"The pasta is in the cabinet on the left."},
+    canned_tomatoes: {name:"canned tomatoes", emoji:"🥫", zone:"cabinet-right", plural:true, reply:"The canned tomatoes are in the cabinet on the right."},
+    garlic: {name:"garlic", emoji:"🧄", zone:"counter-blue-box", plural:false, reply:"The garlic is in the blue box on the counter."},
+    olive_oil: {name:"olive oil", emoji:"🫒", zone:"top-shelf", plural:false, reply:"The olive oil is on the top shelf."},
+    basil: {name:"basil", emoji:"🌿", zone:"bottom-shelf", plural:false, reply:"The basil is on the bottom shelf."},
+    parmesan: {name:"parmesan", emoji:"🧀", zone:"fridge", plural:false, reply:"The parmesan is in the refrigerator."},
+    bread: {name:"bread", emoji:"🍞", zone:"bottom-drawer", plural:false, reply:"The bread is in the bottom drawer."},
+    cheese: {name:"cheese", emoji:"🧀", zone:"fridge", plural:false, reply:"The cheese is in the refrigerator."},
+    butter: {name:"butter", emoji:"🧈", zone:"top-drawer", plural:false, reply:"The butter is in the top drawer."},
+    tomato: {name:"tomato", emoji:"🍅", zone:"counter-bowl", plural:false, reply:"The tomato is in the bowl on the counter."},
+    flour: {name:"flour", emoji:"🫙", zone:"top-shelf", plural:false, reply:"The flour is on the top shelf."},
+    sugar: {name:"sugar", emoji:"🧂", zone:"bottom-shelf", plural:false, reply:"The sugar is on the bottom shelf."},
+    eggs: {name:"eggs", emoji:"🥚", zone:"fridge", plural:true, reply:"The eggs are in the refrigerator."},
+    milk: {name:"milk", emoji:"🥛", zone:"fridge", plural:false, reply:"The milk is in the refrigerator."},
+    baking_powder: {name:"baking powder", emoji:"🧂", zone:"cabinet-left", plural:false, reply:"The baking powder is in the cabinet on the left."},
+    chicken: {name:"chicken", emoji:"🍗", zone:"freezer", plural:false, reply:"The chicken is in the freezer."},
+    soy_sauce: {name:"soy sauce", emoji:"🍶", zone:"cabinet-right", plural:false, reply:"The soy sauce is in the cabinet on the right."},
+    bell_pepper: {name:"bell pepper", emoji:"🫑", zone:"fridge", plural:false, reply:"The bell pepper is in the refrigerator."},
+    carrot: {name:"carrot", emoji:"🥕", zone:"counter-orange-box", plural:false, reply:"The carrot is in the orange box on the counter."},
+    rice: {name:"rice", emoji:"🍚", zone:"bottom-shelf", plural:false, reply:"The rice is on the bottom shelf."},
+    avocado: {name:"avocado", emoji:"🥑", zone:"counter-bowl", plural:false, reply:"The avocado is in the bowl on the counter."},
+    lime: {name:"lime", emoji:"🟢", zone:"counter-bowl", plural:false, reply:"The lime is in the bowl on the counter."},
+    onion: {name:"onion", emoji:"🧅", zone:"counter-blue-box", plural:false, reply:"The onion is in the blue box on the counter."},
+    salt: {name:"salt", emoji:"🧂", zone:"top-shelf", plural:false, reply:"The salt is on the top shelf."},
+    spinach: {name:"spinach", emoji:"🥬", zone:"fridge", plural:false, reply:"The spinach is in the refrigerator."},
+    canned_beans: {name:"canned beans", emoji:"🥫", zone:"cabinet-right", plural:true, reply:"The canned beans are in the cabinet on the right."},
+    broth: {name:"broth", emoji:"🍲", zone:"stove-pot", plural:false, reply:"The broth is in the pot on the stove."},
+    pepper: {name:"pepper", emoji:"🌶️", zone:"top-shelf", plural:false, reply:"The pepper is on the top shelf."},
+    chocolate_chips: {name:"chocolate chips", emoji:"🍫", zone:"bottom-shelf", plural:true, reply:"The chocolate chips are on the bottom shelf."},
+    vanilla_extract: {name:"vanilla extract", emoji:"🍶", zone:"top-shelf", plural:false, reply:"The vanilla extract is on the top shelf."},
+    ground_beef: {name:"ground beef", emoji:"🥩", zone:"freezer", plural:false, reply:"The ground beef is in the freezer."},
+    tortillas: {name:"tortillas", emoji:"🫓", zone:"bottom-drawer", plural:true, reply:"The tortillas are in the bottom drawer."},
+    lettuce: {name:"lettuce", emoji:"🥬", zone:"fridge", plural:false, reply:"The lettuce is in the refrigerator."},
+    hot_sauce: {name:"hot sauce", emoji:"🔥", zone:"cabinet-right", plural:false, reply:"The hot sauce is in the cabinet on the right."},
+    banana: {name:"banana", emoji:"🍌", zone:"counter-bowl", plural:false, reply:"The banana is in the bowl on the counter."},
+    apple: {name:"apple", emoji:"🍎", zone:"counter-bowl", plural:false, reply:"The apple is in the bowl on the counter."},
+    orange: {name:"orange", emoji:"🍊", zone:"counter-orange-box", plural:false, reply:"The orange is in the orange box on the counter."},
+    lemon: {name:"lemon", emoji:"🍋", zone:"counter-bowl", plural:false, reply:"The lemon is in the bowl on the counter."},
+    shrimp: {name:"shrimp", emoji:"🍤", zone:"freezer", plural:false, reply:"The shrimp is in the freezer."}
+  };
+
+  const RECIPES = [
+    {name:"Spaghetti with Tomato Sauce", ingredients:["pasta","canned_tomatoes","garlic","olive_oil","basil","parmesan"]},
+    {name:"Grilled Cheese Sandwich", ingredients:["bread","cheese","butter","tomato"]},
+    {name:"Fluffy Pancakes", ingredients:["flour","sugar","eggs","milk","baking_powder"]},
+    {name:"Chicken Stir-Fry", ingredients:["chicken","soy_sauce","bell_pepper","carrot","garlic","rice"]},
+    {name:"Fresh Guacamole", ingredients:["avocado","lime","onion","tomato","salt"]},
+    {name:"Hearty Vegetable Soup", ingredients:["carrot","spinach","canned_beans","broth","pepper"]},
+    {name:"Chocolate Chip Cookies", ingredients:["flour","sugar","butter","eggs","chocolate_chips","vanilla_extract"]},
+    {name:"Beef Tacos", ingredients:["ground_beef","tortillas","cheese","lettuce","tomato","hot_sauce"]},
+    {name:"Mixed Fruit Salad", ingredients:["banana","apple","orange","lemon"]},
+    {name:"Garlic Shrimp Pasta", ingredients:["shrimp","pasta","garlic","olive_oil","lemon","parmesan"]}
+  ];
+
+  // ---------------- State ----------------
+  let state = {
+    recipe: null,
+    collected: new Set(),
+    target: null,     // ingredient id currently revealed and awaiting a kitchen click
+    lastRecipeIndex: -1,
+    soundOn: true,
+    mode: 'type',      // 'type' or 'drag'
+    dragTiles: [],     // master list of {id, text, kind} for the current question round
+    dragSentence: []   // ordered array of tile ids placed in the sentence strip
+  };
+
+  // ---------------- DOM refs ----------------
+  const els = {
+    recipeName: document.getElementById('recipeName'),
+    progressLabel: document.getElementById('progressLabel'),
+    progressFill: document.getElementById('progressFill'),
+    ingredientList: document.getElementById('ingredientList'),
+    typeUi: document.getElementById('typeUi'),
+    sentenceInput: document.getElementById('sentenceInput'),
+    dragUi: document.getElementById('dragUi'),
+    sentenceDrop: document.getElementById('sentenceDrop'),
+    wordBank: document.getElementById('wordBank'),
+    clearDragBtn: document.getElementById('clearDragBtn'),
+    askBtn: document.getElementById('askBtn'),
+    helpBtn: document.getElementById('helpBtn'),
+    helpOverlay: document.getElementById('helpOverlay'),
+    helpCloseBtn: document.getElementById('helpCloseBtn'),
+    replyBubble: document.getElementById('replyBubble'),
+    replyText: document.getElementById('replyText'),
+    voiceBtn: document.getElementById('voiceBtn'),
+    newRecipeBtn: document.getElementById('newRecipeBtn'),
+    soundToggleBtn: document.getElementById('soundToggleBtn'),
+    infoBtn: document.getElementById('infoBtn'),
+    introOverlay: document.getElementById('introOverlay'),
+    modeSelect: document.getElementById('modeSelect'),
+    startPlayBtn: document.getElementById('startPlayBtn'),
+    toast: document.getElementById('toast'),
+    stage: document.querySelector('.stage'),
+    svg: document.getElementById('kitchenSvg'),
+    modalOverlay: document.getElementById('modalOverlay'),
+    modalText: document.getElementById('modalText'),
+    playAgainBtn: document.getElementById('playAgainBtn')
+  };
+
+  // ---------------- Helpers ----------------
+  function pickRecipe(){
+    if (RECIPES.length === 1) return 0;
+    let idx;
+    do { idx = Math.floor(Math.random() * RECIPES.length); }
+    while (idx === state.lastRecipeIndex);
+    return idx;
+  }
+
+  function capitalize(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  function showToast(msg){
+    els.toast.textContent = msg;
+    els.toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(() => els.toast.classList.remove('show'), 2000);
+  }
+
+  // ---------------- Sound engine (synthesized, no audio files needed) ----------------
+  let audioCtx = null;
+  function getAudioCtx(){
+    if (!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return null;
+      audioCtx = new Ctx();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playTone(ctx, freq, startAt, duration, peakGain){
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, startAt);
+    gain.gain.linearRampToValueAtTime(peakGain, startAt + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(startAt);
+    osc.stop(startAt + duration + 0.02);
+  }
+
+  function playNotes(notes){
+    if (!state.soundOn) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    notes.forEach(n => playTone(ctx, n.freq, now + n.delay, n.duration, n.gain !== undefined ? n.gain : 0.12));
+  }
+
+  function playAskSuccess(){
+    // gentle two-note rise, played once the question is understood
+    playNotes([
+      {freq:523.25, delay:0,    duration:0.22, gain:0.10},
+      {freq:659.25, delay:0.10, duration:0.28, gain:0.12}
+    ]);
+  }
+
+  function playFoundSound(){
+    // brighter three-note arpeggio for a successful find
+    playNotes([
+      {freq:523.25, delay:0,    duration:0.18, gain:0.12},
+      {freq:659.25, delay:0.09, duration:0.18, gain:0.12},
+      {freq:783.99, delay:0.18, duration:0.30, gain:0.14}
+    ]);
+  }
+
+  function playFanfare(){
+    // short triumphant run for finishing the whole recipe
+    playNotes([
+      {freq:523.25, delay:0.00, duration:0.20, gain:0.12},
+      {freq:659.25, delay:0.14, duration:0.20, gain:0.12},
+      {freq:783.99, delay:0.28, duration:0.20, gain:0.12},
+      {freq:1046.5, delay:0.42, duration:0.45, gain:0.15}
+    ]);
+  }
+
+  function updateSoundButton(){
+    els.soundToggleBtn.textContent = state.soundOn ? '🔊' : '🔇';
+  }
+
+  els.soundToggleBtn.addEventListener('click', () => {
+    state.soundOn = !state.soundOn;
+    updateSoundButton();
+    if (state.soundOn) getAudioCtx();
+  });
+
+  els.modeSelect.querySelectorAll('.mode-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.mode = btn.getAttribute('data-mode');
+      els.modeSelect.querySelectorAll('.mode-option').forEach(b => b.classList.toggle('selected', b === btn));
+    });
+  });
+
+  els.infoBtn.addEventListener('click', () => els.introOverlay.classList.add('show'));
+  els.startPlayBtn.addEventListener('click', () => {
+    els.introOverlay.classList.remove('show');
+    getAudioCtx();
+    applyMode();
+  });
+
+  // Finds which uncollected ingredient the typed sentence is about, and
+  // loosely checks that it reads like "Where is/are the X?"
+  function parseQuestion(typed){
+    const clean = typed.toLowerCase().replace(/[^a-z\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (!clean) return {status:'empty'};
+
+    const remaining = state.recipe.ingredients.filter(id => !state.collected.has(id));
+    const candidates = remaining
+      .map(id => ({id, ing: INGREDIENTS[id]}))
+      .filter(c => clean.includes(c.ing.name.toLowerCase()))
+      .sort((a,b) => b.ing.name.length - a.ing.name.length);
+
+    if (candidates.length === 0) return {status:'unknown'};
+
+    const {id, ing} = candidates[0];
+    const hasWhere = /\bwhere\b/.test(clean);
+    if (!hasWhere) return {status:'where', id};
+
+    const wantAre = ing.plural;
+    const hasIs = /\bis\b/.test(clean);
+    const hasAre = /\bare\b/.test(clean);
+    if (wantAre && !hasAre) return {status:'grammar', id, expected:'are'};
+    if (!wantAre && !hasIs) return {status:'grammar', id, expected:'is'};
+
+    return {status:'ok', id};
+  }
+
+  // ---------------- Render ----------------
+  function applyMode(){
+    const isDrag = state.mode === 'drag';
+    els.typeUi.classList.toggle('hidden', isDrag);
+    els.dragUi.classList.toggle('hidden', !isDrag);
+    els.clearDragBtn.classList.toggle('hidden', !isDrag);
+    if (isDrag) renderDragUI();
+  }
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function buildWordBank(){
+    const remaining = state.recipe.ingredients.filter(id => !state.collected.has(id));
+    const grammarTiles = [
+      {id:'w-where', text:'Where', kind:'grammar'},
+      {id:'w-is', text:'is', kind:'grammar'},
+      {id:'w-are', text:'are', kind:'grammar'},
+      {id:'w-the', text:'the', kind:'grammar'},
+      {id:'w-q', text:'?', kind:'grammar'}
+    ];
+    const ingTiles = remaining.map(id => ({id:'w-ing-' + id, text: INGREDIENTS[id].name, kind:'ingredient'}));
+    state.dragTiles = shuffle([...grammarTiles, ...ingTiles]);
+    state.dragSentence = [];
+  }
+
+  function tileById(id){ return state.dragTiles.find(t => t.id === id); }
+
+  function makeTileEl(tile, inSentence){
+    const el = document.createElement('div');
+    el.className = 'word-tile' + (tile.kind === 'grammar' ? ' grammar' : '');
+    el.textContent = tile.text;
+    el.draggable = true;
+    el.addEventListener('dragstart', (e) => {
+      e.dataTransfer.setData('text/plain', tile.id);
+    });
+    el.addEventListener('click', () => {
+      if (inSentence){
+        state.dragSentence = state.dragSentence.filter(id => id !== tile.id);
+      } else {
+        state.dragSentence.push(tile.id);
+      }
+      renderDragUI();
+    });
+    return el;
+  }
+
+  function renderDragUI(){
+    els.sentenceDrop.innerHTML = '';
+    if (state.dragSentence.length === 0){
+      const ph = document.createElement('span');
+      ph.className = 'drop-placeholder';
+      ph.textContent = 'Drag or tap words here…';
+      els.sentenceDrop.appendChild(ph);
+    } else {
+      state.dragSentence.forEach(id => {
+        const tile = tileById(id);
+        if (tile) els.sentenceDrop.appendChild(makeTileEl(tile, true));
+      });
+    }
+
+    els.wordBank.innerHTML = '';
+    state.dragTiles
+      .filter(t => !state.dragSentence.includes(t.id))
+      .forEach(tile => els.wordBank.appendChild(makeTileEl(tile, false)));
+  }
+
+  [els.sentenceDrop, els.wordBank].forEach(zoneEl => {
+    zoneEl.addEventListener('dragover', (e) => { e.preventDefault(); zoneEl.classList.add('drag-over'); });
+    zoneEl.addEventListener('dragleave', () => zoneEl.classList.remove('drag-over'));
+    zoneEl.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zoneEl.classList.remove('drag-over');
+      const tileId = e.dataTransfer.getData('text/plain');
+      if (!tileId) return;
+      if (zoneEl === els.sentenceDrop){
+        if (!state.dragSentence.includes(tileId)) state.dragSentence.push(tileId);
+      } else {
+        state.dragSentence = state.dragSentence.filter(id => id !== tileId);
+      }
+      renderDragUI();
+    });
+  });
+
+  els.clearDragBtn.addEventListener('click', () => {
+    state.dragSentence = [];
+    renderDragUI();
+  });
+
+  function startRecipe(){
+    const idx = pickRecipe();
+    state.lastRecipeIndex = idx;
+    state.recipe = RECIPES[idx];
+    state.collected = new Set();
+    state.target = null;
+
+    els.recipeName.textContent = state.recipe.name;
+    els.modalOverlay.classList.remove('show');
+    els.sentenceInput.value = '';
+    els.replyBubble.classList.remove('show');
+    buildWordBank();
+    if (state.mode === 'drag') renderDragUI();
+    renderChecklist();
+    updateProgress();
+  }
+
+  function renderChecklist(){
+    els.ingredientList.innerHTML = '';
+    state.recipe.ingredients.forEach(id => {
+      const ing = INGREDIENTS[id];
+      const li = document.createElement('li');
+      const isCollected = state.collected.has(id);
+      if (isCollected) li.classList.add('done');
+      li.innerHTML = `<span class="box">${isCollected ? '✓' : ''}</span>` +
+                      `<span class="emoji">${ing.emoji}</span>` +
+                      `<span class="label">${capitalize(ing.name)}</span>`;
+      els.ingredientList.appendChild(li);
+    });
+  }
+
+  function updateProgress(){
+    const total = state.recipe.ingredients.length;
+    const done = state.collected.size;
+    els.progressLabel.textContent = `${done} / ${total}`;
+    els.progressFill.style.width = `${(done/total)*100}%`;
+  }
+
+  // ---------------- Interactions ----------------
+  function currentTypedText(){
+    if (state.mode === 'drag'){
+      return state.dragSentence.map(id => (tileById(id) || {}).text || '').join(' ');
+    }
+    return els.sentenceInput.value;
+  }
+
+  function submitQuestion(){
+    const typed = currentTypedText();
+    const result = parseQuestion(typed);
+
+    if (result.status === 'empty'){ showToast('Ask a question first!'); return; }
+    if (result.status === 'unknown'){ showToast("Name one of the ingredients on your list."); return; }
+    if (result.status === 'where'){ showToast('Start with "Where…"'); return; }
+    if (result.status === 'grammar'){
+      showToast(`Try "${result.expected}" for ${INGREDIENTS[result.id].name}.`);
+      return;
+    }
+
+    const ing = INGREDIENTS[result.id];
+    state.target = result.id;
+    els.replyText.textContent = ing.reply;
+    positionReplyBubble();
+    els.replyBubble.classList.add('show');
+    if (state.mode === 'drag'){
+      state.dragSentence = [];
+      renderDragUI();
+    } else {
+      els.sentenceInput.value = '';
+    }
+    playAskSuccess();
+    if (state.soundOn){
+      setTimeout(() => speakText(ing.reply), 450);
+    }
+  }
+
+  // Maps the answer box's spot on the floor tiles (in the 1100x620 viewBox)
+  // to real on-screen pixels, since the SVG scales to fit the viewport.
+  function positionReplyBubble(){
+    const svgRect = els.svg.getBoundingClientRect();
+    const stageRect = els.stage.getBoundingClientRect();
+    if (!svgRect.width || !svgRect.height) return;
+    const scale = svgRect.width / 1100;
+    const boxX = 100, boxY = 430, boxW = 900, boxH = 150;
+    els.replyBubble.style.left = ((svgRect.left - stageRect.left) + boxX * scale) + 'px';
+    els.replyBubble.style.top = ((svgRect.top - stageRect.top) + boxY * scale) + 'px';
+    els.replyBubble.style.width = (boxW * scale) + 'px';
+    els.replyBubble.style.minHeight = (boxH * scale) + 'px';
+    els.replyBubble.style.height = 'auto';
+    els.replyBubble.style.fontSize = Math.max(11, 18 * scale) + 'px';
+    els.replyBubble.style.padding = Math.max(6, 14 * scale) + 'px ' + Math.max(10, 22 * scale) + 'px';
+    els.replyBubble.style.borderRadius = Math.max(8, 18 * scale) + 'px';
+  }
+
+  window.addEventListener('resize', () => {
+    if (els.replyBubble.classList.contains('show')) positionReplyBubble();
+  });
+
+  els.askBtn.addEventListener('click', submitQuestion);
+  els.sentenceInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){ e.preventDefault(); submitQuestion(); }
+  });
+
+  els.helpBtn.addEventListener('click', () => els.helpOverlay.classList.add('show'));
+  els.helpCloseBtn.addEventListener('click', () => els.helpOverlay.classList.remove('show'));
+  els.helpOverlay.addEventListener('click', (e) => {
+    if (e.target === els.helpOverlay) els.helpOverlay.classList.remove('show');
+  });
+
+  function speakText(text){
+    if (!text) return;
+    if (!('speechSynthesis' in window)){
+      showToast("Voice isn't supported in this browser.");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.95;
+    utter.pitch = 1.05;
+    els.voiceBtn.classList.add('speaking');
+    utter.onend = () => els.voiceBtn.classList.remove('speaking');
+    utter.onerror = () => els.voiceBtn.classList.remove('speaking');
+    window.speechSynthesis.speak(utter);
+  }
+
+  els.voiceBtn.addEventListener('click', () => speakText(els.replyText.textContent));
+
+  els.svg.querySelectorAll('.zone').forEach(zoneEl => {
+    const activate = () => handleZoneClick(zoneEl);
+    zoneEl.addEventListener('click', activate);
+    zoneEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); activate(); }
+    });
+  });
+
+  function handleZoneClick(zoneEl){
+    const zoneId = zoneEl.getAttribute('data-zone');
+
+    if (!state.target){
+      showToast('Ask where something is first!');
+      return;
+    }
+
+    const ing = INGREDIENTS[state.target];
+    if (zoneId === ing.zone){
+      collectIngredient(state.target, zoneEl);
+    } else {
+      zoneEl.classList.remove('wrong');
+      void zoneEl.offsetWidth;
+      zoneEl.classList.add('wrong');
+      showToast('Not quite — try another spot!');
+    }
+  }
+
+  function collectIngredient(id, zoneEl){
+    const ing = INGREDIENTS[id];
+    state.collected.add(id);
+    state.target = null;
+
+    zoneEl.classList.add('correct-pulse');
+    setTimeout(() => zoneEl.classList.remove('correct-pulse'), 500);
+    spawnFoundPop(zoneEl, ing.emoji);
+    showToast(`Found it! ${ing.emoji} ${capitalize(ing.name)}`);
+    playFoundSound();
+
+    els.replyBubble.classList.remove('show');
+    renderChecklist();
+    updateProgress();
+    buildWordBank();
+    if (state.mode === 'drag') renderDragUI();
+
+    if (state.collected.size === state.recipe.ingredients.length){
+      setTimeout(finishRecipe, 650);
+    }
+  }
+
+  function spawnFoundPop(zoneEl, emoji){
+    const bbox = zoneEl.getBoundingClientRect();
+    const stageBox = els.stage.getBoundingClientRect();
+    const pop = document.createElement('div');
+    pop.className = 'found-pop';
+    pop.textContent = emoji;
+    pop.style.left = (bbox.left - stageBox.left + bbox.width/2 - 17) + 'px';
+    pop.style.top = (bbox.top - stageBox.top + bbox.height/2 - 17) + 'px';
+    els.stage.appendChild(pop);
+    setTimeout(() => pop.remove(), 900);
+  }
+
+  function finishRecipe(){
+    els.modalText.textContent = `You found every ingredient for ${state.recipe.name}. Nice listening!`;
+    els.modalOverlay.classList.add('show');
+    burstConfetti();
+    playFanfare();
+  }
+
+  function burstConfetti(){
+    const colors = ['#B23A2E','#D6AE4A','#3F7FB3','#3C8F6C','#EFB13B'];
+    for (let i = 0; i < 38; i++){
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.style.left = Math.random()*100 + 'vw';
+      c.style.background = colors[Math.floor(Math.random()*colors.length)];
+      c.style.animationDuration = (1.4 + Math.random()*1.2) + 's';
+      c.style.opacity = 0.9;
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 2800);
+    }
+  }
+
+  els.newRecipeBtn.addEventListener('click', startRecipe);
+  els.playAgainBtn.addEventListener('click', startRecipe);
+
+  // ---------------- Init ----------------
+  startRecipe();
+})();
+</script>
+</body>
+</html>

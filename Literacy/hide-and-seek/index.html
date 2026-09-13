@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hide &amp; Seek — Where Are You?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#a9d8ea;
+    --sky-bottom:#e3f2df;
+    --sun:#ffe9a8;
+    --grass-far:#6fa85b;
+    --grass-near:#4f8a43;
+    --grass-edge:#3f7236;
+    --path:#d9c8a0;
+    --path-edge:#c2ac7c;
+    --ink:#20301f;
+    --ink-soft:#425240;
+    --paper:#fbf8ef;
+    --paper-2:#f1ecdc;
+    --accent:#2f7a4d;
+    --accent-dark:#215a38;
+    --gold:#e8a93a;
+    --wrong:#c0503f;
+    --line:#d9d2bd;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --shadow-soft:0 8px 20px rgba(32,48,31,.14);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%; margin:0; padding:0; overflow:hidden;}
+  body{
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(180deg,#eaf4ea 0%,#f4f0e2 100%);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:16px;
+    height:100vh;
+    height:100dvh;
+  }
+
+  /* .app's WIDTH is set in px by JS (fitApp, below) so that its natural
+     height (HUD + fixed-aspect scene + builder) always fits the viewport
+     height. The scene keeps its exact 16:11 ratio at every size — widening
+     the window just adds empty space at the sides instead of growing the
+     scene taller than the screen. */
+  .app{
+    width:100%;
+    max-width:980px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:nowrap;
+  }
+  .title{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:clamp(.95rem,2.2vw,1.45rem);
+    margin:0;
+    color:var(--ink);
+    text-align:center;
+    flex:1 1 auto;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .title span{color:var(--accent-dark);}
+  .hud-left,.hud-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex:0 0 auto;
+  }
+  .badge{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:600;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:6px 13px;
+    font-size:.9rem;
+    color:var(--ink);
+    box-shadow:var(--shadow-soft);
+  }
+  .icon-btn{
+    width:36px;height:36px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    font-size:1rem;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:var(--shadow-soft);
+    transition:transform .15s ease, background .15s ease;
+  }
+  .icon-btn:hover{transform:translateY(-1px);background:var(--paper-2);}
+  .icon-btn:active{transform:translateY(0);}
+
+  /* ---------- Scene ---------- */
+  .scene-wrap{position:relative; flex:0 0 auto;}
+  .scene{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/10;
+    border-radius:var(--radius-lg);
+    overflow:hidden;
+    box-shadow:var(--shadow-soft);
+    background:var(--sky-bottom);
+    border:1px solid rgba(32,48,31,.08);
+  }
+  .sky{
+    position:absolute; inset:0 0 40% 0;
+    background:linear-gradient(180deg,var(--sky-top) 0%, var(--sky-bottom) 100%);
+  }
+  .sun{
+    position:absolute; top:6%; right:8%;
+    width:12%; aspect-ratio:1/1;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff6da, var(--sun) 70%);
+    box-shadow:0 0 40px rgba(255,222,140,.6);
+  }
+  .cloud{position:absolute; background:#fff; opacity:.85; border-radius:50px;}
+  .cloud::before,.cloud::after{content:""; position:absolute; background:#fff; border-radius:50%;}
+  .cloud.c1{width:11%;height:5%;top:14%;left:8%;}
+  .cloud.c1::before{width:55%;height:150%;top:-60%;left:8%;}
+  .cloud.c1::after{width:45%;height:120%;top:-40%;left:48%;}
+  .cloud.c2{width:8%;height:4%;top:24%;left:56%;}
+  .cloud.c2::before{width:55%;height:150%;top:-60%;left:10%;}
+  .cloud.c2::after{width:40%;height:110%;top:-30%;left:50%;}
+  @media (prefers-reduced-motion:no-preference){
+    .cloud{animation:drift 70s linear infinite;}
+    .cloud.c2{animation-duration:95s; animation-direction:reverse;}
+  }
+  @keyframes drift{ from{transform:translateX(-6%);} to{transform:translateX(10%);} }
+
+  .ground{
+    position:absolute; left:0; right:0; bottom:0; height:64%;
+    background:linear-gradient(180deg,var(--grass-far) 0%, var(--grass-near) 55%, var(--grass-edge) 100%);
+    overflow:hidden;
+  }
+  .path-svg{ position:absolute; left:0; bottom:0; width:100%; height:100%; }
+
+  .objects-layer{position:absolute; inset:0;}
+  .obj{
+    position:absolute;
+    z-index:3;
+    background:none;
+    border:none;
+    padding:0;
+    cursor:pointer;
+    transform:translate(-50%,0);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .obj svg{
+    display:block;
+    width:100%;
+    height:100%;
+    transition:transform .18s ease;
+  }
+  .obj:hover svg{transform:translateY(-2px) scale(1.02);}
+  .obj:focus-visible{outline:3px solid var(--gold); outline-offset:4px; border-radius:8px;}
+  .obj.shake svg{animation:shake .45s ease;}
+  .obj.found svg{filter:drop-shadow(0 0 16px rgba(232,169,58,.9));}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-4%);}
+    40%{transform:translateX(4%);}
+    60%{transform:translateX(-3%);}
+    80%{transform:translateX(3%);}
+  }
+
+  /* Positioning (left/bottom/transform/opacity/z-index) is driven entirely by
+     JS (see popCharacterOut) so the character can animate out from behind
+     whichever object it's hiding at — these are just its static look. */
+  .character{
+    position:absolute;
+    z-index:3; /* same as .obj — depth between objects is controlled by
+                  moving the element's DOM position (see popCharacterOut),
+                  not by varying this number, so it stays correctly layered
+                  relative to every other object, not just the one it's
+                  hiding at. */
+    width:9%;
+    opacity:0;
+    pointer-events:none;
+    transform-origin:bottom center;
+    clip-path:none;
+  }
+  .character svg{width:100%;height:100%;display:block;}
+  .character .wave-arm{ transform-origin:60px 56px; }
+  .character.waving .wave-arm{ animation:character-wave .9s ease-in-out infinite; }
+  @keyframes character-wave{
+    0%,100%{transform:rotate(0deg);}
+    25%{transform:rotate(-16deg);}
+    75%{transform:rotate(16deg);}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .obj.shake svg{animation:none;}
+    .character.waving .wave-arm{animation:none;}
+  }
+
+  /* Speech bubble and the "Found!" toast are stacked together, centered,
+     so the toast always appears directly under the speech bubble at the
+     same height/style rather than floating somewhere else on screen. */
+  .bubble-stack{
+    position:absolute; top:5%; left:50%; transform:translateX(-50%);
+    width:88%;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    z-index:6;
+    pointer-events:none;
+  }
+  .bubble-stack > *{ pointer-events:auto; }
+
+  .bubble-box{
+    max-width:100%;
+    background:var(--paper);
+    border-radius:16px;
+    padding:10px 20px;
+    box-shadow:var(--shadow-soft);
+    font-family:'Baloo 2',sans-serif;
+    font-weight:600;
+    font-size:clamp(.82rem,1.8vw,1.02rem);
+    text-align:center;
+    display:flex; align-items:center; justify-content:center;
+    transition:opacity .2s ease, transform .2s ease;
+  }
+  .bubble-box.hidden{opacity:0; transform:translateY(-6px); pointer-events:none;}
+
+  .speech-bubble{ position:relative; }
+  .speech-bubble::after{
+    content:""; position:absolute; bottom:-9px; left:50%; transform:translateX(-50%);
+    border-width:9px 8px 0 8px; border-style:solid;
+    border-color:var(--paper) transparent transparent transparent;
+  }
+  .speech-bubble p{margin:0;}
+
+  .toast{
+    background:var(--ink); color:#fdfaf0;
+    gap:12px;
+    box-shadow:0 8px 18px rgba(0,0,0,.25);
+  }
+  .toast button{
+    font-family:'Baloo 2',sans-serif; font-weight:600;
+    background:var(--gold); color:#3a2a06; border:none;
+    border-radius:999px; padding:6px 14px; cursor:pointer;
+    font-size:.85rem;
+  }
+  .toast button:hover{filter:brightness(1.06);}
+
+  /* ---------- Builder ---------- */
+  .builder{
+    flex:0 0 auto;
+    background:var(--paper);
+    border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-soft);
+    padding:9px 16px 11px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .builder-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .builder-label{
+    margin:0;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:600;
+    color:var(--ink-soft);
+    font-size:.78rem;
+  }
+  .slots{ display:flex; flex-wrap:wrap; gap:6px; }
+  .slots.wrong{animation:shake-row .45s ease;}
+  @keyframes shake-row{
+    0%,100%{transform:translateX(0);}
+    20%{transform:translateX(-5px);}
+    40%{transform:translateX(5px);}
+    60%{transform:translateX(-4px);}
+    80%{transform:translateX(4px);}
+  }
+  .slot{
+    min-width:52px; height:32px;
+    border-radius:var(--radius-sm);
+    border:2px dashed var(--line);
+    background:var(--paper-2);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:600; font-size:.85rem;
+    color:var(--ink); padding:0 10px; cursor:default;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .slot.filled{ border-style:solid; border-color:var(--accent); background:#e8f3ea; cursor:pointer; }
+  .slot.filled:hover{background:#dcecdf;}
+  .pool{ display:flex; flex-wrap:wrap; gap:6px; min-height:34px; }
+  .tile{
+    font-family:'Baloo 2',sans-serif; font-weight:600; font-size:.85rem;
+    background:var(--accent); color:#fbf8ef; border:none;
+    border-radius:var(--radius-sm); padding:6px 13px; cursor:pointer;
+    box-shadow:0 3px 0 var(--accent-dark);
+    transition:transform .1s ease, box-shadow .1s ease;
+  }
+  .tile:hover{transform:translateY(-1px);}
+  .tile:active{transform:translateY(3px); box-shadow:0 1px 0 var(--accent-dark);}
+  .tile.used{visibility:hidden;}
+
+  .builder-mode.hidden{ display:none; }
+
+  .choice-list{ display:flex; flex-wrap:wrap; gap:7px; }
+  .choice-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:600; font-size:.85rem;
+    background:var(--paper-2); color:var(--ink);
+    border:2px solid var(--line);
+    border-radius:var(--radius-sm); padding:8px 15px; cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .choice-btn:hover:not(:disabled){ border-color:var(--accent); }
+  .choice-btn:active:not(:disabled){ transform:translateY(2px); }
+  .choice-btn.correct{ border-color:var(--accent); background:#e8f3ea; }
+  .choice-btn.wrong{ border-color:#c0504d; background:#f7dede; animation:shake-row .45s ease; }
+  .choice-btn:disabled{ cursor:not-allowed; opacity:.7; }
+
+  .ghost-btn{
+    flex:0 0 auto;
+    font-family:'Baloo 2',sans-serif; font-weight:600;
+    background:transparent; border:1.5px solid var(--line); color:var(--ink-soft);
+    border-radius:999px; padding:5px 12px; font-size:.8rem; cursor:pointer;
+    transition:border-color .15s ease, color .15s ease;
+  }
+  .ghost-btn:hover:not(:disabled){border-color:var(--accent); color:var(--accent-dark);}
+  .ghost-btn:disabled{opacity:.45; cursor:not-allowed;}
+
+  /* ---------- Modals ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(20,28,18,.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:50;
+  }
+  .modal-backdrop.hidden{display:none;}
+  .modal{
+    background:var(--paper); border-radius:22px; max-width:440px; width:100%;
+    padding:28px 26px 24px; box-shadow:0 24px 60px rgba(0,0,0,.3);
+    max-height:92vh; overflow:auto;
+  }
+  .modal h2{ font-family:'Baloo 2',sans-serif; margin:0 0 4px; font-size:1.35rem; color:var(--ink); }
+  .modal .sub{ margin:0 0 16px; color:var(--ink-soft); font-size:.93rem; }
+  .steps{ list-style:none; margin:0 0 20px; padding:0; display:flex; flex-direction:column; gap:11px; }
+  .steps li{ display:flex; gap:12px; align-items:flex-start; font-size:.9rem; line-height:1.42; color:var(--ink); }
+  .step-num{
+    flex:0 0 auto; width:24px;height:24px; border-radius:50%;
+    background:var(--accent); color:#fff; font-family:'Baloo 2',sans-serif;
+    font-weight:700; font-size:.8rem; display:flex;align-items:center;justify-content:center;
+  }
+  .primary-btn{
+    width:100%; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1rem;
+    background:var(--accent); color:#fbf8ef; border:none; border-radius:999px;
+    padding:12px 18px; cursor:pointer; box-shadow:0 5px 0 var(--accent-dark);
+    transition:transform .1s ease, box-shadow .1s ease;
+  }
+  .primary-btn:hover{transform:translateY(-1px);}
+  .primary-btn:active{transform:translateY(4px); box-shadow:0 1px 0 var(--accent-dark);}
+
+  .mode-prompt{
+    margin:0 0 10px; font-family:'Baloo 2',sans-serif; font-weight:600;
+    font-size:.88rem; color:var(--ink-soft); text-align:center;
+  }
+  .mode-buttons{ display:flex; flex-direction:column; gap:10px; }
+  .primary-btn.mode-alt{
+    background:var(--paper-2); color:var(--ink);
+    border:2px solid var(--line); box-shadow:none; padding:10px 18px;
+  }
+  .primary-btn.mode-alt:active{ transform:translateY(2px); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <header class="hud">
+    <div class="hud-left">
+      <span class="badge">Round <span id="roundNum">1</span>/6</span>
+    </div>
+    <h1 class="title">Hide &amp; Seek: <span>Where are you?</span></h1>
+    <div class="hud-right">
+      <button class="icon-btn" id="muteBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+    </div>
+  </header>
+
+  <div class="scene-wrap">
+    <div class="scene" id="scene">
+      <div class="sky">
+        <div class="sun"></div>
+        <div class="cloud c1"></div>
+        <div class="cloud c2"></div>
+      </div>
+      <div class="ground" id="ground">
+        <svg class="path-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+          <path d="M45,0 C41,22 55,34 49,52 C46,64 57,72 52,100 L64,100 C60,74 47,64 51,50 C55,32 40,24 44,0 Z" fill="var(--path)"/>
+          <path d="M45,0 C41,22 55,34 49,52 C46,64 57,72 52,100" fill="none" stroke="var(--path-edge)" stroke-width="0.6"/>
+          <path d="M44,0 C40,24 55,32 51,50 C47,64 60,74 64,100" fill="none" stroke="var(--path-edge)" stroke-width="0.6"/>
+        </svg>
+      </div>
+      <div class="objects-layer" id="objectsLayer"></div>
+      <div class="character" id="character"></div>
+      <div class="bubble-stack" id="bubbleStack">
+        <div class="bubble-box speech-bubble hidden" id="speechBubble"><p id="speechText"></p></div>
+        <div class="bubble-box toast hidden" id="toast"><span id="toastText"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="builder" aria-label="Build the question">
+    <div class="builder-top">
+      <p class="builder-label" id="builderLabel">Tap the words in order to ask the question:</p>
+      <button class="ghost-btn" id="speakBtn" disabled>🔊 Hear it</button>
+    </div>
+    <div class="builder-mode" id="modeAsk">
+      <div class="slots" id="slots"></div>
+      <div class="pool" id="pool"></div>
+    </div>
+    <div class="builder-mode hidden" id="modeChoose">
+      <div class="choice-list" id="choiceList"></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Intro modal -->
+<div class="modal-backdrop" id="introModal">
+  <div class="modal">
+    <h2>Hide &amp; Seek</h2>
+    <p class="sub">Learn to ask “Where are you?” — then find your friend in the park.</p>
+    <ul class="steps">
+      <li><span class="step-num">1</span><span>Someone is hiding somewhere in the park. Ask them <strong>“Where are you?”</strong></span></li>
+      <li><span class="step-num">2</span><span>Listen to the answer — for example, <em>“I am behind the tree.”</em></span></li>
+      <li><span class="step-num">3</span><span>Tap the matching object in the park to find your friend.</span></li>
+      <li><span class="step-num">4</span><span>Play through 6 rounds and find your friend every time!</span></li>
+    </ul>
+    <p class="mode-prompt">Choose how you'd like to ask the question:</p>
+    <div class="mode-buttons">
+      <button class="primary-btn" id="startAskBtn">🧩 Ask the question</button>
+      <button class="primary-btn mode-alt" id="startChooseBtn">✅ Choose the question</button>
+    </div>
+  </div>
+</div>
+
+<!-- End modal -->
+<div class="modal-backdrop hidden" id="endModal">
+  <div class="modal">
+    <h2>Game complete!</h2>
+    <p class="sub" id="endSummary" style="text-align:center;">You found me! It was nice playing with you :)</p>
+    <button class="primary-btn" id="playAgainBtn">Play again</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ======================= DATA ======================= */
+  /* left/bottom are the object's ground-anchored CENTER point, as a % of
+     the scene's width/height. width is a % of scene width; the matching
+     height is derived from the svg's own aspect ratio at layout time, so
+     objects always sit on the ground with correct proportions no matter
+     how the scene box is resized. */
+
+  const OBJECTS = [
+    {
+      id:"shed", label:"the shed", prep:"inside",
+      left:84, bottom:34, width:28, aspect:150/140,
+      svg:`<svg viewBox="0 0 150 140" xmlns="http://www.w3.org/2000/svg">
+        <rect x="18" y="58" width="114" height="68" rx="4" fill="#c8a165"/>
+        <path d="M6 58 L75 10 L144 58 Z" fill="#8c4a3b"/>
+        <rect x="100" y="20" width="13" height="22" fill="#8c4a3b"/>
+        <rect x="62" y="92" width="27" height="34" rx="2" fill="#6e4423"/>
+        <rect x="33" y="72" width="23" height="19" rx="2" fill="#e6f1f7" stroke="#6e4423" stroke-width="2"/>
+      </svg>`
+    },
+    {
+      id:"lamppost", label:"the lamp post", prep:"behind",
+      left:30, bottom:32, width:7, aspect:40/170, revealStyle:"peek",
+      peekOffset:0.05,
+      svg:`<svg viewBox="0 0 40 170" xmlns="http://www.w3.org/2000/svg">
+        <rect x="17" y="42" width="6" height="118" rx="3" fill="#3b3b3b"/>
+        <circle cx="20" cy="26" r="17" fill="#ffde7a" opacity=".35"/>
+        <rect x="7" y="30" width="26" height="7" rx="3.5" fill="#3b3b3b"/>
+        <path d="M7 30 Q20 4 33 30 Z" fill="#4a4a4a"/>
+        <circle cx="20" cy="26" r="9" fill="#ffde7a"/>
+      </svg>`
+    },
+    {
+      id:"tree", label:"the tree", prep:"behind",
+      left:10, bottom:30, width:30, aspect:100/170, revealStyle:"peek",
+      peekOffset:0.12, peekDir:1, peekFloorAdjust:9.9,
+      svg:`<svg viewBox="0 0 100 170" xmlns="http://www.w3.org/2000/svg">
+        <rect x="43" y="92" width="14" height="58" rx="6" fill="#8a5a34"/>
+        <rect x="43" y="92" width="6" height="58" rx="3" fill="#6e4423"/>
+        <circle cx="50" cy="56" r="42" fill="#4f7f3e"/>
+        <circle cx="24" cy="72" r="27" fill="#5c9450"/>
+        <circle cx="76" cy="72" r="27" fill="#5c9450"/>
+        <circle cx="50" cy="34" r="30" fill="#6eae58"/>
+      </svg>`
+    },
+    {
+      id:"fountain", label:"the fountain", prep:"behind",
+      left:68, bottom:26, width:26, aspect:120/112, revealStyle:"peek",
+      peekOffset:0.36, peekDir:1, peekFloorAdjust:6.8,
+      svg:`<svg viewBox="0 0 120 112" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="92" rx="50" ry="13" fill="#9aa5a0"/>
+        <rect x="24" y="62" width="72" height="32" rx="10" fill="#b9c2bd"/>
+        <rect x="50" y="40" width="20" height="26" rx="5" fill="#9aa5a0"/>
+        <ellipse cx="60" cy="38" rx="26" ry="8" fill="#c3cbc6"/>
+        <path d="M60 20 Q52 32 56 40 M60 20 Q68 32 64 40 M60 16 L60 34" stroke="#bfe3f5" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="60" cy="86" rx="30" ry="7" fill="#8fcbea" opacity=".8"/>
+      </svg>`
+    },
+    {
+      id:"bush", label:"the bush", prep:"behind",
+      left:30, bottom:16, width:20, aspect:100/68, revealStyle:"peekLow",
+      svg:`<svg viewBox="0 0 100 68" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="30" cy="42" r="25" fill="#8bc34a"/>
+        <circle cx="66" cy="40" r="27" fill="#9ccc65"/>
+        <circle cx="48" cy="28" r="23" fill="#aed581"/>
+      </svg>`
+    },
+    {
+      id:"rock", label:"the rock", prep:"behind",
+      left:16, bottom:8, width:30, aspect:100/50, revealStyle:"peekLow",
+      svg:`<svg viewBox="0 0 100 50" xmlns="http://www.w3.org/2000/svg">
+        <path d="M4 42 Q0 20 24 14 Q44 0 68 9 Q100 13 95 38 Q80 49 50 47 Q20 49 4 42 Z" fill="#9aa5a0"/>
+        <ellipse cx="65" cy="27" rx="20" ry="9" fill="#7c8985" opacity=".5"/>
+      </svg>`
+    },
+    {
+      id:"bench", label:"the bench", prep:"under",
+      left:80, bottom:6, width:30, aspect:160/80,
+      svg:`<svg viewBox="0 0 160 80" xmlns="http://www.w3.org/2000/svg">
+        <rect x="10" y="46" width="8" height="26" rx="2" fill="#6e4423"/>
+        <rect x="142" y="46" width="8" height="26" rx="2" fill="#6e4423"/>
+        <rect x="30" y="24" width="8" height="48" rx="2" fill="#6e4423"/>
+        <rect x="122" y="24" width="8" height="48" rx="2" fill="#6e4423"/>
+        <rect x="8" y="6" width="144" height="9" rx="4" fill="#a9702e"/>
+        <rect x="8" y="19" width="144" height="9" rx="4" fill="#a9702e"/>
+        <rect x="4" y="46" width="152" height="11" rx="4" fill="#b47b34"/>
+      </svg>`
+    },
+    {
+      id:"flowerpot", label:"the flower pot", prep:"next to",
+      left:90, bottom:6, width:15, aspect:60/78,
+      svg:`<svg viewBox="0 0 60 78" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 46 L45 46 L40 72 L20 72 Z" fill="#b5652e"/>
+        <rect x="12" y="40" width="36" height="9" rx="3" fill="#8c4a22"/>
+        <line x1="22" y1="40" x2="22" y2="20" stroke="#4f7f3e" stroke-width="3"/>
+        <line x1="30" y1="40" x2="30" y2="12" stroke="#4f7f3e" stroke-width="3"/>
+        <line x1="38" y1="40" x2="38" y2="22" stroke="#4f7f3e" stroke-width="3"/>
+        <circle cx="22" cy="17" r="7" fill="#e97a7a"/>
+        <circle cx="30" cy="9" r="7" fill="#f0c94c"/>
+        <circle cx="38" cy="19" r="7" fill="#e97a7a"/>
+      </svg>`
+    }
+  ];
+  /* rendered back-to-front so nearer (lower) objects overlap farther ones correctly */
+  const RENDER_ORDER = OBJECTS.slice().sort((a,b)=> b.bottom - a.bottom);
+
+  const CHARACTER_ASPECT = 80/120;
+  const CHARACTER_WIDTH_PCT = 9; // must match .character{width:9%} in CSS
+  const CHARACTER_SVG = `<svg viewBox="0 0 80 120" xmlns="http://www.w3.org/2000/svg">
+    <rect x="24" y="86" width="12" height="26" rx="5" fill="#38424a"/>
+    <rect x="44" y="86" width="12" height="26" rx="5" fill="#38424a"/>
+    <rect x="22" y="108" width="16" height="8" rx="3" fill="#20262b"/>
+    <rect x="42" y="108" width="16" height="8" rx="3" fill="#20262b"/>
+    <rect x="14" y="58" width="10" height="28" rx="5" fill="#1b6b78"/>
+    <rect x="18" y="48" width="44" height="42" rx="16" fill="#1b6b78"/>
+    <path d="M28 50 Q40 40 52 50" fill="#154f58"/>
+    <circle cx="40" cy="34" r="18" fill="#e8b892"/>
+    <path d="M22 26 Q40 4 58 26 Q56 13 40 11 Q24 13 22 26 Z" fill="#3b2a20"/>
+    <circle cx="29" cy="39" r="2.8" fill="#f2a488" opacity=".6"/>
+    <circle cx="51" cy="39" r="2.8" fill="#f2a488" opacity=".6"/>
+    <circle cx="33" cy="33" r="2.3" fill="#20301f"/>
+    <circle cx="47" cy="33" r="2.3" fill="#20301f"/>
+    <path d="M32 41 Q40 46.5 48 41" stroke="#8a5a34" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+    <g class="wave-arm" transform-origin="60 56">
+      <path d="M60 56 Q78 44 73 28" stroke="#1b6b78" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <circle cx="73" cy="26" r="6.5" fill="#e8b892"/>
+    </g>
+  </svg>`;
+
+  const QUESTION_WORDS = ["Where","are","you","?"];
+  const TOTAL_ROUNDS = 6;
+
+  /* ======================= STATE ======================= */
+
+  let roundOrder = [];
+  let roundIndex = 0;
+  let currentTargetId = null;
+  let sentenceLocked = false;
+  let slots = [null,null,null,null];
+  let poolState = [];
+  let muted = false;
+
+  /* ======================= DOM REFS ======================= */
+
+  const sceneEl = document.getElementById("scene");
+  const objectsLayer = document.getElementById("objectsLayer");
+  const characterEl = document.getElementById("character");
+  const speechBubble = document.getElementById("speechBubble");
+  const speechText = document.getElementById("speechText");
+  const builderLabel = document.getElementById("builderLabel");
+  const modeAskEl = document.getElementById("modeAsk");
+  const modeChooseEl = document.getElementById("modeChoose");
+  const slotsEl = document.getElementById("slots");
+  const poolEl = document.getElementById("pool");
+  const choiceListEl = document.getElementById("choiceList");
+  const speakBtn = document.getElementById("speakBtn");
+  const roundNumEl = document.getElementById("roundNum");
+  const muteBtn = document.getElementById("muteBtn");
+  const introModal = document.getElementById("introModal");
+  const endModal = document.getElementById("endModal");
+  const startAskBtn = document.getElementById("startAskBtn");
+  const startChooseBtn = document.getElementById("startChooseBtn");
+  const playAgainBtn = document.getElementById("playAgainBtn");
+  const endSummary = document.getElementById("endSummary");
+  const toastEl = document.getElementById("toast");
+  const toastText = document.getElementById("toastText");
+
+  let gameMode = "ask"; // "ask" (arrange the words) or "choose" (pick from 4 questions)
+
+  characterEl.innerHTML = CHARACTER_SVG;
+
+  /* ======================= AUDIO ======================= */
+
+  let audioCtx = null;
+  function ctx(){
+    if(!audioCtx){
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(AC) audioCtx = new AC();
+    }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, type){
+    if(muted) return;
+    const c = ctx();
+    if(!c) return;
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0.0001, c.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(0.14, c.currentTime + start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur);
+    osc.connect(gain).connect(c.destination);
+    osc.start(c.currentTime + start);
+    osc.stop(c.currentTime + start + dur + 0.02);
+  }
+  function playSuccess(){ tone(523,0,.16,"triangle"); tone(659,.14,.18,"triangle"); tone(784,.28,.22,"triangle"); }
+  function playError(){ tone(180,0,.22,"sawtooth"); }
+  function playFound(){ tone(659,0,.14,"triangle"); tone(880,.12,.16,"triangle"); tone(1047,.24,.28,"triangle"); }
+
+  function speak(text, onEnd){
+    if(muted || !("speechSynthesis" in window)){
+      if(onEnd) onEnd();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.92;
+    utter.pitch = 1.05;
+    if(onEnd){
+      utter.onend = onEnd;
+      utter.onerror = onEnd; // still proceed if speech fails partway through
+    }
+    window.speechSynthesis.speak(utter);
+  }
+
+  /* ======================= HELPERS ======================= */
+
+  function shuffle(arr){
+    const a = arr.slice();
+    for(let i=a.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [a[i],a[j]] = [a[j],a[i]];
+    }
+    return a;
+  }
+
+  function showToast(message, withContinue){
+    toastText.textContent = message;
+    const existingBtn = toastEl.querySelector("button");
+    if(existingBtn) existingBtn.remove();
+    if(withContinue){
+      const btn = document.createElement("button");
+      btn.textContent = "Continue →";
+      btn.addEventListener("click", ()=>{
+        hideToast();
+        hideCharacter();
+        nextRoundOrEnd();
+      });
+      toastEl.appendChild(btn);
+    }
+    toastEl.classList.remove("hidden");
+    if(!withContinue){
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(hideToast, 1700);
+    }
+  }
+  function hideToast(){ toastEl.classList.add("hidden"); }
+
+  /* ======================= BUILD SCENE ======================= */
+
+  function buildScene(){
+    objectsLayer.innerHTML = "";
+    RENDER_ORDER.forEach(obj=>{
+      const btn = document.createElement("button");
+      btn.className = "obj";
+      btn.id = "obj-"+obj.id;
+      btn.style.left = obj.left + "%";
+      btn.style.bottom = obj.bottom + "%";
+      btn.style.width = obj.width + "%";
+      btn.dataset.aspect = obj.aspect;
+      btn.setAttribute("aria-label", "Look " + obj.prep + " " + obj.label);
+      btn.innerHTML = obj.svg;
+      btn.addEventListener("click", ()=> onObjectClick(obj.id));
+      objectsLayer.appendChild(btn);
+    });
+    layoutScene();
+  }
+
+  /* every object's width is a % of the scene, but its height is derived in
+     pixels from the svg's real aspect ratio so nothing stretches, and the
+     bottom-anchored position always keeps its base on the lawn */
+  function layoutScene(){
+    document.querySelectorAll(".obj").forEach(el=>{
+      const w = el.offsetWidth;
+      const aspect = parseFloat(el.dataset.aspect);
+      if(w && aspect) el.style.height = (w/aspect) + "px";
+    });
+    const cw = characterEl.offsetWidth;
+    if(cw) characterEl.style.height = (cw/CHARACTER_ASPECT) + "px";
+  }
+
+  if("ResizeObserver" in window){
+    new ResizeObserver(()=> layoutScene()).observe(sceneEl);
+  } else {
+    window.addEventListener("resize", layoutScene);
+  }
+
+  /* ======================= FIT APP TO VIEWPORT ======================= */
+  /* The scene keeps a fixed 16:11 aspect ratio always. Instead of letting
+     the scene grow with the window's width (which can push the total
+     column taller than the screen), we size .app's WIDTH in px so that
+     HUD + scene(at that width, 16:11) + builder always fits the viewport
+     height. Widening the window beyond that just adds empty space at the
+     sides rather than growing the scene. */
+  const appEl = document.querySelector(".app");
+  const hudEl = document.querySelector(".hud");
+  const builderEl = document.querySelector(".builder");
+  const BODY_PADDING = 32; // 16px top+bottom from body padding
+  const SCENE_ASPECT = 16/10;
+
+  function fitApp(){
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const gap = parseFloat(getComputedStyle(appEl).rowGap) || 12;
+
+    // Measure HUD/builder height at a generous width first, since their
+    // height can change at very narrow widths (title wraps to its own line).
+    appEl.style.width = Math.min(980, vw - BODY_PADDING) + "px";
+    let hudH = hudEl.offsetHeight;
+    let builderH = builderEl.offsetHeight;
+
+    const computeWidth = ()=>{
+      const availH = vh - BODY_PADDING - hudH - builderH - gap*2;
+      const widthFromHeight = Math.max(0, availH) * SCENE_ASPECT;
+      return Math.max(240, Math.min(980, vw - BODY_PADDING, widthFromHeight));
+    };
+
+    let width = computeWidth();
+    appEl.style.width = width + "px";
+
+    // Re-measure: a narrower width may reflow the HUD (title wraps below
+    // 560px) or the word tiles, changing their height — recompute once more.
+    const newHudH = hudEl.offsetHeight;
+    const newBuilderH = builderEl.offsetHeight;
+    if(newHudH !== hudH || newBuilderH !== builderH){
+      hudH = newHudH;
+      builderH = newBuilderH;
+      width = computeWidth();
+      appEl.style.width = width + "px";
+    }
+  }
+
+  window.addEventListener("resize", fitApp);
+  window.addEventListener("orientationchange", fitApp);
+  if(document.fonts && document.fonts.ready){
+    document.fonts.ready.then(fitApp);
+  }
+
+  function getObject(id){ return OBJECTS.find(o=>o.id===id); }
+
+  /* place the found character just beside its hiding spot, staying inside frame */
+  function computePeek(obj){
+    const dir = obj.left > 62 ? -1 : 1;
+    const offset = Math.max(obj.width*0.42, 11);
+    const left = Math.min(93, Math.max(7, obj.left + dir*offset));
+    const bottom = Math.max(obj.bottom - 7, 2);
+    return {left, bottom, dir};
+  }
+
+  let charAnimation = null;
+  let frontTimeout = null;
+
+  /* Every .obj shares z-index:3, and their front-to-back order among each
+     other comes purely from DOM order (farther/higher-'bottom' objects are
+     inserted first, so they paint behind nearer ones — see RENDER_ORDER).
+     To make the character sit "behind object X" WITHOUT disturbing that
+     existing order between all the other objects, we don't touch z-index
+     at all — instead we move the character itself to the DOM slot right
+     before X. That keeps it behind X, but still correctly behind/in front
+     of every other object exactly as X itself is. To show the character
+     fully in front of everything (its normal "found" resting state), we
+     just move it back out to be the last child of the scene. */
+  function placeCharacterBehind(objId){
+    const objEl = document.getElementById("obj-"+objId);
+    if(objEl && objEl.parentNode){ objEl.parentNode.insertBefore(characterEl, objEl); }
+  }
+  function placeCharacterInFront(){
+    sceneEl.appendChild(characterEl);
+  }
+
+  /* Object height, expressed as a % of the SCENE's height (not its own
+     width-based %), so it can be combined with 'bottom' (also %-of-scene-
+     height). Needed because the scene isn't square: a width-% and a
+     height-% don't correspond to the same number of pixels. */
+  function objHeightPct(obj){
+    return obj.width * SCENE_ASPECT / obj.aspect;
+  }
+  const CHARACTER_HEIGHT_PCT = CHARACTER_WIDTH_PCT * SCENE_ASPECT / CHARACTER_ASPECT;
+
+  /* Animates the character revealing itself at the found object. Three
+     styles:
+     - "walkOut" (shed, bench, flowerpot — default): steps out from behind
+       the object to a clear spot beside it, rising in front partway through.
+     - "peek" (tree, fountain, lamppost): stays BEHIND the object throughout
+       (never rises in front), leaning to whichever side keeps it genuinely
+       overlapping the object rather than clearing it, and waves. Each
+       object tunes its own lean amount/direction/floor since their shapes
+       differ a lot (thin pole vs. wide canopy vs. tall basin).
+     - "peekLow" (rock, bush): the object is shorter than the character, so
+       instead of matching the ground level, the character is raised so only
+       its head and chest show peeking above the object's own top edge. */
+  function popCharacterOut(obj, peek){
+    if(charAnimation){ charAnimation.cancel(); charAnimation = null; }
+    if(frontTimeout){ clearTimeout(frontTimeout); frontTimeout = null; }
+    characterEl.classList.remove("waving");
+    characterEl.style.clipPath = "none";
+    placeCharacterBehind(obj.id); // correctly slotted behind this object, relative to every other object
+
+    const style = obj.revealStyle || "walkOut";
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if(style === "peek" || style === "peekLow"){
+      let targetLeft, targetBottom;
+
+      if(style === "peekLow"){
+        const dir = peek.dir;
+        const offsetFactor = 0.15;
+        targetLeft = obj.left + dir * obj.width * offsetFactor;
+        // Raise the character so the clip boundary (see below) lines up
+        // just at/slightly below the object's own top edge.
+        const hiddenFraction = 0.45; // bottom 45% hidden, top 55% (head+chest) shown
+        const overlapIntoObject = 1.5; // % of scene height, for a natural "resting behind" look
+        const objTopEdge = obj.bottom + objHeightPct(obj);
+        targetBottom = objTopEdge - overlapIntoObject - CHARACTER_HEIGHT_PCT*hiddenFraction;
+        characterEl.style.clipPath = "inset(0 0 45% 0)"; // only face + chest show
+      } else {
+        const dir = obj.peekDir !== undefined ? obj.peekDir : peek.dir;
+        const offsetFactor = obj.peekOffset !== undefined ? obj.peekOffset : 0.22;
+        targetLeft = obj.left + dir * obj.width * offsetFactor;
+        targetBottom = obj.bottom + (obj.peekFloorAdjust || 0);
+      }
+
+      // Stays behind this object the whole time — no DOM move needed after this.
+
+      if(reduced){
+        characterEl.style.left = targetLeft + "%";
+        characterEl.style.bottom = targetBottom + "%";
+        characterEl.style.opacity = "1";
+        characterEl.style.transform = "translate(-50%,0) scale(1)";
+        characterEl.classList.add("waving");
+        return;
+      }
+
+      characterEl.style.left = targetLeft + "%";
+      characterEl.style.bottom = targetBottom + "%";
+      characterEl.style.opacity = "0";
+      characterEl.style.transform = "translate(-50%,10%) scale(.5)";
+      void characterEl.offsetWidth; // force layout before animating
+
+      charAnimation = characterEl.animate([
+        { transform:"translate(-50%,10%) scale(.5)", opacity:0, offset:0 },
+        { transform:"translate(-50%,0) scale(1)", opacity:1, offset:1 }
+      ], { duration:500, easing:"ease-out", fill:"forwards" });
+
+      charAnimation.onfinish = () => {
+        characterEl.style.opacity = "1";
+        characterEl.style.transform = "translate(-50%,0) scale(1)";
+        charAnimation.cancel();
+        charAnimation = null;
+        characterEl.classList.add("waving");
+      };
+      return;
+    }
+
+    /* "walkOut" style */
+    characterEl.style.left = obj.left + "%";
+    characterEl.style.bottom = obj.bottom + "%";
+    layoutScene();
+
+    const dir = peek.dir; // -1 = character steps out to the left, 1 = to the right
+
+    if(reduced){
+      placeCharacterInFront();
+      characterEl.style.left = peek.left + "%";
+      characterEl.style.bottom = peek.bottom + "%";
+      characterEl.style.opacity = "1";
+      characterEl.style.transform = "translate(-50%,0) scale(1)";
+      return;
+    }
+
+    characterEl.style.opacity = "0";
+    characterEl.style.transform = "translate(-50%,10%) scale(.35)";
+    void characterEl.offsetWidth; // force layout before animating
+
+    const midLeft = obj.left + (peek.left - obj.left) * 0.6;
+    const midBottom = Math.max(obj.bottom, peek.bottom) + 3;
+    const duration = 850;
+
+    charAnimation = characterEl.animate([
+      { left: obj.left+"%", bottom: obj.bottom+"%",
+        transform:"translate(-50%,8%) scale(.35)", opacity:0, offset:0 },
+      { left: obj.left+"%", bottom: obj.bottom+"%",
+        transform:"translate(-50%,4%) scale(.55)", opacity:1, offset:0.32 },
+      { left: midLeft+"%", bottom: midBottom+"%",
+        transform:`translate(calc(-50% + ${dir*4}%),-10%) scale(.9)`, opacity:1, offset:0.62 },
+      { left: peek.left+"%", bottom: peek.bottom+"%",
+        transform:"translate(-50%,-6%) scale(1.12)", opacity:1, offset:0.85 },
+      { left: peek.left+"%", bottom: peek.bottom+"%",
+        transform:"translate(-50%,0) scale(1)", opacity:1, offset:1 }
+    ], { duration, easing:"cubic-bezier(.34,1.56,.64,1)", fill:"forwards" });
+
+    // At the same point the old z-index crossover used to happen (62% of
+    // the way through), move the character to sit in front of everything —
+    // it's stepped clear of the object by then.
+    frontTimeout = setTimeout(()=>{ placeCharacterInFront(); frontTimeout = null; }, duration*0.62);
+
+    charAnimation.onfinish = () => {
+      characterEl.style.left = peek.left+"%";
+      characterEl.style.bottom = peek.bottom+"%";
+      characterEl.style.opacity = "1";
+      characterEl.style.transform = "translate(-50%,0) scale(1)";
+      charAnimation.cancel();
+      charAnimation = null;
+    };
+  }
+
+  /* Hide the character the moment "Continue" is clicked — they're hiding
+     again for the next round, so they shouldn't stay in view. */
+  function hideCharacter(){
+    if(charAnimation){ charAnimation.cancel(); charAnimation = null; }
+    if(frontTimeout){ clearTimeout(frontTimeout); frontTimeout = null; }
+    characterEl.classList.remove("waving");
+    characterEl.style.clipPath = "none";
+    characterEl.style.opacity = "0";
+    placeCharacterInFront();
+  }
+
+  /* ======================= ROUNDS ======================= */
+
+  function initGame(){
+    roundOrder = shuffle(OBJECTS.map(o=>o.id)).slice(0, TOTAL_ROUNDS);
+    roundIndex = 0;
+    startRound();
+  }
+
+  function startRound(){
+    currentTargetId = roundOrder[roundIndex];
+    sentenceLocked = false;
+    roundNumEl.textContent = String(roundIndex+1);
+
+    if(charAnimation){ charAnimation.cancel(); charAnimation = null; }
+    characterEl.classList.remove("waving");
+    characterEl.style.clipPath = "none";
+    characterEl.style.opacity = "0";
+    speechBubble.classList.add("hidden");
+    hideToast();
+    document.querySelectorAll(".obj").forEach(el=>el.classList.remove("found","shake"));
+
+    setupBuilder();
+    speakBtn.disabled = true;
+  }
+
+  function nextRoundOrEnd(){
+    roundIndex++;
+    if(roundIndex >= roundOrder.length){
+      endGame();
+    } else {
+      startRound();
+    }
+  }
+
+  /* ======================= BUILDER (question) ======================= */
+
+  function setupBuilder(){
+    if(gameMode === "choose"){
+      modeAskEl.classList.add("hidden");
+      modeChooseEl.classList.remove("hidden");
+      builderLabel.textContent = "Choose the question to ask:";
+      renderChoices();
+    } else {
+      modeChooseEl.classList.add("hidden");
+      modeAskEl.classList.remove("hidden");
+      builderLabel.textContent = "Tap the words in order to ask the question:";
+      slots = [null,null,null,null];
+      poolState = shuffle(QUESTION_WORDS.map((w,i)=>({word:w, key:i+"-"+Math.random()})));
+      renderSlots();
+      renderPool();
+    }
+    fitApp();
+  }
+
+  function renderSlots(){
+    slotsEl.innerHTML = "";
+    slots.forEach((val, i)=>{
+      const d = document.createElement("div");
+      d.className = "slot" + (val ? " filled" : "");
+      d.textContent = val ? val.word : "";
+      if(val){
+        d.setAttribute("role","button");
+        d.tabIndex = 0;
+        d.setAttribute("aria-label", "Remove " + val.word);
+        d.addEventListener("click", ()=> clearFromSlot(i));
+        d.addEventListener("keydown", (e)=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); clearFromSlot(i);} });
+      }
+      slotsEl.appendChild(d);
+    });
+  }
+
+  function renderPool(){
+    poolEl.innerHTML = "";
+    poolState.forEach(item=>{
+      const btn = document.createElement("button");
+      btn.className = "tile" + (item.placed ? " used" : "");
+      btn.textContent = item.word;
+      btn.disabled = sentenceLocked || item.placed;
+      btn.addEventListener("click", ()=> placeTile(item));
+      poolEl.appendChild(btn);
+    });
+  }
+
+  function placeTile(item){
+    if(sentenceLocked || item.placed) return;
+    const emptyIndex = slots.findIndex(s=>s===null);
+    if(emptyIndex === -1) return;
+    slots[emptyIndex] = item;
+    item.placed = true;
+    renderSlots();
+    renderPool();
+    if(slots.every(s=>s!==null)){
+      checkSentence();
+    }
+  }
+
+  function clearFromSlot(index){
+    if(sentenceLocked) return;
+    for(let i=index;i<slots.length;i++){
+      if(slots[i]){
+        slots[i].placed = false;
+        slots[i] = null;
+      }
+    }
+    renderSlots();
+    renderPool();
+  }
+
+  function checkSentence(){
+    const built = slots.map(s=>s.word);
+    const correct = built.every((w,i)=>w===QUESTION_WORDS[i]);
+    if(correct){
+      lockInCorrectQuestion();
+    } else {
+      playError();
+      slotsEl.classList.remove("wrong");
+      void slotsEl.offsetWidth;
+      slotsEl.classList.add("wrong");
+      setTimeout(()=>{
+        slots.forEach(s=>{ if(s) s.placed=false; });
+        slots = [null,null,null,null];
+        renderSlots();
+        renderPool();
+      }, 700);
+    }
+  }
+
+  /* ---------- "Choose the question" mode ---------- */
+  const CHOICE_QUESTIONS = ["Where are you?", "Who are you?", "What are you?", "How are you?"];
+
+  function renderChoices(){
+    choiceListEl.innerHTML = "";
+    shuffle(CHOICE_QUESTIONS).forEach(q=>{
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-btn";
+      btn.textContent = q;
+      btn.addEventListener("click", ()=> onChoiceClick(btn, q));
+      choiceListEl.appendChild(btn);
+    });
+  }
+
+  function onChoiceClick(btn, text){
+    if(sentenceLocked) return;
+    if(text === "Where are you?"){
+      btn.classList.add("correct");
+      Array.from(choiceListEl.children).forEach(b=>{ b.disabled = true; });
+      lockInCorrectQuestion();
+    } else {
+      playError();
+      btn.classList.remove("wrong");
+      void btn.offsetWidth;
+      btn.classList.add("wrong");
+      btn.disabled = true;
+      showToast("Not quite — try another question.", false);
+    }
+  }
+
+  /* Shared by both modes once the right question has been asked/chosen */
+  function lockInCorrectQuestion(){
+    sentenceLocked = true;
+    speakBtn.disabled = false;
+    playSuccess();
+    const sentence = "Where are you?";
+    speakBtn.onclick = ()=> speak(sentence);
+
+    // Don't reveal (or read out) the answer until "Where are you?" has
+    // actually finished being spoken. Fall back to a timer in the rare case
+    // speech synthesis never fires its end event, so the game can't stall.
+    let revealed = false;
+    const doReveal = () => {
+      if(revealed) return;
+      revealed = true;
+      revealAnswer();
+    };
+    speak(sentence, doReveal);
+    setTimeout(doReveal, 3000);
+  }
+
+  /* ======================= ANSWER + FIND ======================= */
+
+  function revealAnswer(){
+    const target = getObject(currentTargetId);
+    speechText.textContent = "I am " + target.prep + " " + target.label + ".";
+    speechBubble.classList.remove("hidden");
+    speak("I am " + target.prep + " " + target.label + ".");
+  }
+
+  function onObjectClick(id){
+    if(!sentenceLocked){
+      showToast("Ask “Where are you?” first!", false);
+      return;
+    }
+    const el = document.getElementById("obj-"+id);
+    if(id === currentTargetId){
+      const obj = getObject(id);
+      const peek = computePeek(obj);
+      el.classList.add("found");
+      popCharacterOut(obj, peek);
+      playFound();
+      const isLast = roundIndex === roundOrder.length - 1;
+      showToast(
+        "🎉 Found!" + (isLast ? "  — that was the last round." : ""),
+        true
+      );
+    } else {
+      playError();
+      el.classList.remove("shake");
+      void el.offsetWidth;
+      el.classList.add("shake");
+      showToast("Not there — listen again.", false);
+    }
+  }
+
+  /* ======================= END ======================= */
+
+  function endGame(){
+    endSummary.textContent = "You found me! It was nice playing with you :)";
+    endModal.classList.remove("hidden");
+  }
+
+  /* ======================= UI EVENTS ======================= */
+
+  muteBtn.addEventListener("click", ()=>{
+    muted = !muted;
+    muteBtn.textContent = muted ? "🔇" : "🔊";
+    muteBtn.setAttribute("aria-label", muted ? "Unmute sound" : "Mute sound");
+    if(muted && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  });
+
+  function beginGame(mode){
+    gameMode = mode;
+    introModal.classList.add("hidden");
+    initGame();
+  }
+
+  startAskBtn.addEventListener("click", ()=> beginGame("ask"));
+  startChooseBtn.addEventListener("click", ()=> beginGame("choose"));
+
+  playAgainBtn.addEventListener("click", ()=>{
+    endModal.classList.add("hidden");
+    initGame();
+  });
+
+  /* ======================= INIT ======================= */
+
+  buildScene();
+  fitApp();
+  startAskBtn.focus();
+
+})();
+</script>
+</body>
+</html>
