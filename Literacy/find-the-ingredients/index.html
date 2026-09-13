@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Where Is It? — Kitchen Quest</title>
+<title>Find the Ingredients</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -522,9 +522,35 @@
     border-radius:20px;
     padding:30px 28px;
     max-width:380px;
+    max-height:90vh;
+    overflow-y:auto;
     text-align:center;
     border:3px solid var(--brass);
     position:relative;
+  }
+  #introOverlay .modal-card{max-width:min(760px, 92vw);}
+
+  .intro-body{display:flex; flex-direction:column; gap:16px; margin-bottom:18px;}
+  .intro-body .mode-select{margin:0;}
+  .intro-body .instructions-list{margin:0;}
+  @media (min-width:620px){
+    .intro-body{flex-direction:row; align-items:stretch; gap:26px; text-align:left;}
+    .intro-body .mode-select{flex:0 0 200px; flex-direction:column;}
+    .intro-body .instructions-list{flex:1;}
+  }
+
+  @media (orientation:landscape) and (max-height:560px){
+    .modal-card{
+      padding:18px 26px;
+      max-height:94vh;
+    }
+    .modal-card .big-emoji{font-size:34px; margin-bottom:2px;}
+    .modal-card h2{font-size:18px; margin-bottom:6px;}
+    .intro-body{gap:14px; margin-bottom:12px;}
+    .instructions-list{gap:6px;}
+    .instructions-list li{padding:6px 10px; font-size:13px;}
+    .mode-option{padding:9px 8px;}
+    .mode-option .mode-emoji{font-size:19px; margin-bottom:3px;}
   }
   .modal-card .big-emoji{font-size:54px; margin-bottom:6px;}
   .modal-card h2{font-size:21px; color:var(--teal-dark); margin-bottom:8px;}
@@ -551,17 +577,7 @@
     cursor:pointer;
     line-height:1;
   }
-  .help-line{
-    font-family:'Poppins',sans-serif;
-    font-size:17px;
-    font-weight:600;
-    color:var(--teal-dark);
-    background:#fff;
-    border-radius:10px;
-    padding:10px 14px;
-    margin:0 0 10px;
-  }
-  .help-line em{color:var(--cherry-dark); font-style:normal;}
+  .instructions-list em{color:var(--cherry-dark); font-style:normal;}
 
   .confetti{
     position:absolute;
@@ -581,10 +597,10 @@
   <div class="topbar">
     <div class="brand">
       <div class="mark">🍳</div>
-      <h1>Where Is It? Kitchen Quest</h1>
+      <h1>Find the Ingredients</h1>
     </div>
     <div class="topbar-actions">
-      <button class="icon-btn" id="infoBtn" title="How to play" aria-label="How to play">❓</button>
+      <button class="icon-btn" id="infoBtn" title="How to play" aria-label="How to play">🧑‍🍳</button>
       <button class="icon-btn" id="soundToggleBtn" title="Toggle sound" aria-label="Toggle sound">🔊</button>
       <button class="new-recipe-btn" id="newRecipeBtn">🔀 New Recipe</button>
     </div>
@@ -833,20 +849,22 @@
     <div class="modal-card">
       <div class="big-emoji">🧑‍🍳</div>
       <h2>How to Play</h2>
-      <div class="mode-select" id="modeSelect">
-        <button type="button" class="mode-option selected" data-mode="type">
-          <span class="mode-emoji">⌨️</span>Type the question
-        </button>
-        <button type="button" class="mode-option" data-mode="drag">
-          <span class="mode-emoji">🧩</span>Drag the words
-        </button>
+      <div class="intro-body">
+        <div class="mode-select" id="modeSelect">
+          <button type="button" class="mode-option selected" data-mode="type">
+            <span class="mode-emoji">⌨️</span>Type the question
+          </button>
+          <button type="button" class="mode-option" data-mode="drag">
+            <span class="mode-emoji">🧩</span>Drag the words
+          </button>
+        </div>
+        <ul class="instructions-list">
+          <li><span class="num">1</span> Check the note pad for the ingredients you need.</li>
+          <li><span class="num">2</span> Ask a question, like "Where is the tomato?"</li>
+          <li><span class="num">3</span> Press Ask to hear where it is.</li>
+          <li><span class="num">4</span> Click the matching spot in the kitchen to collect it!</li>
+        </ul>
       </div>
-      <ul class="instructions-list">
-        <li><span class="num">1</span> Check the note pad for the ingredients you need.</li>
-        <li><span class="num">2</span> Ask a question, like "Where is the tomato?"</li>
-        <li><span class="num">3</span> Press Ask to hear where it is.</li>
-        <li><span class="num">4</span> Click the matching spot in the kitchen to collect it!</li>
-      </ul>
       <button class="primary" id="startPlayBtn">Let's Cook! 🍳</button>
     </div>
   </div>
@@ -854,9 +872,11 @@
   <div class="modal-overlay" id="helpOverlay">
     <div class="modal-card">
       <button class="modal-close" id="helpCloseBtn" aria-label="Close">✕</button>
-      <h2>Ask it like this</h2>
-      <p class="help-line">Where is the <em>[ingredient]</em>?</p>
-      <p class="help-line">Where are the <em>[ingredients]</em>?</p>
+      <h2>How to Ask</h2>
+      <ul class="instructions-list">
+        <li><span class="num">1</span> Type the question in the box (e.g. "Where is the shrimp?")</li>
+        <li><span class="num">2</span> Tap the location in the kitchen.</li>
+      </ul>
     </div>
   </div>
 
@@ -1096,11 +1116,16 @@
     const hasWhere = /\bwhere\b/.test(clean);
     if (!hasWhere) return {status:'where', id};
 
+    const hasThe = /\bthe\b/.test(clean);
+    if (!hasThe) return {status:'the', id};
+
     const wantAre = ing.plural;
     const hasIs = /\bis\b/.test(clean);
     const hasAre = /\bare\b/.test(clean);
     if (wantAre && !hasAre) return {status:'grammar', id, expected:'are'};
     if (!wantAre && !hasIs) return {status:'grammar', id, expected:'is'};
+
+    if (!typed.includes('?')) return {status:'question-mark', id};
 
     return {status:'ok', id};
   }
@@ -1253,10 +1278,12 @@
     if (result.status === 'empty'){ showToast('Ask a question first!'); return; }
     if (result.status === 'unknown'){ showToast("Name one of the ingredients on your list."); return; }
     if (result.status === 'where'){ showToast('Start with "Where…"'); return; }
+    if (result.status === 'the'){ showToast('Don\u2019t forget "the".'); return; }
     if (result.status === 'grammar'){
       showToast(`Try "${result.expected}" for ${INGREDIENTS[result.id].name}.`);
       return;
     }
+    if (result.status === 'question-mark'){ showToast('Don\u2019t forget the question mark "?"'); return; }
 
     const ing = INGREDIENTS[result.id];
     state.target = result.id;
