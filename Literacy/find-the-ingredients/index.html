@@ -1290,6 +1290,7 @@
     els.replyText.textContent = ing.reply;
     positionReplyBubble();
     els.replyBubble.classList.add('show');
+    requestAnimationFrame(positionReplyBubble);
     if (state.mode === 'drag'){
       state.dragSentence = [];
       renderDragUI();
@@ -1309,9 +1310,17 @@
     const stageRect = els.stage.getBoundingClientRect();
     if (!svgRect.width || !svgRect.height) return;
     const scale = svgRect.width / 1100;
-    const boxX = 100, boxY = 430, boxW = 900, boxH = 150;
-    els.replyBubble.style.left = ((svgRect.left - stageRect.left) + boxX * scale) + 'px';
-    els.replyBubble.style.top = ((svgRect.top - stageRect.top) + boxY * scale) + 'px';
+    // Origin for an absolutely-positioned child is the *padding* edge of its
+    // positioned ancestor, which sits inside the ancestor's border — so the
+    // border width has to be subtracted from the raw bounding-rect offset.
+    const originLeft = stageRect.left + els.stage.clientLeft;
+    const originTop = stageRect.top + els.stage.clientTop;
+    // Box sits well clear of the cabinets/drawers (which end at y=420) with
+    // a generous margin, so small rounding differences across browsers can
+    // never push it up into them.
+    const boxX = 100, boxY = 460, boxW = 900, boxH = 130;
+    els.replyBubble.style.left = ((svgRect.left - originLeft) + boxX * scale) + 'px';
+    els.replyBubble.style.top = ((svgRect.top - originTop) + boxY * scale) + 'px';
     els.replyBubble.style.width = (boxW * scale) + 'px';
     els.replyBubble.style.minHeight = (boxH * scale) + 'px';
     els.replyBubble.style.height = 'auto';
@@ -1320,9 +1329,16 @@
     els.replyBubble.style.borderRadius = Math.max(8, 18 * scale) + 'px';
   }
 
-  window.addEventListener('resize', () => {
+  function repositionReplyBubbleIfShown(){
     if (els.replyBubble.classList.contains('show')) positionReplyBubble();
-  });
+  }
+
+  window.addEventListener('resize', repositionReplyBubbleIfShown);
+  // Re-check after fonts finish swapping in, since that can reflow the
+  // header/sidebar and shift the stage without firing a resize event.
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(repositionReplyBubbleIfShown).catch(() => {});
+  }
 
   els.askBtn.addEventListener('click', submitQuestion);
   els.sentenceInput.addEventListener('keydown', (e) => {
