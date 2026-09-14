@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hear &amp; Type</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&family=Nunito:wght@500;700;800&display=swap');
+
+  :root{
+    --board:#2B3A34;
+    --board-dark:#22302B;
+    --chalk:#F2EFE4;
+    --mustard:#E3A857;
+    --brick:#C1502E;
+    --sky:#6FA8C7;
+    --mint:#7FB77E;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(255,255,255,0.03) 0, transparent 40%),
+      radial-gradient(circle at 80% 85%, rgba(255,255,255,0.03) 0, transparent 40%),
+      var(--board);
+    font-family:'Nunito', sans-serif;
+    color:var(--chalk);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:28px;
+  }
+
+  .frame{
+    width:100%;
+    max-width:640px;
+    border:10px solid #5b4632;
+    border-radius:6px;
+    background:var(--board-dark);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.45), inset 0 0 60px rgba(0,0,0,0.35);
+    padding:36px 34px 30px;
+    position:relative;
+  }
+
+  .frame::before, .frame::after{
+    content:"";
+    position:absolute;
+    width:14px; height:14px;
+    background:#c9c2b0;
+    border-radius:50%;
+    box-shadow: inset 0 2px 3px rgba(0,0,0,0.4);
+  }
+  .frame::before{ top:-7px; left:14px; }
+  .frame::after{ top:-7px; right:14px; }
+
+  h1{
+    font-family:'Kalam', cursive;
+    font-weight:700;
+    font-size:2.1rem;
+    margin:0 0 4px;
+    color:var(--chalk);
+    letter-spacing:0.5px;
+  }
+
+  .sub{
+    margin:0 0 28px;
+    font-size:0.98rem;
+    color:#c9d1cb;
+    max-width:46ch;
+    line-height:1.5;
+  }
+
+  .stage{
+    display:flex;
+    gap:28px;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+
+  .hear-btn{
+    width:120px; height:120px;
+    border-radius:50%;
+    border:3px solid var(--mustard);
+    background:radial-gradient(circle at 35% 30%, #3a4b44, #263631);
+    color:var(--mustard);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    cursor:pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 0 0 rgba(227,168,87,0);
+    flex-shrink:0;
+  }
+  .hear-btn:hover{ transform:scale(1.04); }
+  .hear-btn:active{ transform:scale(0.97); }
+  .hear-btn.speaking{
+    box-shadow: 0 0 0 10px rgba(227,168,87,0.12);
+  }
+  .hear-btn svg{ width:34px; height:34px; }
+  .hear-btn span{ font-family:'Kalam', cursive; font-size:0.95rem; }
+
+  .answer-area{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+  }
+
+  .letter-slot{
+    width:96px; height:96px;
+    border:3px dashed rgba(242,239,228,0.35);
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Kalam', cursive;
+    font-size:3.4rem;
+    font-weight:700;
+    color:var(--chalk);
+    background:rgba(255,255,255,0.02);
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.12s ease;
+  }
+  .letter-slot.correct{
+    border-color:var(--mint);
+    background:rgba(127,183,126,0.14);
+    color:var(--mint);
+  }
+  .letter-slot.wrong{
+    border-color:var(--brick);
+    background:rgba(193,80,46,0.14);
+    color:var(--brick);
+    animation:shake 0.3s ease;
+  }
+  @keyframes shake{
+    0%,100%{ transform:translateX(0); }
+    25%{ transform:translateX(-6px); }
+    75%{ transform:translateX(6px); }
+  }
+
+  #typedInput{
+    position:absolute;
+    opacity:0;
+    pointer-events:none;
+    font-size:16px;
+  }
+
+  .hint{
+    font-size:0.85rem;
+    color:#93a39a;
+    min-height:20px;
+  }
+
+  .row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:16px;
+    flex-wrap:wrap;
+    border-top:1px solid rgba(242,239,228,0.12);
+    padding-top:20px;
+  }
+
+  .stats{
+    display:flex;
+    gap:22px;
+  }
+
+  .stat{
+    text-align:left;
+  }
+  .stat .num{
+    font-family:'Kalam', cursive;
+    font-size:1.6rem;
+    line-height:1;
+    color:var(--sky);
+  }
+  .stat .lbl{
+    font-size:0.72rem;
+    color:#93a39a;
+    text-transform:none;
+    letter-spacing:0.3px;
+  }
+
+  .controls{
+    display:flex;
+    gap:10px;
+    align-items:center;
+  }
+
+  button.ghost{
+    background:transparent;
+    border:1.5px solid rgba(242,239,228,0.3);
+    color:var(--chalk);
+    border-radius:8px;
+    padding:10px 12px;
+    font-family:'Nunito', sans-serif;
+    font-size:1rem;
+    min-height:44px;
+    cursor:pointer;
+    touch-action:manipulation;
+  }
+  .hear-btn{ touch-action:manipulation; }
+  button.ghost:focus, .hear-btn:focus{
+    outline:2px solid var(--sky);
+    outline-offset:2px;
+  }
+
+  .toast{
+    margin-top:14px;
+    font-family:'Kalam', cursive;
+    font-size:1.05rem;
+    text-align:center;
+    min-height:26px;
+    color:var(--mustard);
+  }
+
+  @media (max-width:480px){
+    .stage{ gap:18px; }
+    .hear-btn{ width:100px; height:100px; }
+    .letter-slot{ width:80px; height:80px; font-size:2.8rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="frame">
+  <h1>Hear &amp; Type</h1>
+  <p class="sub">Tap the speaker to hear a letter out loud, then type the letter you heard. No mouse click needed on the box &mdash; just start typing.</p>
+
+  <div class="stage">
+    <button class="hear-btn" id="hearBtn" aria-label="Play the letter again">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5 6 9H2v6h4l5 4V5Z"></path>
+        <path d="M15.5 8.5a5 5 0 0 1 0 7"></path>
+        <path d="M18.5 6a9 9 0 0 1 0 12"></path>
+      </svg>
+      <span>Listen</span>
+    </button>
+
+    <div class="answer-area">
+      <div class="letter-slot" id="letterSlot" aria-live="polite">&nbsp;</div>
+      <div class="hint" id="hint">Tap "Listen" to begin</div>
+    </div>
+  </div>
+
+  <input type="text" id="typedInput" maxlength="1" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-hidden="true">
+
+  <div class="toast" id="toast">&nbsp;</div>
+
+  <div class="row">
+    <div class="stats">
+      <div class="stat">
+        <div class="num" id="scoreNum">0</div>
+        <div class="lbl">score</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="streakNum">0</div>
+        <div class="lbl">streak</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="bestNum">0</div>
+        <div class="lbl">best streak</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ghost" id="restartBtn">Restart</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const hearBtn = document.getElementById('hearBtn');
+  const letterSlot = document.getElementById('letterSlot');
+  const hint = document.getElementById('hint');
+  const toast = document.getElementById('toast');
+  const typedInput = document.getElementById('typedInput');
+  const scoreNum = document.getElementById('scoreNum');
+  const streakNum = document.getElementById('streakNum');
+  const bestNum = document.getElementById('bestNum');
+  const restartBtn = document.getElementById('restartBtn');
+
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+  let currentLetter = '';   // always uppercase internally
+  let displayLetter = '';   // what's shown / expected keystroke
+  let score = 0;
+  let streak = 0;
+  let best = 0;
+  let locked = false;       // true briefly after an answer while feedback shows
+  let gameStarted = false;  // first round only begins on a real tap (iOS requires this)
+  let voices = [];
+  let chosenVoice = null;
+  let audioCtx = null;
+
+  function unlockAudioForIOS(){
+    // Must run inside a real user gesture the first time. Creates/resumes
+    // the AudioContext and "warms up" speech synthesis so later automatic
+    // calls (e.g. after setTimeout) are allowed to produce sound.
+    const ctx = getAudioCtx();
+    if(ctx && ctx.state === 'suspended') ctx.resume();
+    if('speechSynthesis' in window && window.speechSynthesis.getVoices().length === 0){
+      loadVoices();
+    }
+  }
+
+  // Names commonly used by browsers/OSes for female English voices.
+  const FEMALE_VOICE_HINTS = [
+    'female','samantha','victoria','karen','moira','tessa','fiona','susan',
+    'zira','aria','jenny','joanna','salli','kimberly','kendra','ivy',
+    'google uk english female','google us english','allison','ava','serena',
+    'nicky','catherine','martha','flo','sandy','shelley'
+  ];
+
+  function pickBestVoice(){
+    const englishVoices = voices.filter(v => /^en/i.test(v.lang));
+    const pool = englishVoices.length ? englishVoices : voices;
+
+    // 1) explicit gender flag some browsers expose
+    let match = pool.find(v => (v.gender || '').toLowerCase() === 'female');
+    if(match) return match;
+
+    // 2) name-based hint match
+    match = pool.find(v => FEMALE_VOICE_HINTS.some(hint => v.name.toLowerCase().includes(hint)));
+    if(match) return match;
+
+    // 3) prefer a "Natural"/"Neural"/"Online" voice, which tends to sound clearer
+    match = pool.find(v => /natural|neural|online|enhanced|premium/i.test(v.name));
+    if(match) return match;
+
+    // 4) fall back to first English voice, or first available
+    return pool[0] || null;
+  }
+
+  function loadVoices(){
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+    if(voices.length) chosenVoice = pickBestVoice();
+  }
+  if('speechSynthesis' in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    // Safari (iOS/macOS) often returns an empty voice list on first call and
+    // never fires onvoiceschanged, so poll briefly as a fallback.
+    let voicePollTries = 0;
+    const voicePoll = setInterval(() => {
+      voicePollTries++;
+      if(voices.length || voicePollTries > 10){
+        clearInterval(voicePoll);
+        return;
+      }
+      loadVoices();
+    }, 300);
+  }
+
+  function getAudioCtx(){
+    if(!audioCtx){
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if(Ctx) audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }
+
+  function playChime(){
+    const ctx = getAudioCtx();
+    if(!ctx) return;
+    if(ctx.state === 'suspended') ctx.resume();
+
+    const notes = [523.25, 659.25, 783.99]; // C5, E5, G5 — a bright little arpeggio
+    const startTime = ctx.currentTime;
+
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+
+      const noteStart = startTime + i * 0.09;
+      const noteEnd = noteStart + 0.22;
+
+      gain.gain.setValueAtTime(0, noteStart);
+      gain.gain.linearRampToValueAtTime(0.22, noteStart + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, noteEnd);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(noteStart);
+      osc.stop(noteEnd + 0.02);
+    });
+  }
+
+  function pickLetter(){
+    let next = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    // avoid immediate repeat
+    while(next === currentLetter && ALPHABET.length > 1){
+      next = ALPHABET[Math.floor(Math.random() * ALPHABET.length)];
+    }
+    return next;
+  }
+
+  function applyCase(letter){
+    return letter.toUpperCase();
+  }
+
+  function speak(letter){
+    if(!('speechSynthesis' in window)){
+      hint.textContent = 'Speech is not supported in this browser — showing the letter instead.';
+      letterSlot.textContent = '?';
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(letter);
+    utter.rate = 1;
+    utter.pitch = 1;
+    if(chosenVoice) utter.voice = chosenVoice;
+
+    hearBtn.classList.add('speaking');
+    utter.onend = () => hearBtn.classList.remove('speaking');
+    utter.onerror = () => hearBtn.classList.remove('speaking');
+    window.speechSynthesis.speak(utter);
+  }
+
+  function newRound(){
+    locked = false;
+    currentLetter = pickLetter();
+    displayLetter = applyCase(currentLetter);
+    letterSlot.textContent = '\u00A0';
+    letterSlot.classList.remove('correct','wrong');
+    toast.textContent = '\u00A0';
+    hint.textContent = 'Press any letter key to answer';
+    speak(displayLetter);
+  }
+
+  function flashToast(msg){
+    toast.textContent = msg;
+  }
+
+  function handleAnswer(typedChar){
+    if(locked || !currentLetter) return;
+    locked = true;
+
+    const isCorrect = typedChar.toUpperCase() === currentLetter;
+    letterSlot.textContent = displayLetter;
+
+    if(isCorrect){
+      letterSlot.classList.add('correct');
+      score += 10;
+      streak += 1;
+      best = Math.max(best, streak);
+      playChime();
+      const cheers = ['Nice one!','You got it!','Great ear!','Correct!','Sharp listening!'];
+      flashToast(cheers[Math.floor(Math.random()*cheers.length)]);
+    } else {
+      letterSlot.classList.add('wrong');
+      streak = 0;
+      flashToast('That was "' + displayLetter + '" — listen again and try the next one.');
+    }
+
+    scoreNum.textContent = score;
+    streakNum.textContent = streak;
+    bestNum.textContent = best;
+
+    setTimeout(newRound, 950);
+  }
+
+  hearBtn.addEventListener('click', () => {
+    unlockAudioForIOS();
+    if(!gameStarted){
+      gameStarted = true;
+      newRound();
+    } else if(currentLetter){
+      speak(displayLetter);
+    }
+    typedInput.focus();
+  });
+
+  restartBtn.addEventListener('click', () => {
+    unlockAudioForIOS();
+    gameStarted = true;
+    score = 0; streak = 0; best = 0;
+    scoreNum.textContent = '0';
+    streakNum.textContent = '0';
+    bestNum.textContent = '0';
+    newRound();
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if(/^[a-zA-Z]$/.test(e.key)){
+      if(!gameStarted){
+        gameStarted = true;
+        unlockAudioForIOS();
+        newRound();
+        return;
+      }
+      handleAnswer(e.key);
+    }
+  });
+
+  // keep a hidden input focused so mobile keyboards can pop up too
+  typedInput.addEventListener('input', () => {
+    const val = typedInput.value;
+    typedInput.value = '';
+    if(val) handleAnswer(val);
+  });
+
+  document.body.addEventListener('click', (e) => {
+    const tag = e.target.tagName;
+    if(tag === 'SELECT' || tag === 'OPTION' || tag === 'BUTTON') return;
+    typedInput.focus();
+  });
+})();
+</script>
+
+</body>
+</html>
