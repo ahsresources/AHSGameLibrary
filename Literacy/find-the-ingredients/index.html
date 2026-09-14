@@ -36,6 +36,7 @@
     --postit-ink:#5A4E17;
     --steel:#B7C4C6;
     --steel-dark:#7C8A8C;
+    --app-height:100vh;
     font-family:'Nunito',sans-serif;
   }
   *{box-sizing:border-box;}
@@ -46,14 +47,14 @@
       radial-gradient(circle at 88% 92%, rgba(255,255,255,0.5), transparent 50%),
       linear-gradient(160deg, var(--page-bg), var(--page-bg-2));
     color:var(--ink);
-    height:100vh;
+    height:var(--app-height);
     display:flex;
     flex-direction:column;
     align-items:center;
     padding:14px 14px 10px;
   }
   @media (max-width:840px){
-    body{height:auto; min-height:100vh; padding:18px 14px 40px;}
+    body{height:auto; min-height:var(--app-height); padding:18px 14px 40px;}
   }
   h1,h2,h3{font-family:'Poppins',sans-serif; margin:0;}
 
@@ -1332,6 +1333,32 @@
   function repositionReplyBubbleIfShown(){
     if (els.replyBubble.classList.contains('show')) positionReplyBubble();
   }
+
+  // ---------------- Stable viewport height ----------------
+  // Plain "100vh" resizes every time a mobile/tablet browser's chrome or a
+  // keyboard accessory bar (e.g. the shortcut bar a Bluetooth keyboard shows
+  // above a focused text field) appears or disappears, which makes the whole
+  // fitted layout jump around while typing. We track the visible height in
+  // JS instead and ignore small, temporary shrinks — but always accept the
+  // height growing back, so the layout never gets stuck larger than the
+  // actual viewport once that bar goes away.
+  let appHeight = 0;
+  function setAppHeight(force){
+    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    if (!h) return;
+    const shrinking = appHeight && h < appHeight;
+    const smallShrink = shrinking && (appHeight - h) < 220;
+    if (!force && smallShrink) return; // likely just a keyboard/accessory bar — hold steady
+    appHeight = h;
+    document.documentElement.style.setProperty('--app-height', h + 'px');
+    repositionReplyBubbleIfShown();
+  }
+  setAppHeight(true);
+  window.addEventListener('resize', () => setAppHeight(false));
+  if (window.visualViewport){
+    window.visualViewport.addEventListener('resize', () => setAppHeight(false));
+  }
+  window.addEventListener('orientationchange', () => setTimeout(() => setAppHeight(true), 300));
 
   window.addEventListener('resize', repositionReplyBubbleIfShown);
   // Re-check after fonts finish swapping in, since that can reflow the
