@@ -1,4 +1,14 @@
 [
+   {
+    "id": "hear-and-type",
+    "title": "Hear and Type",
+    "description": "Listen to the letter name and type the letter.",
+    "creatorName": "Teacher Shanice",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["letters", "alphabet"],
+    "uploadDate": "2026-09-14"
+  },
   {
     "id": "cashier-simulator",
     "title": "Cashier Simulator",
