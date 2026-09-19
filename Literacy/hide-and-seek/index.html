@@ -202,9 +202,9 @@
     transform-origin:bottom center;
     clip-path:none;
   }
-  .character svg{width:100%;height:100%;display:block;}
-  .character .wave-arm{ transform-origin:60px 56px; }
-  .character.waving .wave-arm{ animation:character-wave .9s ease-in-out infinite; }
+  .character svg, .end-character svg{width:100%;height:100%;display:block;}
+  .wave-arm{ transform-origin:60px 56px; }
+  .waving .wave-arm{ animation:character-wave .9s ease-in-out infinite; }
   @keyframes character-wave{
     0%,100%{transform:rotate(0deg);}
     25%{transform:rotate(-16deg);}
@@ -212,7 +212,13 @@
   }
   @media (prefers-reduced-motion:reduce){
     .obj.shake svg{animation:none;}
-    .character.waving .wave-arm{animation:none;}
+    .waving .wave-arm{animation:none;}
+  }
+
+  .end-character{
+    width:88px;
+    margin:0 auto 4px;
+    filter:drop-shadow(0 4px 6px rgba(0,0,0,.2));
   }
 
   /* Speech bubble and the "Found!" toast are stacked together, centered,
@@ -449,7 +455,7 @@
     <ul class="steps">
       <li><span class="step-num">1</span><span>Someone is hiding somewhere in the park. Ask them <strong>“Where are you?”</strong></span></li>
       <li><span class="step-num">2</span><span>Listen to the answer — for example, <em>“I am behind the tree.”</em></span></li>
-      <li><span class="step-num">3</span><span>Tap the matching object in the park to find your friend.</span></li>
+      <li><span class="step-num">3</span><span>Tap the matching place in the park to find your friend.</span></li>
       <li><span class="step-num">4</span><span>Play through 6 rounds and find your friend every time!</span></li>
     </ul>
     <p class="mode-prompt">Choose how you'd like to ask the question:</p>
@@ -463,6 +469,7 @@
 <!-- End modal -->
 <div class="modal-backdrop hidden" id="endModal">
   <div class="modal">
+    <div class="end-character waving" id="endCharacter" aria-hidden="true"></div>
     <h2>Game complete!</h2>
     <p class="sub" id="endSummary" style="text-align:center;">You found me! It was nice playing with you :)</p>
     <button class="primary-btn" id="playAgainBtn">Play again</button>
@@ -482,7 +489,7 @@
 
   const OBJECTS = [
     {
-      id:"shed", label:"the shed", prep:"inside",
+      id:"shed", label:"the house", prep:"inside",
       left:84, bottom:34, width:28, aspect:150/140,
       svg:`<svg viewBox="0 0 150 140" xmlns="http://www.w3.org/2000/svg">
         <rect x="18" y="58" width="114" height="68" rx="4" fill="#c8a165"/>
@@ -562,7 +569,7 @@
     },
     {
       id:"flowerpot", label:"the flower pot", prep:"next to",
-      left:90, bottom:6, width:15, aspect:60/78,
+      left:92, bottom:3, width:15, aspect:60/78,
       svg:`<svg viewBox="0 0 60 78" xmlns="http://www.w3.org/2000/svg">
         <path d="M15 46 L45 46 L40 72 L20 72 Z" fill="#b5652e"/>
         <rect x="12" y="40" width="36" height="9" rx="3" fill="#8c4a22"/>
@@ -642,6 +649,7 @@
   let gameMode = "ask"; // "ask" (arrange the words) or "choose" (pick from 4 questions)
 
   characterEl.innerHTML = CHARACTER_SVG;
+  document.getElementById("endCharacter").innerHTML = CHARACTER_SVG;
 
   /* ======================= AUDIO ======================= */
 
@@ -672,15 +680,70 @@
   function playError(){ tone(180,0,.22,"sawtooth"); }
   function playFound(){ tone(659,0,.14,"triangle"); tone(880,.12,.16,"triangle"); tone(1047,.24,.28,"triangle"); }
 
-  function speak(text, onEnd){
+  /* Two distinct "characters" for text-to-speech: the player asking the
+     question, and the friend answering. This relies only on picking two
+     different system voices when the browser offers more than one — no
+     pitch/rate shifting, since that's what made the answer sound off. If
+     the device only exposes a single voice, both lines will simply sound
+     the same, which is fine.
+
+     The Web Speech API doesn't expose how deep/light a voice actually
+     sounds, but voice *names* are a decent hint (most platforms label
+     their typically-deeper voices things like "Daniel"/"David"/"Fred" and
+     their lighter ones "Samantha"/"Zira"/"Female"). For a kids' game we
+     sort lighter-sounding voices first, so a deep voice is only ever used
+     if nothing else is available. */
+  let cachedVoices = [];
+  let friendlyVoicePool = [];
+  const LIGHT_VOICE_HINTS = [
+    "female","samantha","victoria","karen","moira","tessa","fiona","susan",
+    "kate","allison","ava","serena","zira","hazel","kids","child",
+    "google uk english female","google us english"
+  ];
+  const DEEP_VOICE_HINTS = [
+    "male","daniel","alex","fred","david","mark","james","aaron","guy",
+    "gordon","liam","google uk english male","microsoft david",
+    "microsoft mark","microsoft james"
+  ];
+  function voiceLightness(v){
+    const n = v.name.toLowerCase();
+    if(LIGHT_VOICE_HINTS.some(h=> n.includes(h))) return 0; // prefer these first
+    if(DEEP_VOICE_HINTS.some(h=> n.includes(h))) return 2;  // avoid these unless nothing else
+    return 1; // unknown — use before resorting to a known-deep voice
+  }
+  function loadVoices(){
+    cachedVoices = ("speechSynthesis" in window) ? window.speechSynthesis.getVoices() : [];
+    const englishVoices = cachedVoices.filter(v=> /^en/i.test(v.lang));
+    const pool = englishVoices.length ? englishVoices : cachedVoices;
+    friendlyVoicePool = pool.slice().sort((a,b)=> voiceLightness(a) - voiceLightness(b));
+  }
+  if("speechSynthesis" in window){
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+  function pickVoice(index){
+    if(!friendlyVoicePool.length) return null;
+    return friendlyVoicePool[index % friendlyVoicePool.length] || null;
+  }
+
+  const VOICE_PROFILES = {
+    question: { rate:0.92, pitch:1.0, voiceIndex:0 },
+    answer:   { rate:0.92, pitch:1.0, voiceIndex:1 }
+  };
+
+  function speak(text, role, onEnd){
+    if(typeof role === "function"){ onEnd = role; role = "question"; } // backwards-compatible call shape
     if(muted || !("speechSynthesis" in window)){
       if(onEnd) onEnd();
       return;
     }
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
-    utter.rate = 0.92;
-    utter.pitch = 1.05;
+    const profile = VOICE_PROFILES[role] || VOICE_PROFILES.question;
+    utter.rate = profile.rate;
+    utter.pitch = profile.pitch;
+    const voice = pickVoice(profile.voiceIndex);
+    if(voice) utter.voice = voice;
     if(onEnd){
       utter.onend = onEnd;
       utter.onerror = onEnd; // still proceed if speech fails partway through
@@ -1154,7 +1217,7 @@
     speakBtn.disabled = false;
     playSuccess();
     const sentence = "Where are you?";
-    speakBtn.onclick = ()=> speak(sentence);
+    speakBtn.onclick = ()=> speakQuestionThenAnswer();
 
     // Don't reveal (or read out) the answer until "Where are you?" has
     // actually finished being spoken. Fall back to a timer in the rare case
@@ -1165,17 +1228,31 @@
       revealed = true;
       revealAnswer();
     };
-    speak(sentence, doReveal);
+    speak(sentence, "question", doReveal);
     setTimeout(doReveal, 3000);
   }
 
   /* ======================= ANSWER + FIND ======================= */
 
+  function answerSentenceFor(target){
+    return "I am " + target.prep + " " + target.label + ".";
+  }
+
   function revealAnswer(){
     const target = getObject(currentTargetId);
-    speechText.textContent = "I am " + target.prep + " " + target.label + ".";
+    const answerSentence = answerSentenceFor(target);
+    speechText.textContent = answerSentence;
     speechBubble.classList.remove("hidden");
-    speak("I am " + target.prep + " " + target.label + ".");
+    speak(answerSentence, "answer");
+  }
+
+  /* Used by the "Hear it" button: replays the question, then the answer
+     again right after — not just whichever one was last spoken. */
+  function speakQuestionThenAnswer(){
+    const target = getObject(currentTargetId);
+    speak("Where are you?", "question", () => {
+      speak(answerSentenceFor(target), "answer");
+    });
   }
 
   function onObjectClick(id){
