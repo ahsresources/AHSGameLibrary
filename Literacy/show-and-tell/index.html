@@ -472,6 +472,39 @@
   .badge.b2{color:var(--teal);}
   .badge.b1{color:#a06a00;}
   .badge.b0{color:var(--coral);}
+
+  /* ============ PHONES: scroll instead of clipping ============
+     On a phone the stacked layout (photo above quiz) needs more height than the
+     screen has once browser toolbars are showing, so the bottom got cut off.
+     Here the page grows to fit its content and scrolls. If everything does fit,
+     it still stretches to fill the screen.
+     Only applies to phone-sized screens (narrow, or short and under 820px wide);
+     laptops and tablets keep the fixed one-screen layout above. Keep this block last. */
+  @media (max-width:480px), (max-width:819px) and (max-height:700px){
+    html,body{height:auto;}
+    body{
+      min-height:100dvh;          /* was a fixed height */
+      overflow-x:hidden;
+      overflow-y:auto;            /* was hidden */
+      padding-bottom:max(clamp(12px,2vh,22px), env(safe-area-inset-bottom,0px));
+    }
+    /* cards may no longer shrink below their content */
+    .screen,.game,.card,.showcase,.quiz{min-height:auto;}
+    .opts{min-height:auto;flex:1 0 auto;}
+  }
+
+  /* Narrow phones: the two answer columns are too tight for words like "watermelon"
+     beside an emoji (they split mid-word), so stack the emoji above the label. */
+  @media (max-width:480px){
+    .opt{
+      flex-direction:column;
+      justify-content:center;
+      text-align:center;
+      gap:4px;
+      padding-left:8px;padding-right:8px;
+      font-size:clamp(17px,5.2vw,20px);
+    }
+  }
 </style>
 </head>
 <body>
@@ -633,6 +666,7 @@
 
   function show(name){
     Object.keys(screens).forEach(function(k){ screens[k].classList.toggle("on", k===name); });
+    window.scrollTo(0,0);   // small screens scroll; start each screen at the top
   }
 
   function drawTrack(){
@@ -655,6 +689,7 @@
   function loadRound(){
     var round=S.rounds[S.r];
     round.got=0;
+    window.scrollTo(0,0);   // new round: show the photo and question from the top
     S.opts=buildOpts(round);
 
     charImg.src="assets/"+round.character.file;
