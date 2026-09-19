@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=overlays-content">
 <title>Find the Ingredients</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1335,29 +1335,28 @@
   }
 
   // ---------------- Stable viewport height ----------------
-  // Plain "100vh" resizes every time a mobile/tablet browser's chrome or a
-  // keyboard accessory bar (e.g. the shortcut bar a Bluetooth keyboard shows
-  // above a focused text field) appears or disappears, which makes the whole
-  // fitted layout jump around while typing. We track the visible height in
-  // JS instead and ignore small, temporary shrinks — but always accept the
-  // height growing back, so the layout never gets stuck larger than the
-  // actual viewport once that bar goes away.
-  let appHeight = 0;
+  // Plain "100vh" resizes whenever a mobile/tablet browser's on-screen
+  // keyboard or a keyboard accessory bar (e.g. the shortcut bar a Bluetooth
+  // keyboard shows above a focused text field) appears or disappears — that
+  // makes the whole fitted layout shrink and jump around while typing, which
+  // we don't want. A keyboard only ever changes the available *height*, never
+  // the *width* — real rotations and window resizes change the width — so we
+  // use that as a reliable signal: only recompute the layout height when the
+  // width has actually changed (or on load/orientation change). Any
+  // height-only change is treated as a keyboard and simply ignored, so the
+  // game's size never reacts to it at all.
+  let lastWidth = window.innerWidth;
   function setAppHeight(force){
-    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+    const widthChanged = window.innerWidth !== lastWidth;
+    if (!force && !widthChanged) return;
+    lastWidth = window.innerWidth;
+    const h = window.innerHeight;
     if (!h) return;
-    const shrinking = appHeight && h < appHeight;
-    const smallShrink = shrinking && (appHeight - h) < 220;
-    if (!force && smallShrink) return; // likely just a keyboard/accessory bar — hold steady
-    appHeight = h;
     document.documentElement.style.setProperty('--app-height', h + 'px');
     repositionReplyBubbleIfShown();
   }
   setAppHeight(true);
   window.addEventListener('resize', () => setAppHeight(false));
-  if (window.visualViewport){
-    window.visualViewport.addEventListener('resize', () => setAppHeight(false));
-  }
   window.addEventListener('orientationchange', () => setTimeout(() => setAppHeight(true), 300));
 
   window.addEventListener('resize', repositionReplyBubbleIfShown);
