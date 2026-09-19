@@ -1,5 +1,15 @@
 [
    {
+    "id": "find-the-ingredients",
+    "title": "Find the Ingredients",
+    "description": "Practice asking "where" questions by looking for ingredients in the kitchen to make a dish.",
+    "creatorName": "Teacher Carmina",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["comprehension", "questions", "LC.SL.3.8"],
+    "uploadDate": "2026-09-19"
+  },
+   {
     "id": "hear-and-type",
     "title": "Hear and Type",
     "description": "Listen to the letter name and type the letter.",
