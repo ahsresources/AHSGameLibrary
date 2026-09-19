@@ -491,6 +491,8 @@
     /* cards may no longer shrink below their content */
     .screen,.game,.card,.showcase,.quiz{min-height:auto;}
     .opts{min-height:auto;flex:1 0 auto;}
+    /* the photo is much smaller here, so the food emoji is half its usual size */
+    .frame .item{font-size:clamp(42px,9vh,78px);}
   }
 
   /* Narrow phones: the two answer columns are too tight for words like "watermelon"
