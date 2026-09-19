@@ -1,4 +1,14 @@
 [
+ {
+    "id": "hide-and-seek",
+    "title": "Hide and Seek",
+    "description": "Find your friend by asking 'Where are you?'",
+    "creatorName": "Teacher Carmina",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["comprehension", "questions", "LC.SL.3.8"],
+    "uploadDate": "2026-09-19"
+  },
    {
     "id": "find-the-ingredients",
     "title": "Find the Ingredients",
