@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Show &amp; Tell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f2f6fb;
+    --paper:#ffffff;
+    --ink:#22304a;
+    --ink-soft:#6b7896;
+    --line:#dfe7f2;
+
+    --yellow:#ffcb4d;
+    --teal:#18997f;
+    --teal-bg:#e7f6f1;
+    --coral:#ec6152;
+    --coral-bg:#fdeceb;
+    --indigo:#3a5a8c;
+    --indigo-bg:#edf2fb;
+
+    --r-lg:22px;
+    --r-md:14px;
+    --r-sm:11px;
+
+    --shadow:0 10px 30px -18px rgba(34,48,74,.45);
+    --f-display:"Baloo 2","Segoe UI",system-ui,sans-serif;
+    --f-body:"Nunito","Segoe UI",system-ui,sans-serif;
+
+    /* fluid type: blends width + height so it never collapses to unreadable */
+    --t-xs: clamp(11px, .35vw + .5vh, 13px);
+    --t-sm: clamp(13px, .4vw + .7vh, 15px);
+    --t-md: clamp(15px, .5vw + .9vh, 18px);
+    --t-lg: clamp(19px, .9vw + 1.3vh, 27px);
+    --t-xl: clamp(24px, 1.5vw + 1.6vh, 40px);
+
+    --gap: clamp(10px, 1.4vh, 18px);
+    --pad: clamp(14px, 1.8vh, 24px);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:var(--f-body);
+    color:var(--ink);
+    background:
+      radial-gradient(ellipse at 10% -10%, #e3eefb 0%, transparent 55%),
+      radial-gradient(ellipse at 95% 0%, #fdf0e2 0%, transparent 45%),
+      var(--bg);
+    height:100dvh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    padding:clamp(10px,1.6vh,20px) clamp(12px,2.4vw,26px) clamp(12px,2vh,22px);
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important;}}
+  button{font-family:inherit;}
+  :focus-visible{outline:3px solid var(--indigo);outline-offset:2px;}
+
+  /* ============ TOP BAR ============ */
+  .topbar{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:clamp(10px,2vw,20px);
+    width:100%;
+    max-width:1180px;
+    margin:0 auto clamp(10px,1.6vh,18px);
+  }
+  .brand{display:flex;align-items:center;gap:9px;flex:none;}
+  .brand svg{width:clamp(26px,3.4vh,34px);height:clamp(26px,3.4vh,34px);display:block;}
+  .brand span{
+    font-family:var(--f-display);
+    font-weight:700;
+    font-size:clamp(16px,2.2vh,21px);
+    letter-spacing:.2px;
+    white-space:nowrap;
+  }
+
+  .track{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:1;
+    justify-content:center;
+    min-width:0;
+  }
+  .pin{
+    width:clamp(8px,1.1vh,11px);
+    height:clamp(8px,1.1vh,11px);
+    border-radius:50%;
+    background:#fff;
+    border:2px solid var(--line);
+    flex:none;
+    transition:background .25s,border-color .25s,transform .25s;
+  }
+  .pin.done{background:var(--teal);border-color:var(--teal);}
+  .pin.current{border-color:var(--indigo);background:var(--indigo);transform:scale(1.35);}
+
+  .score{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:7px;
+    background:var(--paper);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:5px 14px 5px 6px;
+    font-weight:800;
+    font-size:var(--t-sm);
+    white-space:nowrap;
+    box-shadow:var(--shadow);
+  }
+  .score i{
+    width:clamp(20px,2.4vh,25px);height:clamp(20px,2.4vh,25px);
+    border-radius:50%;background:var(--yellow);
+    display:flex;align-items:center;justify-content:center;
+    font-style:normal;font-size:var(--t-xs);
+  }
+
+  .mutebtn{
+    flex:none;
+    width:clamp(30px,3.8vh,38px);height:clamp(30px,3.8vh,38px);
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--paper);
+    box-shadow:var(--shadow);
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-size:clamp(14px,2vh,17px);
+    line-height:1;
+    transition:transform .15s,background .15s;
+  }
+  .mutebtn:hover{background:var(--indigo-bg);}
+  .mutebtn:active{transform:scale(.92);}
+  .mutebtn.is-muted{color:var(--ink-soft);}
+
+  /* ============ SCREENS ============ */
+  .screen{display:none;flex:1;min-height:0;}
+  .screen.on{display:flex;}
+  .screen > *{width:100%;max-width:1180px;margin:0 auto;}
+
+  /* ============ INTRO ============ */
+  .intro{
+    background:var(--paper);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    display:grid;
+    grid-template-columns:1fr;
+    align-content:center;
+    justify-items:center;
+    text-align:center;
+    gap:clamp(8px,1.4vh,16px);
+    padding:clamp(20px,4vh,52px) clamp(20px,5vw,60px);
+  }
+  .intro h1{
+    font-family:var(--f-display);
+    font-size:var(--t-xl);
+    line-height:1.12;
+    margin:0;
+    max-width:18ch;
+  }
+  .intro p{
+    font-size:var(--t-md);
+    color:var(--ink-soft);
+    font-weight:700;
+    margin:0;
+    max-width:40ch;
+    line-height:1.5;
+  }
+  .intro .faces{
+    display:flex;
+    gap:clamp(4px,1vw,10px);
+    font-size:clamp(22px,4vh,38px);
+    margin-bottom:clamp(2px,.8vh,8px);
+    line-height:1;
+  }
+  .btn{
+    border:none;cursor:pointer;
+    font-family:var(--f-display);font-weight:700;
+    border-radius:999px;
+    background:var(--coral);color:#fff;
+    padding:clamp(11px,1.7vh,15px) clamp(26px,3.5vw,38px);
+    font-size:var(--t-md);
+    box-shadow:0 12px 24px -12px rgba(236,97,82,.7);
+    transition:filter .15s,transform .15s;
+    margin-top:clamp(6px,1.2vh,12px);
+  }
+  .btn:hover{filter:brightness(1.05);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+
+  .modes{
+    display:flex;
+    gap:clamp(10px,1.6vw,16px);
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-top:clamp(8px,1.4vh,16px);
+  }
+  .modebtn{
+    border:none;cursor:pointer;
+    font-family:var(--f-display);
+    border-radius:18px;
+    color:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    min-width:clamp(120px,16vw,160px);
+    padding:clamp(14px,2.2vh,22px) clamp(14px,2vw,22px);
+    box-shadow:var(--shadow);
+    transition:transform .15s,filter .15s,opacity .15s;
+  }
+  .modebtn:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.06);}
+  .modebtn:active:not(:disabled){transform:translateY(0);}
+  .modebtn:disabled{opacity:.55;cursor:default;}
+  .modebtn b{font-weight:800;font-size:var(--t-lg);}
+  .modebtn small{font-weight:700;font-size:var(--t-xs);opacity:.9;}
+  .modebtn.who{background:var(--indigo);}
+  .modebtn.what{background:var(--coral);}
+  .modebtn.both{background:var(--teal);}
+
+  /* ============ GAME ============ */
+  .game{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-rows:auto 1fr;
+    gap:var(--gap);
+    min-height:0;
+  }
+  /* side-by-side once there's horizontal room — photo keeps its landscape shape,
+     text keeps its full size */
+  @media (min-width:820px){
+    .game{
+      grid-template-columns:minmax(0,1.02fr) minmax(0,1fr);
+      grid-template-rows:1fr;
+      align-items:stretch;
+    }
+  }
+
+  .card{
+    background:var(--paper);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    min-height:0;
+  }
+
+  /* --- photo side --- */
+  .showcase{
+    display:flex;
+    flex-direction:column;
+    padding:clamp(10px,1.4vh,16px);
+    min-height:0;
+  }
+  .frame{
+    position:relative;
+    flex:1 1 auto;
+    min-height:0;
+    border-radius:var(--r-md);
+    overflow:hidden;
+    background:linear-gradient(160deg,var(--indigo-bg),#fdf3e8);
+  }
+  .frame img{width:100%;height:100%;object-fit:cover;object-position:center;display:block;}
+  .frame .item{
+    position:absolute;
+    left:28%; top:40%;
+    transform:translate(-50%,-50%);
+    font-size:clamp(84px,18vh,156px);
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,.35));
+    animation:pop .45s cubic-bezier(.34,1.56,.64,1) both;
+    line-height:1;
+  }
+  @keyframes pop{from{transform:translate(-50%,-50%) scale(0);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+
+  /* portrait/stacked: cap the photo so it can't eat the screen */
+  @media (max-width:819px){
+    .frame{aspect-ratio:16/10;flex:none;max-height:38dvh;}
+    .frame img{height:100%;}
+  }
+
+  .caption{
+    flex:none;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:clamp(8px,1.2vh,14px);
+    padding:clamp(9px,1.3vh,14px) clamp(12px,1.6vw,18px);
+    background:var(--indigo-bg);
+    border-radius:var(--r-md);
+    color:var(--indigo);
+    font-weight:700;
+    font-size:clamp(20px, 1vw + 1vh, 38px);
+    line-height:1.55;
+    animation:fade .4s ease both;
+  }
+  .caption p{margin:0;flex:1;}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .speak{
+    flex:none;
+    width:clamp(40px,4.4vh,40px);height:clamp(40px,4.4vh,40px);
+    border-radius:50%;
+    border:none;
+    background:#fff;
+    color:var(--indigo);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    box-shadow:0 2px 6px -2px rgba(34,48,74,.3);
+    transition:transform .15s,background .15s;
+  }
+  .speak:hover{background:var(--yellow);}
+  .speak:active{transform:scale(.92);}
+  .speak svg{width:55%;height:55%;}
+
+  /* --- question side --- */
+  .quiz{
+    display:flex;
+    flex-direction:column;
+    padding:var(--pad);
+    min-height:0;
+  }
+  .qhead{
+    flex:none;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:clamp(6px,1vh,12px);
+  }
+  .qstep{
+    font-weight:800;
+    font-size:var(--t-xs);
+    color:var(--ink-soft);
+    letter-spacing:.6px;
+    text-transform:uppercase;
+  }
+  .qtitle{
+    flex:none;
+    font-family:var(--f-display);
+    font-size:clamp(32px, 3vw + 3vh, 80px);
+    line-height:1.15;
+    margin:0 0 clamp(12px,2vh,22px);
+    text-align:center;
+    color:var(--indigo);
+    background:linear-gradient(135deg,#fff3d2,#ffe6a8);
+    border:2px solid var(--yellow);
+    border-radius:var(--r-md);
+    padding:clamp(14px,2.6vh,30px) clamp(12px,2vw,24px);
+    box-shadow:0 6px 18px -10px rgba(255,180,40,.8);
+  }
+
+  .opts{
+    flex:1 1 auto;
+    min-height:0;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    grid-auto-rows:1fr;
+    gap:clamp(9px,1.4vh,14px);
+  }
+  .opt{
+    cursor:pointer;
+    text-align:left;
+    background:#fcfdff;
+    border:2px solid var(--line);
+    border-radius:var(--r-md);
+    padding:clamp(10px,1.6vh,18px) clamp(12px,1.6vw,20px);
+    font-family:var(--f-body);
+    font-weight:800;
+    font-size:clamp(20px, 1vw + 1vh, 38px);
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    gap:clamp(8px,1vw,12px);
+    line-height:1.2;
+    min-width:0;
+    transition:border-color .15s,background .15s,transform .12s,box-shadow .15s,opacity .2s;
+  }
+  .opt em{font-style:normal;font-size:clamp(27px,4.2vh,40px);flex:none;line-height:1;}
+  .opt span{min-width:0;overflow-wrap:anywhere;}
+  .opt:hover:not(:disabled){border-color:var(--indigo);transform:translateY(-2px);box-shadow:var(--shadow);}
+  .opt:disabled{cursor:default;}
+  .opt.right{background:var(--teal-bg);border-color:var(--teal);color:var(--teal);}
+  .opt.wrong{background:var(--coral-bg);border-color:var(--coral);color:var(--coral);}
+  .opt.fade{opacity:.45;}
+
+  .qfoot{
+    flex:none;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:clamp(10px,1.6vh,18px);
+    min-height:clamp(36px,5vh,46px);
+  }
+  .qhead{margin-top:0;}
+  .msg{
+    font-weight:800;
+    font-size:var(--t-sm);
+    display:flex;align-items:center;gap:7px;
+    animation:fade .25s ease both;
+  }
+  .msg.good{color:var(--teal);}
+  .msg.bad{color:var(--coral);}
+  .next{
+    border:none;cursor:pointer;
+    font-family:var(--f-display);font-weight:700;
+    background:var(--indigo);color:#fff;
+    border-radius:999px;
+    padding:clamp(9px,1.4vh,13px) clamp(20px,2.6vw,30px);
+    font-size:var(--t-sm);
+    transition:filter .15s,transform .15s;
+    margin-left:auto;
+  }
+  .next:hover{filter:brightness(1.1);}
+  .next:active{transform:scale(.97);}
+
+  /* ============ RESULTS ============ */
+  .results{
+    background:var(--paper);
+    border-radius:var(--r-lg);
+    box-shadow:var(--shadow);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:clamp(18px,3vh,40px) clamp(20px,4vw,48px);
+    min-height:0;
+    gap:clamp(4px,.8vh,10px);
+  }
+  .results .lbl{font-weight:800;color:var(--ink-soft);font-size:var(--t-xs);text-transform:uppercase;letter-spacing:.8px;}
+  .results .big{
+    font-family:var(--f-display);
+    font-size:clamp(34px,8vh,72px);
+    line-height:1;
+    color:var(--indigo);
+  }
+  .stars{display:flex;gap:7px;margin:clamp(2px,.6vh,8px) 0;}
+  .stars svg{width:clamp(22px,3.6vh,34px);height:clamp(22px,3.6vh,34px);}
+  .results .note{
+    font-size:var(--t-sm);font-weight:700;color:var(--ink);
+    max-width:44ch;line-height:1.45;
+    margin-bottom:clamp(4px,1vh,10px);
+  }
+  .recap{
+    list-style:none;margin:0;padding:2px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(clamp(130px,16vw,180px),1fr));
+    gap:clamp(6px,1vh,10px);
+    width:100%;max-width:620px;
+    min-height:0;overflow-y:auto;
+  }
+  .recap li{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--indigo-bg);
+    border-radius:var(--r-sm);
+    padding:clamp(6px,1vh,10px) clamp(10px,1.2vw,14px);
+    font-weight:700;font-size:var(--t-sm);
+  }
+  .recap .who{display:flex;align-items:center;gap:8px;min-width:0;}
+  .recap .who em{font-style:normal;font-size:clamp(14px,2.2vh,19px);flex:none;}
+  .recap .who span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .badge{
+    font-family:var(--f-display);font-weight:700;
+    font-size:var(--t-xs);padding:2px 9px;border-radius:999px;background:#fff;flex:none;
+  }
+  .badge.b2{color:var(--teal);}
+  .badge.b1{color:#a06a00;}
+  .badge.b0{color:var(--coral);}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="20" cy="20" r="18" fill="#FFCB4D"/>
+      <circle cx="15" cy="17" r="2" fill="#22304A"/><circle cx="25" cy="17" r="2" fill="#22304A"/>
+      <path d="M13 25c2.2 2 4.4 3 7 3s4.8-1 7-3" stroke="#EC6152" stroke-width="2.6" stroke-linecap="round"/>
+    </svg>
+    <span>Show &amp; Tell</span>
+  </div>
+  <div class="track" id="track" hidden></div>
+  <div class="score" id="score" hidden><i>★</i><span id="scoreText">0 / 6</span></div>
+  <button class="mutebtn" id="muteBtn" type="button" aria-pressed="false" aria-label="Mute sound effects">🔊</button>
+</header>
+
+<!-- INTRO -->
+<section class="screen on" id="s-intro">
+  <div class="intro">
+    <div class="faces">👦🏻 👧🏽 👦🏾 👧🏻</div>
+    <h1>It's show and tell — everyone brought their favourite food.</h1>
+    <p>Meet each classmate, then tell us <strong>who</strong> it is and <strong>what</strong> they brought.</p>
+    <div class="modes">
+      <button class="modebtn who" type="button" data-mode="who"><b>Ask Who?</b><small>Who questions only</small></button>
+      <button class="modebtn what" type="button" data-mode="what"><b>Ask What?</b><small>What questions only</small></button>
+      <button class="modebtn both" type="button" data-mode="both"><b>Ask Both</b><small>An even mix of both</small></button>
+    </div>
+  </div>
+</section>
+
+<!-- GAME -->
+<section class="screen" id="s-game">
+  <div class="game">
+    <div class="card showcase">
+      <div class="frame">
+        <img id="charImg" src="" alt="">
+        <span class="item" id="charEmoji" aria-hidden="true"></span>
+      </div>
+      <div class="caption">
+        <p id="charSpeech"></p>
+        <button class="speak" id="sayBtn" type="button" aria-label="Play sentence">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card quiz">
+      <div class="qhead">
+        <span class="qstep" id="roundCount">Round 1 of 6</span>
+      </div>
+      <h2 class="qtitle" id="questionTitle"></h2>
+      <div class="opts" id="optionsGrid" role="group" aria-label="Answer options"></div>
+      <div class="qfoot">
+        <span class="msg" id="feedbackMsg" aria-live="polite"></span>
+        <button class="next" id="nextBtn" type="button" hidden>Continue</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESULTS -->
+<section class="screen" id="s-results">
+  <div class="results">
+    <div class="lbl">Your score</div>
+    <div class="big" id="finalScore">0 / 6</div>
+    <div class="stars" id="starsRow"></div>
+    <p class="note" id="finalMessage"></p>
+    <ul class="recap" id="recapList"></ul>
+    <button class="btn" id="restartBtn" type="button">Play again</button>
+  </div>
+</section>
+
+<script>
+(function(){
+  "use strict";
+
+  var CHARACTERS = [
+    { file:"cboy.png",  icon:"👦🏻", sex:"m", names:["Dylan","Justin","Yun Hao","Hayden"] },
+    { file:"cgirl.png", icon:"👧🏻", sex:"f", names:["Mikelle","Jessie","Emilia","Eliza"] },
+    { file:"mboy.png",  icon:"👦🏽", sex:"m", names:["Adam","Danish","Uwais","Ayden"] },
+    { file:"mgirl.png", icon:"👧🏽", sex:"f", names:["Amanda","Mikayla","Nur","Zara"] },
+    { file:"iboy.png",  icon:"👦🏾", sex:"m", names:["Aarya","Nitesh","Nashwan","Aahil"] },
+    { file:"igirl.png", icon:"👧🏾", sex:"f", names:["Priyya","Vani","Saranya","Clara"] }
+  ];
+
+  var FOODS = [
+    {emoji:"🍎",word:"apple"},{emoji:"🍕",word:"pizza"},{emoji:"🍔",word:"burger"},
+    {emoji:"🍦",word:"ice cream",kind:"mass"},{emoji:"🍩",word:"donut"},{emoji:"🍇",word:"grapes",kind:"plural"},
+    {emoji:"🍓",word:"strawberry"},{emoji:"🍉",word:"watermelon"},{emoji:"🍌",word:"banana"},
+    {emoji:"🥐",word:"croissant"},{emoji:"🍪",word:"cookie"},{emoji:"🧁",word:"cupcake"},
+    {emoji:"🍭",word:"lollipop"},{emoji:"🥕",word:"carrot"},{emoji:"🍒",word:"cherry"},
+    {emoji:"🍋",word:"lemon"},{emoji:"🥨",word:"pretzel"},{emoji:"🧀",word:"cheese",kind:"mass"},
+    {emoji:"🍿",word:"popcorn",kind:"mass"},{emoji:"🍞",word:"bread",kind:"mass"}
+  ];
+
+  var ROUNDS = 6;
+
+  function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+  function pickN(a,n){return shuffle(a).slice(0,n);}
+  function pick(a){return a[Math.floor(Math.random()*a.length)];}
+  function article(w){return /^[aeiou]/i.test(w)?"an":"a";}
+  function foodSentence(food){
+    if(food.kind==="plural") return "These are "+food.word+".";
+    if(food.kind==="mass")   return "This is "+food.word+".";
+    return "This is "+article(food.word)+" "+food.word+".";
+  }
+  function not(arr,item,key){return arr.filter(function(x){return x[key]!==item[key];});}
+
+  /* --- preload the six pictures as soon as the page loads --- */
+  function preloadImage(src){
+    return new Promise(function(resolve){
+      var img = new Image();
+      img.onload = function(){ resolve(); };
+      img.onerror = function(){ resolve(); };
+      img.src = src;
+    });
+  }
+  var imagesReady = Promise.all(CHARACTERS.map(function(c){ return preloadImage("assets/"+c.file); }));
+
+  var S = { mode:"both", rounds:[], types:[], r:0, score:0, recap:[], opts:[], answered:false, attempted:false, muted:false };
+
+  function makeChar(base){ return {file:base.file, icon:base.icon, sex:base.sex, name:pick(base.names)}; }
+
+  function buildRounds(){
+    var chars = shuffle(CHARACTERS), foods = pickN(FOODS, ROUNDS);
+    return chars.map(function(c,i){ return {character:makeChar(c), food:foods[i], got:0}; });
+  }
+
+  function buildTypes(mode){
+    if(mode==="who") return Array(ROUNDS).fill("who");
+    if(mode==="what") return Array(ROUNDS).fill("what");
+    // "both": exactly half who, half what, shuffled across the rounds
+    var half = ROUNDS/2, arr = [];
+    for(var i=0;i<half;i++){ arr.push("who"); arr.push("what"); }
+    return shuffle(arr);
+  }
+
+  function buildOpts(round){
+    var otherChar = makeChar(pick(not(CHARACTERS, round.character, "file")));
+    var otherFood = pick(not(FOODS, round.food, "word"));
+    return shuffle([
+      {type:"person", label:round.character.name, icon:round.character.icon, right:"who"},
+      {type:"object", label:round.food.word,      icon:round.food.emoji,     right:"what"},
+      {type:"person", label:otherChar.name,       icon:otherChar.icon,       right:null},
+      {type:"object", label:otherFood.word,       icon:otherFood.emoji,      right:null}
+    ]);
+  }
+
+  var $ = function(id){return document.getElementById(id);};
+  var screens = {intro:$("s-intro"), game:$("s-game"), results:$("s-results")};
+  var charImg=$("charImg"), charEmoji=$("charEmoji"), charSpeech=$("charSpeech");
+  var roundCount=$("roundCount"), questionTitle=$("questionTitle");
+  var optionsGrid=$("optionsGrid"), feedbackMsg=$("feedbackMsg"), nextBtn=$("nextBtn"), sayBtn=$("sayBtn");
+  var track=$("track"), score=$("score"), scoreText=$("scoreText");
+  var finalScore=$("finalScore"), finalMessage=$("finalMessage"), starsRow=$("starsRow"), recapList=$("recapList");
+  var modeBtns = [].slice.call(document.querySelectorAll(".modebtn"));
+
+  function show(name){
+    Object.keys(screens).forEach(function(k){ screens[k].classList.toggle("on", k===name); });
+  }
+
+  function drawTrack(){
+    track.innerHTML="";
+    for(var i=0;i<ROUNDS;i++){
+      var p=document.createElement("span");
+      p.className="pin"+(i<S.r?" done":"")+(i===S.r?" current":"");
+      track.appendChild(p);
+    }
+  }
+  function drawScore(){ scoreText.textContent = S.score+" / "+ROUNDS; }
+
+  function start(mode){
+    S.mode=mode;
+    S.rounds=buildRounds(); S.types=buildTypes(mode); S.r=0; S.score=0; S.recap=[];
+    track.hidden=false; score.hidden=false;
+    drawScore(); show("game"); loadRound();
+  }
+
+  function loadRound(){
+    var round=S.rounds[S.r];
+    round.got=0;
+    S.opts=buildOpts(round);
+
+    charImg.src="assets/"+round.character.file;
+    charImg.alt=round.character.name+" at show and tell";
+    charEmoji.textContent=round.food.emoji;
+    charSpeech.textContent="Hi, I am "+round.character.name+". "+foodSentence(round.food);
+
+    drawTrack();
+    loadQuestion();
+  }
+
+  function loadQuestion(){
+    var round=S.rounds[S.r], type=S.types[S.r];
+    S.answered=false;
+    S.attempted=false;
+
+    roundCount.textContent="Round "+(S.r+1)+" of "+ROUNDS;
+    questionTitle.textContent = type==="who" ? "Who is it?" : "What is it?";
+
+    optionsGrid.innerHTML="";
+    shuffle(S.opts).forEach(function(o){
+      var b=document.createElement("button");
+      b.type="button"; b.className="opt";
+      b.dataset.right = (o.right===type) ? "1" : "0";
+      b.innerHTML='<em>'+o.icon+'</em><span>'+o.label+'</span>';
+      b.addEventListener("click",function(){ answer(b, round, type); });
+      optionsGrid.appendChild(b);
+    });
+
+    feedbackMsg.textContent=""; feedbackMsg.className="msg";
+    nextBtn.hidden=true;
+  }
+
+  /* --- gentle chime for correct answers (no file needed, Web Audio API) --- */
+  var audioCtx = null;
+  function ensureAudio(){
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    if(!audioCtx) audioCtx = new AC();
+    if(audioCtx.state === "suspended") audioCtx.resume();
+    return audioCtx;
+  }
+  function playCorrectChime(){
+    if(S.muted) return;
+    var ctx = ensureAudio();
+    if(!ctx) return;
+    var t0 = ctx.currentTime;
+    // two warm, soft notes (a gentle major third) with a slow fade in/out — no sharp "ding"
+    [[523.25, t0, .34, 0.09], [659.25, t0+.15, .42, 0.08]].forEach(function(n){
+      var osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = n[0];
+      g.gain.setValueAtTime(0.0001, n[1]);
+      g.gain.exponentialRampToValueAtTime(n[3], n[1] + 0.07);
+      g.gain.exponentialRampToValueAtTime(0.0001, n[1] + n[2]);
+      osc.connect(g);
+      g.connect(ctx.destination);
+      osc.start(n[1]);
+      osc.stop(n[1] + n[2] + 0.03);
+    });
+  }
+
+  function answer(btn, round, type){
+    if(S.answered || btn.disabled) return;
+    var ok = btn.dataset.right==="1";
+
+    if(ok){
+      btn.classList.add("right");
+      var all=[].slice.call(optionsGrid.querySelectorAll(".opt"));
+      all.forEach(function(o){o.disabled=true;});
+      S.answered=true;
+      if(!S.attempted){ S.score++; round.got++; }
+      feedbackMsg.textContent="✓ Correct!";
+      feedbackMsg.className="msg good";
+      drawScore();
+      playCorrectChime();
+      nextBtn.hidden=false;
+      nextBtn.focus();
+    }else{
+      btn.classList.add("wrong");
+      btn.disabled=true;
+      S.attempted=true;
+      feedbackMsg.textContent="Not quite — try again!";
+      feedbackMsg.className="msg bad";
+    }
+  }
+
+  function next(){
+    var round=S.rounds[S.r];
+    S.recap.push({name:round.character.name, emoji:round.food.emoji, got:round.got});
+    if(S.r<ROUNDS-1){ S.r++; loadRound(); } else { finish(); }
+  }
+
+  function finish(){
+    S.r=ROUNDS; drawTrack();
+    show("results");
+    var total=ROUNDS, pct=S.score/total;
+    finalScore.textContent=S.score+" / "+total;
+
+    var n = pct>=.95?3 : pct>=.6?2 : pct>=.3?1 : 0;
+    starsRow.innerHTML="";
+    for(var i=0;i<3;i++){
+      starsRow.innerHTML+='<svg viewBox="0 0 24 24" fill="'+(i<n?"#FFCB4D":"#E2E8F2")+'"><path d="M12 2l2.9 6.6 7.1.7-5.4 4.7 1.7 7-6.3-3.9-6.3 3.9 1.7-7L2 9.3l7.1-.7L12 2z"/></svg>';
+    }
+    finalMessage.textContent =
+      pct>=.95 ? "Perfect! You knew every classmate and every snack." :
+      pct>=.75 ? "Great listening — you got almost all of them." :
+      pct>=.5  ? "Good effort. Play again to catch the tricky ones." :
+                 "Nice try! Look closely at the picture and the words.";
+
+    recapList.innerHTML="";
+    S.recap.forEach(function(r){
+      var li=document.createElement("li");
+      li.innerHTML='<span class="who"><em>'+r.emoji+'</em><span>'+r.name+'</span></span>'+
+                   '<span class="badge b'+r.got+'">'+(r.got ? "✓" : "✗")+'</span>';
+      recapList.appendChild(li);
+    });
+  }
+
+  /* --- gendered speech --- */
+  var FEMALE_RE = /\b(female|woman|girl)\b|samantha|victoria|karen|moira|tessa|fiona|serena|zira|susan|allison|ava|joanna|salli|kimberly|amy|emma|nicky|catherine|hazel|linda|zoe|aria|jenny|michelle|sonia|libby|neerja|raveena|kalpana|heera|google us english/i;
+  var MALE_RE   = /\bmale\b|\bman\b|\bboy\b|daniel|alex|fred|thomas|oliver|george|david|mark|ryan|brian|matthew|guy|arthur|aaron|nathan|eric|christopher|roger|steffan|prabhat|rishi|ravi|hemant/i;
+
+  function voiceFor(sex){
+    if(!("speechSynthesis" in window)) return null;
+    var all = window.speechSynthesis.getVoices() || [];
+    if(!all.length) return null;
+    var en = all.filter(function(v){ return /^en/i.test(v.lang); });
+    var pool = en.length ? en : all;
+
+    var wanted = pool.filter(function(v){
+      var n = v.name || "";
+      // test female first so "female" isn't caught by a loose "male" match
+      return FEMALE_RE.test(n) ? sex === "f" : (MALE_RE.test(n) ? sex === "m" : false);
+    });
+    if(wanted.length) return wanted[0];
+
+    // no labelled voices: split the pool so the two sexes at least sound different
+    if(pool.length > 1) return sex === "f" ? pool[0] : pool[pool.length - 1];
+    return pool[0] || null;
+  }
+
+  // voice list often loads asynchronously
+  if("speechSynthesis" in window && typeof speechSynthesis.addEventListener === "function"){
+    speechSynthesis.addEventListener("voiceschanged", function(){ voiceFor("f"); });
+  }
+
+  function speak(){
+    if(!("speechSynthesis" in window)) return;
+    window.speechSynthesis.cancel();
+    var sex = (S.rounds[S.r] && S.rounds[S.r].character.sex) || "f";
+    var u = new SpeechSynthesisUtterance(charSpeech.textContent);
+    var v = voiceFor(sex);
+    if(v){ u.voice = v; u.lang = v.lang; }
+    u.rate = .92;
+    u.pitch = sex === "f" ? 1.35 : 0.75;   // reinforces the difference on generic voices
+    window.speechSynthesis.speak(u);
+  }
+
+  modeBtns.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      if(btn.disabled) return;
+      modeBtns.forEach(function(b){ b.disabled = true; });
+      imagesReady.then(function(){ start(btn.dataset.mode); });
+    });
+  });
+  $("restartBtn").addEventListener("click", function(){
+    modeBtns.forEach(function(b){ b.disabled = false; });
+    show("intro");
+  });
+  nextBtn.addEventListener("click",next);
+  sayBtn.addEventListener("click",speak);
+  if(!("speechSynthesis" in window)) sayBtn.style.display="none";
+
+  var muteBtn = $("muteBtn");
+  muteBtn.addEventListener("click", function(){
+    S.muted = !S.muted;
+    muteBtn.textContent = S.muted ? "🔇" : "🔊";
+    muteBtn.classList.toggle("is-muted", S.muted);
+    muteBtn.setAttribute("aria-pressed", S.muted ? "true" : "false");
+    muteBtn.setAttribute("aria-label", S.muted ? "Unmute sound effects" : "Mute sound effects");
+  });
+})();
+</script>
+</body>
+</html>
