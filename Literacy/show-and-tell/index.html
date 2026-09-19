@@ -317,6 +317,13 @@
   .speak:active{transform:scale(.92);}
   .speak svg{width:55%;height:55%;}
 
+  /* photo and speech box are also tap targets for read-aloud (class added by JS
+     only when the browser supports speech) */
+  .speakable{cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .caption.speakable{transition:background .15s;}
+  .caption.speakable:active{background:#e0e8f7;}
+  .frame.speakable:active img{filter:brightness(.96);}
+
   /* --- question side --- */
   .quiz{
     display:flex;
@@ -864,7 +871,18 @@
   });
   nextBtn.addEventListener("click",next);
   sayBtn.addEventListener("click",speak);
-  if(!("speechSynthesis" in window)) sayBtn.style.display="none";
+  if(!("speechSynthesis" in window)){
+    sayBtn.style.display="none";
+  }else{
+    // tapping the photo or the speech box also reads the sentence aloud
+    [document.querySelector(".frame"), document.querySelector(".caption")].forEach(function(el){
+      el.classList.add("speakable");
+      el.addEventListener("click", function(e){
+        if(e.target.closest("#sayBtn")) return;   // the button has its own handler
+        speak();
+      });
+    });
+  }
 
   var muteBtn = $("muteBtn");
   muteBtn.addEventListener("click", function(){
