@@ -1,4 +1,14 @@
 [
+  {
+    "id": "cvc-game",
+    "title": "CVC Game",
+    "description": "Listen to the word and type the missing consonants.",
+    "creatorName": "Teacher Shanice",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["CVC", "reading", "phonics", "letter sounds"],
+    "uploadDate": "2026-09-22"
+  },
  {
     "id": "hide-and-seek",
     "title": "Hide and Seek",
