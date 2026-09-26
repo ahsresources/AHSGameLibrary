@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ordinal Numbers Spelling Game</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --card-bg: #ffffff;
+            --text-color: #2c3e50;
+            --primary-color: #4a90e2;
+            --primary-hover: #357abd;
+            --accent-color: #8e44ad;
+            --success-color: #2ec4b6;
+            --error-color: #e71d36;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none; /* Prevents text highlight on rapid tapping */
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top Right Hint Button */
+        .hint-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 10;
+        }
+
+        .hint-btn {
+            background-color: #ffb703;
+            color: #333;
+            border: none;
+            padding: 10px 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            transition: transform 0.1s ease, background 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .hint-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Top Left Sound Toggle Button */
+        .sound-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+        }
+
+        .sound-btn {
+            background-color: #4a90e2;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            transition: transform 0.1s ease, background 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sound-btn.muted {
+            background-color: #6c757d;
+        }
+
+        .sound-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Main Game Card */
+        .game-card {
+            background-color: var(--card-bg);
+            padding: 2rem 1.5rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            width: 100%;
+            max-width: 480px;
+            margin: auto;
+            position: relative;
+        }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0.8); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .shake-animation {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .pop-animation {
+            animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        h1 {
+            font-size: clamp(1.3rem, 4vw, 1.7rem);
+            margin-bottom: 0.3rem;
+        }
+
+        .score {
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .target-display {
+            font-size: clamp(2.8rem, 8vw, 3.8rem);
+            font-weight: 800;
+            color: var(--primary-color);
+            line-height: 1;
+            margin-bottom: 0.5rem;
+        }
+
+        .hint-text {
+            font-size: clamp(0.85rem, 2.8vw, 1rem);
+            color: #fb8500;
+            min-height: 1.2rem;
+            margin-bottom: 0.8rem;
+            font-style: italic;
+            font-weight: 600;
+        }
+
+        /* Answer Slots Area */
+        .answer-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 55px;
+            margin-bottom: 1.2rem;
+            padding: 8px;
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #ced4da;
+            align-items: center;
+        }
+
+        /* Letter Bank Area */
+        .letters-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 55px;
+            margin-bottom: 1.2rem;
+        }
+
+        /* Tiles Styling */
+        .letter-tile {
+            width: clamp(38px, 10vw, 48px);
+            height: clamp(38px, 10vw, 48px);
+            background-color: #ffffff;
+            border: 2px solid var(--primary-color);
+            border-bottom: 4px solid var(--primary-color);
+            color: var(--primary-color);
+            font-size: clamp(1.2rem, 4vw, 1.5rem);
+            font-weight: 700;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.05);
+            transition: all 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .letter-tile:active {
+            transform: translateY(2px);
+            border-bottom-width: 2px;
+        }
+
+        .letter-tile.placed {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .letter-tile.hidden {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Action Controls */
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button.action-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.1s ease;
+            flex: 1;
+            -webkit-tap-highlight-color: transparent;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        button.action-btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        button.action-btn:active {
+            transform: scale(0.98);
+        }
+
+        button.clear-btn {
+            background-color: #6c757d;
+            flex: 0.3;
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.2);
+        }
+
+        .feedback {
+            margin-top: 1rem;
+            font-size: 1.05rem;
+            font-weight: 600;
+            min-height: 1.5rem;
+        }
+
+        .feedback.correct { color: var(--success-color); }
+        .feedback.incorrect { color: var(--error-color); }
+
+        @media (max-width: 600px) {
+            .hint-container { top: 12px; right: 12px; }
+            .sound-container { top: 12px; left: 12px; }
+            .hint-btn, .sound-btn { padding: 8px 14px; font-size: 0.85rem; }
+            .game-card { padding: 1.5rem 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Left Sound Toggle Button -->
+    <div class="sound-container">
+        <button id="soundToggleBtn" class="sound-btn" onclick="toggleSound()">🔊 Sound: ON</button>
+    </div>
+
+    <!-- Top Right Hint Button -->
+    <div class="hint-container">
+        <button id="hintToggleBtn" class="hint-btn" onclick="toggleHint()">Hint: OFF</button>
+    </div>
+
+    <!-- Main Game Container -->
+    <div class="game-card" id="gameCard">
+        <h1>Tap to Spell the Ordinal</h1>
+        <div class="score" id="scoreDisplay">Question 1 of 10</div>
+        
+        <div class="target-display" id="targetDisplay">1st</div>
+        <div class="hint-text" id="hintDisplay"></div>
+
+        <!-- Answer Drop Slots -->
+        <div class="answer-container" id="answerContainer"></div>
+
+        <!-- Scrambled Letter Bank -->
+        <div class="letters-container" id="lettersContainer"></div>
+
+        <div class="controls">
+            <button class="action-btn clear-btn" id="clearBtn" onclick="clearAnswer()">Clear</button>
+            <button class="action-btn" id="submitBtn" onclick="checkAnswer()">Submit</button>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <script>
+        // Web Audio API Sound Effects Generator
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        let soundEnabled = true;
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'tap') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.05);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+                osc.start(now);
+                osc.stop(now + 0.05);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'incorrect') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(180, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'win') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.1);
+                osc.frequency.setValueAtTime(659.25, now + 0.2);
+                osc.frequency.setValueAtTime(880, now + 0.3);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            }
+        }
+
+        const ordinals = [
+            { digit: "1st", word: "first" },
+            { digit: "2nd", word: "second" },
+            { digit: "3rd", word: "third" },
+            { digit: "4th", word: "fourth" },
+            { digit: "5th", word: "fifth" },
+            { digit: "6th", word: "sixth" },
+            { digit: "7th", word: "seventh" },
+            { digit: "8th", word: "eighth" },
+            { digit: "9th", word: "ninth" },
+            { digit: "10th", word: "tenth" }
+        ];
+
+        let currentIndex = 0;
+        let score = 0;
+        let hintEnabled = false;
+        let answeredCurrent = false;
+        
+        let scrambledArray = [];
+        let userSelected = []; // Holds objects: { id, letter }
+
+        const targetDisplay = document.getElementById("targetDisplay");
+        const hintDisplay = document.getElementById("hintDisplay");
+        const answerContainer = document.getElementById("answerContainer");
+        const lettersContainer = document.getElementById("lettersContainer");
+        const feedback = document.getElementById("feedback");
+        const scoreDisplay = document.getElementById("scoreDisplay");
+        const hintToggleBtn = document.getElementById("hintToggleBtn");
+        const soundToggleBtn = document.getElementById("soundToggleBtn");
+        const submitBtn = document.getElementById("submitBtn");
+        const clearBtn = document.getElementById("clearBtn");
+        const gameCard = document.getElementById("gameCard");
+
+        function scrambleWord(word) {
+            let arr = word.split('').map((char, index) => ({ id: index, letter: char }));
+            if (arr.length <= 1) return arr;
+            
+            let scrambled = [...arr];
+            while (scrambled.map(a => a.letter).join('') === word) {
+                for (let i = scrambled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
+                }
+            }
+            return scrambled;
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            soundToggleBtn.textContent = soundEnabled ? "🔊 Sound: ON" : "🔇 Sound: OFF";
+            soundToggleBtn.classList.toggle("muted", !soundEnabled);
+            if (soundEnabled) playSound('tap');
+        }
+
+        function toggleHint() {
+            playSound('tap');
+            hintEnabled = !hintEnabled;
+            hintToggleBtn.textContent = `Hint: ${hintEnabled ? "ON" : "OFF"}`;
+            hintToggleBtn.style.backgroundColor = hintEnabled ? "#28a745" : "#ffb703";
+            hintToggleBtn.style.color = hintEnabled ? "#fff" : "#333";
+            updateHint();
+        }
+
+        function updateHint() {
+            if (hintEnabled && !answeredCurrent) {
+                const currentWord = ordinals[currentIndex].word;
+                const halfLength = Math.ceil(currentWord.length / 2);
+                const firstHalf = currentWord.slice(0, halfLength).toUpperCase();
+                const blanks = "_ ".repeat(currentWord.length - halfLength).trim();
+
+                hintDisplay.textContent = blanks
+                    ? `Hint: ${firstHalf} ${blanks}`
+                    : `Hint: ${firstHalf}`;
+            } else {
+                hintDisplay.textContent = "";
+            }
+        }
+
+        function loadQuestion() {
+            answeredCurrent = false;
+            userSelected = [];
+            feedback.textContent = "";
+            feedback.className = "feedback";
+            submitBtn.textContent = "Submit";
+            clearBtn.style.display = "block";
+            
+            const currentObj = ordinals[currentIndex];
+            scrambledArray = scrambleWord(currentObj.word);
+
+            targetDisplay.textContent = currentObj.digit;
+            scoreDisplay.textContent = `Question ${currentIndex + 1} of ${ordinals.length}`;
+            
+            updateHint();
+            renderTiles();
+        }
+
+        function renderTiles() {
+            // Render Answer Bank
+            answerContainer.innerHTML = "";
+            userSelected.forEach((item, idx) => {
+                const tile = document.createElement("div");
+                tile.className = "letter-tile placed pop-animation";
+                tile.textContent = item.letter;
+                tile.onclick = () => removeLetter(idx);
+                answerContainer.appendChild(tile);
+            });
+
+            // Render Scrambled Bank
+            lettersContainer.innerHTML = "";
+            scrambledArray.forEach((item) => {
+                const tile = document.createElement("div");
+                const isUsed = userSelected.some(selected => selected.id === item.id);
+                tile.className = `letter-tile ${isUsed ? 'hidden' : 'pop-animation'}`;
+                tile.textContent = item.letter;
+                tile.onclick = () => selectLetter(item);
+                lettersContainer.appendChild(tile);
+            });
+        }
+
+        function selectLetter(item) {
+            if (answeredCurrent) return;
+            playSound('tap');
+            userSelected.push(item);
+            renderTiles();
+        }
+
+        function removeLetter(index) {
+            if (answeredCurrent) return;
+            playSound('tap');
+            userSelected.splice(index, 1);
+            renderTiles();
+        }
+
+        function clearAnswer() {
+            if (answeredCurrent || userSelected.length === 0) return;
+            playSound('tap');
+            userSelected = [];
+            renderTiles();
+        }
+
+        function checkAnswer() {
+            if (answeredCurrent) {
+                // Advance to next question
+                currentIndex++;
+                if (currentIndex < ordinals.length) {
+                    loadQuestion();
+                } else {
+                    endGame();
+                }
+                return;
+            }
+
+            const currentWord = ordinals[currentIndex].word;
+            const userGuess = userSelected.map(item => item.letter).join('');
+
+            if (userGuess === currentWord) {
+                playSound('correct');
+                gameCard.classList.add('pop-animation');
+                setTimeout(() => gameCard.classList.remove('pop-animation'), 300);
+                
+                feedback.textContent = "Correct! Well done! 🎉";
+                feedback.className = "feedback correct";
+                score++;
+            } else {
+                playSound('incorrect');
+                gameCard.classList.add('shake-animation');
+                setTimeout(() => gameCard.classList.remove('shake-animation'), 400);
+
+                feedback.textContent = `Incorrect! The answer is "${currentWord}".`;
+                feedback.className = "feedback incorrect";
+            }
+
+            answeredCurrent = true;
+            clearBtn.style.display = "none";
+            hintDisplay.textContent = "";
+
+            if (currentIndex === ordinals.length - 1) {
+                submitBtn.textContent = "See Results";
+            } else {
+                submitBtn.textContent = "Next Question";
+            }
+        }
+
+        function endGame() {
+            playSound('win');
+            document.getElementById("gameCard").innerHTML = `
+                <h1 class="pop-animation">Game Complete! 🏆</h1>
+                <p style="font-size: 1.1rem; margin: 20px 0 10px 0;">Your final score:</p>
+                <div class="target-display" style="font-size: 3.5rem;">${score} / ${ordinals.length}</div>
+                <button class="action-btn" onclick="restartGame()" style="margin-top: 20px;">Play Again</button>
+            `;
+            hintToggleBtn.style.display = "none";
+        }
+
+        function restartGame() {
+            location.reload();
+        }
+
+        loadQuestion();
+    </script>
+</body>
+</html>

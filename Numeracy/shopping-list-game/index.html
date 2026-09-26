@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Singapore Grocery Challenge Game ($2 - $20)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .game-window {
+      width: 95vw;
+      max-width: 1024px;
+      height: 95vh;
+      max-height: 768px;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 14px;
+      gap: 8px;
+    }
+
+    /* Header & Teacher Bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 6px;
+      border-bottom: 2px solid #e2e8f0;
+      gap: 10px;
+    }
+
+    h1 {
+      font-size: clamp(1rem, 2.2vw, 1.3rem);
+      margin: 0;
+      color: #1e3a8a;
+      white-space: nowrap;
+    }
+
+    .teacher-control {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #f8fafc;
+      padding: 4px 10px;
+      border-radius: 8px;
+      border: 1px solid #cbd5e1;
+    }
+
+    .teacher-control label {
+      font-size: clamp(0.75rem, 1.4vw, 0.85rem);
+      font-weight: 700;
+      color: #475569;
+    }
+
+    .teacher-control select {
+      font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid #94a3b8;
+      background: #fff;
+      color: #1e3a8a;
+      cursor: pointer;
+    }
+
+    .score-badge {
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: clamp(0.8rem, 1.6vw, 0.9rem);
+      white-space: nowrap;
+    }
+
+    /* Challenge Top Card */
+    .challenge-card {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .challenge-text {
+      font-size: clamp(0.85rem, 1.8vw, 1rem);
+      font-weight: 700;
+      color: #78350f;
+    }
+
+    .target-badge {
+      background: #1e40af;
+      color: #fff;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: clamp(0.9rem, 2vw, 1.1rem);
+      white-space: nowrap;
+    }
+
+    /* Main Grid Split */
+    .main-content {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    @media (max-width: 600px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+    }
+
+    .panel {
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #cbd5e1;
+      min-height: 0;
+    }
+
+    .panel-title {
+      font-weight: 700;
+      font-size: clamp(0.75rem, 1.4vw, 0.85rem);
+      margin-bottom: 6px;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Grocery Grid */
+    .shelf-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 4px;
+    }
+
+    .item-card {
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .item-card.has-qty {
+      border-color: #16a34a;
+      background: #f0fdf4;
+    }
+
+    .item-badge {
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      background: #16a34a;
+      color: white;
+      font-weight: 800;
+      font-size: 0.7rem;
+      padding: 1px 5px;
+      border-radius: 10px;
+    }
+
+    .item-icon {
+      font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+    }
+
+    .item-name {
+      font-size: clamp(0.65rem, 1.1vw, 0.75rem);
+      font-weight: 600;
+      text-align: center;
+      margin: 1px 0;
+    }
+
+    .item-price {
+      font-weight: 800;
+      color: #16a34a;
+      font-size: clamp(0.75rem, 1.2vw, 0.85rem);
+    }
+
+    /* Quantity Controls */
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+      width: 100%;
+    }
+
+    .qty-btn {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      background: #ffffff;
+      border-radius: 4px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 1px 0;
+    }
+
+    .qty-btn:active {
+      background: #e2e8f0;
+    }
+
+    .qty-btn.minus { color: #dc2626; }
+    .qty-btn.plus { color: #16a34a; }
+
+    /* Payment Area */
+    .basket-area {
+      min-height: 40px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .basket-area img {
+      height: clamp(22px, 4.5vh, 32px);
+      width: auto;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+
+    .cash-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .cash-btn {
+      border: none;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: transform 0.1s;
+    }
+
+    .cash-btn:active {
+      transform: scale(0.92);
+    }
+
+    .cash-btn img {
+      width: 100%;
+      height: clamp(30px, 5.5vh, 42px);
+      object-fit: contain;
+    }
+
+    .total-summary {
+      background: #eff6ff;
+      border: 2px dashed #93c5fd;
+      border-radius: 8px;
+      padding: 6px;
+      text-align: center;
+      margin-bottom: 6px;
+      font-size: clamp(0.85rem, 1.7vw, 1rem);
+      font-weight: 800;
+    }
+
+    .action-bar {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: clamp(6px, 1.4vh, 9px);
+      border: none;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+      cursor: pointer;
+    }
+
+    .btn-pay { background: #16a34a; color: white; }
+    .btn-clear { background: #64748b; color: white; }
+
+    .feedback-banner {
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: clamp(0.8rem, 1.5vw, 0.9rem);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-window">
+  <header>
+    <h1>🇸🇬 Grocery Challenge</h1>
+    
+    <!-- Teacher Mode Target Selector -->
+    <div class="teacher-control">
+      <label for="target-select">🍎 Mode Target:</label>
+      <select id="target-select" onchange="onTargetModeChange()">
+        <option value="all">All ($2 - $20)</option>
+        <option value="2">$2 Challenge</option>
+        <option value="3">$3 Challenge</option>
+        <option value="4">$4 Challenge</option>
+        <option value="5">$5 Challenge</option>
+        <option value="6">$6 Challenge</option>
+        <option value="7">$7 Challenge</option>
+        <option value="8">$8 Challenge</option>
+        <option value="9">$9 Challenge</option>
+        <option value="10">$10 Challenge</option>
+        <option value="11">$11 Challenge</option>
+        <option value="12">$12 Challenge</option>
+        <option value="13">$13 Challenge</option>
+        <option value="14">$14 Challenge</option>
+        <option value="15">$15 Challenge</option>
+        <option value="16">$16 Challenge</option>
+        <option value="17">$17 Challenge</option>
+        <option value="18">$18 Challenge</option>
+        <option value="19">$19 Challenge</option>
+        <option value="20">$20 Challenge</option>
+      </select>
+    </div>
+
+    <div class="score-badge">Completed: <span id="score">0</span></div>
+  </header>
+
+  <!-- Challenge Card -->
+  <div class="challenge-card">
+    <div class="challenge-text">
+      🛒 Shopping List: <span id="list-items" style="color: #1e3a8a;">Loading list...</span>
+    </div>
+    <div class="target-badge">Goal: $<span id="target-total">0</span></div>
+  </div>
+
+  <div class="main-content">
+    <!-- Left: Grocery Shelf -->
+    <div class="panel">
+      <div class="panel-title">1. Find Items from Shopping List (+ / –)</div>
+      <div class="shelf-grid" id="shelf"></div>
+    </div>
+
+    <!-- Right: Cashier Register -->
+    <div class="panel">
+      <div class="panel-title">2. Tap Notes & Coins to Pay</div>
+
+      <div class="total-summary">
+        Bill: $<span id="bill-amount" style="color:#2563eb;">0</span> | 
+        Paid: $<span id="paid-amount" style="color:#16a34a;">0</span>
+      </div>
+
+      <div class="basket-area" id="basket">
+        <span style="color:#94a3b8; font-size:0.8rem;">Cash Tray Empty</span>
+      </div>
+
+      <div class="cash-grid">
+        <button class="cash-btn" onclick="addMoney(1)">
+          <img src="https://www.leftovercurrency.com/app/uploads/2017/04/1-singapore-dollar-coin-third-series-obverse-1.jpg" alt="$1">
+        </button>
+        <button class="cash-btn" onclick="addMoney(2)">
+          <img src="https://www.leftovercurrency.com/app/uploads/2016/11/2-singapore-dollars-banknote-president-encik-yusof-bin-ishak-obverse-1.jpg" alt="$2">
+        </button>
+        <button class="cash-btn" onclick="addMoney(5)">
+          <img src="https://www.leftovercurrency.com/app/uploads/2016/11/5-singapore-dollars-banknote-president-encik-yusof-bin-ishak-obverse-1.jpg" alt="$5">
+        </button>
+        <button class="cash-btn" onclick="addMoney(10)">
+          <img src="https://www.leftovercurrency.com/app/uploads/2016/11/10-singapore-dollars-banknote-president-encik-yusof-bin-ishak-obverse-1.jpg" alt="$10">
+        </button>
+      </div>
+
+      <div class="action-bar">
+        <button class="btn btn-clear" onclick="resetPayment()">Clear Money</button>
+        <button class="btn btn-pay" onclick="checkOut()">Checkout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="feedback-banner" id="feedback"></div>
+</div>
+
+<script>
+  // Web Audio API Sound Effects
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playSound(type) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    if (type === 'pick') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(600, now);
+      osc.frequency.exponentialRampToValueAtTime(900, now + 0.06);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.06);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    } 
+    else if (type === 'remove') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(500, now);
+      osc.frequency.exponentialRampToValueAtTime(300, now + 0.06);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.06);
+      osc.start(now);
+      osc.stop(now + 0.06);
+    }
+    else if (type === 'success') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.08);
+      osc.frequency.setValueAtTime(783.99, now + 0.16);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    } 
+    else if (type === 'overpaid') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.linearRampToValueAtTime(110, now + 0.3);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    }
+    else if (type === 'error') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(200, now);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    }
+  }
+
+  // All Store Items
+  const allStoreItems = [
+    { id: "apple", name: "Apple", price: 1, icon: "🍎" },
+    { id: "banana", name: "Banana", price: 1, icon: "🍌" },
+    { id: "bread", name: "Bread", price: 1, icon: "🍞" },
+    { id: "milk", name: "Fresh Milk", price: 2, icon: "🥛" },
+    { id: "cheese", name: "Cheese Slice", price: 2, icon: "🧀" },
+    { id: "eggs", name: "Egg Carton", price: 3, icon: "🥚" },
+    { id: "cereal", name: "Cereal Box", price: 5, icon: "🥣" },
+    { id: "oil", name: "Olive Oil", price: 5, icon: "🫒" },
+    { id: "rice", name: "Rice Bag", price: 10, icon: "🌾" }
+  ];
+
+  // Map each exact dollar amount ($2 - $20) to specific shopping challenges
+  const challenges = [
+    { target: 2, items: ["apple", "bread"] },                       // $2
+    { target: 3, items: ["apple", "milk"] },                        // $3
+    { target: 4, items: ["milk", "milk"] },                         // $4
+    { target: 5, items: ["milk", "milk", "apple"] },                // $5
+    { target: 6, items: ["eggs", "eggs"] },                         // $6
+    { target: 7, items: ["cereal", "milk"] },                       // $7
+    { target: 8, items: ["cereal", "eggs"] },                       // $8
+    { target: 9, items: ["cereal", "cheese", "milk"] },             // $9
+    { target: 10, items: ["cereal", "oil"] },                       // $10
+    { target: 11, items: ["rice", "apple"] },                       // $11
+    { target: 12, items: ["rice", "milk"] },                        // $12
+    { target: 13, items: ["rice", "eggs"] },                        // $13
+    { target: 14, items: ["rice", "milk", "cheese"] },              // $14
+    { target: 15, items: ["rice", "cereal"] },                      // $15
+    { target: 16, items: ["rice", "cereal", "apple"] },             // $16
+    { target: 17, items: ["rice", "cereal", "milk"] },              // $17
+    { target: 18, items: ["rice", "cereal", "eggs"] },              // $18
+    { target: 19, items: ["rice", "oil", "milk", "cheese"] },       // $19
+    { target: 20, items: ["rice", "rice"] }                         // $20
+  ];
+
+  const images = {
+    1: "https://www.leftovercurrency.com/app/uploads/2017/04/1-singapore-dollar-coin-third-series-obverse-1.jpg",
+    2: "https://www.leftovercurrency.com/app/uploads/2016/11/2-singapore-dollars-banknote-president-encik-yusof-bin-ishak-obverse-1.jpg",
+    5: "https://www.leftovercurrency.com/app/uploads/2016/11/5-singapore-dollars-banknote-president-encik-yusof-bin-ishak-obverse-1.jpg",
+    10: "https://www.leftovercurrency.com/app/uploads/2016/11/10-singapore-dollars-banknote-president-encik-yusof-bin-ishak-obverse-1.jpg"
+  };
+
+  let currentChallengeIndex = 0;
+  let basketQuantities = {};
+  let currentPaid = 0;
+  let selectedMoney = [];
+  let score = 0;
+
+  function onTargetModeChange() {
+    const val = document.getElementById('target-select').value;
+    if (val === "all") {
+      currentChallengeIndex = 0;
+    } else {
+      const selectedTarget = parseInt(val);
+      const foundIdx = challenges.findIndex(c => c.target === selectedTarget);
+      if (foundIdx !== -1) currentChallengeIndex = foundIdx;
+    }
+    initChallenge();
+  }
+
+  function initChallenge() {
+    basketQuantities = {};
+    resetPayment();
+    
+    const task = challenges[currentChallengeIndex];
+    document.getElementById('target-total').innerText = task.target;
+
+    // Count required quantities
+    const counts = {};
+    task.items.forEach(id => counts[id] = (counts[id] || 0) + 1);
+
+    const requiredNames = Object.keys(counts).map(id => {
+      const found = allStoreItems.find(i => i.id === id);
+      return counts[id] > 1 ? `${found.icon} ${found.name} x${counts[id]}` : `${found.icon} ${found.name}`;
+    });
+
+    document.getElementById('list-items').innerText = requiredNames.join(", ");
+
+    renderShelf();
+    calculateBill();
+  }
+
+  function renderShelf() {
+    const shelf = document.getElementById('shelf');
+    shelf.innerHTML = '';
+
+    allStoreItems.forEach((item) => {
+      const qty = basketQuantities[item.id] || 0;
+      const card = document.createElement('div');
+      card.className = `item-card ${qty > 0 ? 'has-qty' : ''}`;
+      
+      card.innerHTML = `
+        ${qty > 0 ? `<div class="item-badge">x${qty}</div>` : ''}
+        <div class="item-icon">${item.icon}</div>
+        <div class="item-name">${item.name}</div>
+        <div class="item-price">$${item.price}</div>
+        <div class="qty-controls">
+          <button class="qty-btn minus" onclick="changeQty('${item.id}', -1)">–</button>
+          <button class="qty-btn plus" onclick="changeQty('${item.id}', 1)">+</button>
+        </div>
+      `;
+      shelf.appendChild(card);
+    });
+  }
+
+  function changeQty(id, delta) {
+    const current = basketQuantities[id] || 0;
+    const next = current + delta;
+
+    if (next <= 0) {
+      delete basketQuantities[id];
+      if (current > 0) playSound('remove');
+    } else {
+      basketQuantities[id] = next;
+      if (delta > 0) playSound('pick');
+      else playSound('remove');
+    }
+
+    renderShelf();
+    calculateBill();
+  }
+
+  function calculateBill() {
+    let total = 0;
+    Object.keys(basketQuantities).forEach(id => {
+      const item = allStoreItems.find(i => i.id === id);
+      total += item.price * basketQuantities[id];
+    });
+    document.getElementById('bill-amount').innerText = total;
+  }
+
+  function addMoney(val) {
+    selectedMoney.push(val);
+    currentPaid += val;
+    playSound('pick');
+    updateBasket();
+  }
+
+  function updateBasket() {
+    const basket = document.getElementById('basket');
+    document.getElementById('paid-amount').innerText = currentPaid;
+    showFeedback("", "#000");
+
+    if (selectedMoney.length === 0) {
+      basket.innerHTML = '<span style="color:#94a3b8; font-size:0.8rem;">Cash Tray Empty</span>';
+      return;
+    }
+
+    basket.innerHTML = '';
+    selectedMoney.forEach(val => {
+      const img = document.createElement('img');
+      img.src = images[val];
+      basket.appendChild(img);
+    });
+  }
+
+  function resetPayment() {
+    currentPaid = 0;
+    selectedMoney = [];
+    updateBasket();
+  }
+
+  function showFeedback(msg, color) {
+    const fb = document.getElementById('feedback');
+    fb.innerText = msg;
+    fb.style.color = color;
+  }
+
+  function checkOut() {
+    const task = challenges[currentChallengeIndex];
+    
+    // Flat array of currently picked item IDs
+    let currentBasketFlat = [];
+    Object.keys(basketQuantities).forEach(id => {
+      for (let i = 0; i < basketQuantities[id]; i++) {
+        currentBasketFlat.push(id);
+      }
+    });
+
+    const pickedSorted = currentBasketFlat.sort();
+    const targetSorted = [...task.items].sort();
+
+    const itemsMatch = JSON.stringify(pickedSorted) === JSON.stringify(targetSorted);
+    const billTotal = parseInt(document.getElementById('bill-amount').innerText);
+
+    if (!itemsMatch) {
+      showFeedback("❌ Check your groceries! Pick the exact items and quantities from the shopping list.", "#dc2626");
+      playSound('error');
+      return;
+    }
+
+    if (currentPaid === billTotal) {
+      showFeedback("🎉 Perfect! Exact groceries and exact payment!", "#16a34a");
+      playSound('success');
+      score++;
+      document.getElementById('score').innerText = score;
+
+      setTimeout(() => {
+        const mode = document.getElementById('target-select').value;
+        if (mode === "all") {
+          currentChallengeIndex = (currentChallengeIndex + 1) % challenges.length;
+        }
+        initChallenge();
+      }, 1500);
+    } else if (currentPaid > billTotal) {
+      showFeedback(`⚠️ Too much cash! You overpaid by $${currentPaid - billTotal}.`, "#dc2626");
+      playSound('overpaid');
+    } else {
+      showFeedback(`Need $${billTotal - currentPaid} more to complete payment!`, "#d97706");
+      playSound('error');
+    }
+  }
+
+  // Load initial challenge
+  initChallenge();
+</script>
+
+</body>
+</html>

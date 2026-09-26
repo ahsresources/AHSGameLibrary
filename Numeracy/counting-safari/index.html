@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Counting Safari — Count & Catch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canopy-1:#0b3d2e;
+    --canopy-2:#145c44;
+    --leaf:#8fd694;
+    --leaf-dark:#5fae67;
+    --sun:#ffcb3d;
+    --sun-dark:#e8a812;
+    --coral:#ff7d5c;
+    --coral-dark:#e35a3a;
+    --cream:#fdf6e6;
+    --bark:#5a3a22;
+    --bark-dark:#432b19;
+    --ink:#20301f;
+    --sky:#eaf7ea;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;height:100%;}
+  html{ touch-action:manipulation; }
+  body{
+    font-family:'Nunito',sans-serif;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(255,255,255,0.08), transparent 55%),
+      radial-gradient(ellipse at 85% 90%, rgba(255,255,255,0.06), transparent 50%),
+      linear-gradient(180deg, var(--canopy-1) 0%, var(--canopy-2) 60%, #0d4a37 100%);
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow-x:hidden;
+    color:var(--ink);
+    position:relative;
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+    padding:
+      max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
+  }
+  button{ touch-action:manipulation; }
+  /* drifting leaf silhouettes for ambient depth */
+  .leaf-bg{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .leaf-bg span{
+    position:absolute; font-size:2.2rem; opacity:0.10; filter:blur(0.3px);
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    from{ transform:translateY(-10vh) rotate(0deg); }
+    to{ transform:translateY(110vh) rotate(50deg); }
+  }
+
+  .stage{
+    position:relative; z-index:1;
+    width:min(560px, 94vw);
+    margin:24px auto;
+  }
+
+  /* ---------- Header / HUD ---------- */
+  .hud{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+    background:linear-gradient(180deg, var(--bark) 0%, var(--bark-dark) 100%);
+    border-radius:20px;
+    padding:10px 16px;
+    box-shadow:0 6px 0 rgba(0,0,0,0.35), 0 10px 24px rgba(0,0,0,0.3);
+    color:var(--cream);
+    margin-bottom:16px;
+  }
+  .brand{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:1.15rem;
+    display:flex; align-items:center; gap:8px;
+    letter-spacing:0.3px;
+    white-space:nowrap;
+  }
+  .brand .toucan{font-size:1.5rem;}
+  .hud-stats{display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:'Baloo 2',sans-serif; font-weight:700;}
+  .hearts{display:flex; gap:3px; font-size:1.1rem;}
+  .stat-pill{
+    background:rgba(255,255,255,0.12);
+    border-radius:999px;
+    padding:6px 12px;
+    font-size:0.95rem;
+    min-height:32px;
+    display:inline-flex;
+    align-items:center;
+  }
+
+  /* ---------- Level banner ---------- */
+  .level-banner{
+    text-align:center;
+    font-family:'Baloo 2',sans-serif;
+    color:var(--sun);
+    font-weight:700;
+    font-size:0.95rem;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    margin-bottom:10px;
+    text-shadow:0 2px 0 rgba(0,0,0,0.3);
+  }
+
+  /* ---------- Clearing (main play card) ---------- */
+  .clearing{
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.35), transparent 60%),
+      linear-gradient(180deg, var(--sky) 0%, #d8f0d6 100%);
+    border-radius:28px;
+    padding:22px 18px 26px;
+    box-shadow:
+      inset 0 0 0 6px rgba(255,255,255,0.5),
+      0 14px 0 var(--leaf-dark),
+      0 22px 30px rgba(0,0,0,0.35);
+    position:relative;
+    min-height:250px;
+  }
+
+  .prompt{
+    text-align:center;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    color:var(--canopy-1);
+    font-size:1.05rem;
+    margin-bottom:6px;
+  }
+
+  .critter-field{
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:center;
+    gap:10px;
+    min-height:110px;
+    padding:12px;
+    margin-bottom:6px;
+  }
+  .critter{
+    font-size:2.4rem;
+    display:inline-block;
+    animation:pop-in 0.35s cubic-bezier(.35,1.6,.6,1) both;
+    filter:drop-shadow(0 4px 3px rgba(0,0,0,0.18));
+  }
+  @keyframes pop-in{
+    from{ transform:scale(0) rotate(-15deg); opacity:0; }
+    to{ transform:scale(1) rotate(0deg); opacity:1; }
+  }
+
+  .mascot-wrap{
+    position:absolute;
+    top:-34px; right:6px;
+    font-size:2.6rem;
+    animation:bob 2.6s ease-in-out infinite;
+    transform-origin:center bottom;
+  }
+  @keyframes bob{
+    0%,100%{ transform:translateY(0) rotate(-4deg); }
+    50%{ transform:translateY(-6px) rotate(4deg); }
+  }
+  .mascot-wrap.correct{ animation:cheer 0.6s ease; }
+  @keyframes cheer{
+    0%{ transform:scale(1) rotate(0);}
+    30%{ transform:scale(1.35) rotate(-12deg);}
+    60%{ transform:scale(1.2) rotate(10deg);}
+    100%{ transform:scale(1) rotate(0);}
+  }
+  .mascot-wrap.oops{ animation:wobble 0.5s ease; }
+  @keyframes wobble{
+    0%,100%{ transform:translateX(0) rotate(0);}
+    25%{ transform:translateX(-6px) rotate(-8deg);}
+    75%{ transform:translateX(6px) rotate(8deg);}
+  }
+
+  /* ---------- Word leaf buttons ---------- */
+  .word-grove{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:12px;
+    margin-top:14px;
+  }
+  .leaf-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    font-size:1.25rem;
+    text-transform:capitalize;
+    color:var(--ink);
+    background:linear-gradient(160deg, var(--leaf) 0%, var(--leaf-dark) 100%);
+    border:none;
+    padding:16px 10px;
+    min-height:56px;
+    cursor:pointer;
+    position:relative;
+    border-radius:50% 50% 50% 8px / 60% 60% 40% 40%;
+    box-shadow:0 6px 0 #3f7f47, 0 10px 16px rgba(0,0,0,0.22);
+    transition:transform 0.08s ease;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:manipulation;
+  }
+  .leaf-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #3f7f47, 0 4px 10px rgba(0,0,0,0.2); }
+  .leaf-btn:disabled{ cursor:default; }
+  .leaf-btn.right{
+    background:linear-gradient(160deg, var(--sun) 0%, var(--sun-dark) 100%);
+    box-shadow:0 6px 0 #b8790c, 0 10px 16px rgba(0,0,0,0.22);
+    animation:zing 0.5s ease;
+  }
+  .leaf-btn.wrong{
+    background:linear-gradient(160deg, var(--coral) 0%, var(--coral-dark) 100%);
+    box-shadow:0 6px 0 #a83f26, 0 10px 16px rgba(0,0,0,0.22);
+    animation:shake 0.45s ease;
+  }
+  @keyframes zing{
+    0%{transform:scale(1);} 40%{transform:scale(1.12);} 100%{transform:scale(1);}
+  }
+  @keyframes shake{
+    0%,100%{transform:translateX(0);} 25%{transform:translateX(-5px);} 75%{transform:translateX(5px);}
+  }
+
+  /* ---------- Footer message strip ---------- */
+  .msg-strip{
+    text-align:center;
+    min-height:28px;
+    margin-top:14px;
+    font-family:'Baloo 2',sans-serif;
+    font-weight:700;
+    color:var(--cream);
+    font-size:1rem;
+    letter-spacing:0.3px;
+  }
+
+  /* ---------- Start / Game Over overlay ---------- */
+  .overlay{
+    position:absolute; inset:0;
+    background:rgba(11,61,46,0.92);
+    border-radius:28px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding:28px;
+    color:var(--cream);
+    z-index:5;
+  }
+  .overlay h1{
+    font-family:'Baloo 2',sans-serif;
+    font-size:1.8rem;
+    margin:0 0 6px;
+    color:var(--sun);
+  }
+  .overlay p{ margin:4px 0 18px; font-weight:700; max-width:320px; line-height:1.4; }
+  .go-btn{
+    font-family:'Baloo 2',sans-serif;
+    font-weight:800;
+    font-size:1.1rem;
+    background:linear-gradient(160deg, var(--sun) 0%, var(--sun-dark) 100%);
+    color:var(--bark-dark);
+    border:none;
+    padding:14px 32px;
+    min-height:52px;
+    border-radius:999px;
+    cursor:pointer;
+    box-shadow:0 6px 0 #b8790c, 0 10px 18px rgba(0,0,0,0.3);
+    touch-action:manipulation;
+  }
+  .go-btn:active{ transform:translateY(4px); box-shadow:0 2px 0 #b8790c; }
+
+  .stars-row{ font-size:1.8rem; margin-bottom:8px; letter-spacing:4px; }
+
+  .confetti{
+    position:fixed; top:-20px; z-index:50; pointer-events:none;
+    animation:fall linear forwards;
+    font-size:1.4rem;
+  }
+  @keyframes fall{
+    to{ transform:translateY(100vh) rotate(360deg); opacity:0.9; }
+  }
+
+  .hidden{ display:none !important; }
+
+  #muteBtn{
+    min-width:40px;
+    min-height:32px;
+    font-size:1rem;
+  }
+
+  /* ---------- Small phones ---------- */
+  @media (max-width:400px){
+    .critter{ font-size:2rem; }
+    .leaf-btn{ font-size:1.05rem; padding:14px 8px; }
+    .brand{ font-size:1rem; }
+  }
+
+  /* ---------- Tablets & laptops: give the card more room and bigger type ---------- */
+  @media (min-width:700px){
+    .stage{ width:min(680px, 80vw); }
+    .brand{ font-size:1.35rem; }
+    .prompt{ font-size:1.2rem; }
+    .critter{ font-size:3rem; }
+    .critter-field{ min-height:140px; }
+    .leaf-btn{ font-size:1.4rem; padding:20px 14px; min-height:64px; }
+    .overlay h1{ font-size:2.1rem; }
+    .overlay p{ max-width:420px; font-size:1.05rem; }
+  }
+
+  /* ---------- Landscape phones: keep the play area from feeling squashed ---------- */
+  @media (max-height:480px) and (orientation:landscape){
+    .stage{ margin:10px auto; }
+    .clearing{ min-height:190px; padding:16px 14px 18px; }
+    .critter-field{ min-height:70px; }
+    .mascot-wrap{ display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="leaf-bg" id="leafBg"></div>
+
+<div class="stage">
+  <div class="hud">
+    <div class="brand"><span class="toucan">🦜</span> Counting Safari</div>
+    <div class="hud-stats">
+      <div class="hearts" id="hearts"></div>
+      <div class="stat-pill" id="scorePill">⭐ 0</div>
+      <button class="stat-pill" id="muteBtn" style="border:none;cursor:pointer;font-family:inherit;color:inherit;" aria-label="Toggle sound">🔊</button>
+    </div>
+  </div>
+
+  <div class="level-banner" id="levelBanner">Level 1 · Cub Explorer</div>
+
+  <div class="clearing" id="clearing">
+    <div class="mascot-wrap" id="mascot">🦜</div>
+    <div class="prompt">Count the critters, then tap the matching word!</div>
+    <div class="critter-field" id="critterField"></div>
+    <div class="word-grove" id="wordGrove"></div>
+
+    <div class="overlay" id="startOverlay">
+      <h1>🌴 Counting Safari 🌴</h1>
+      <p>Count the animals hiding in the clearing, then catch the leaf with the matching NUMBER WORD — not the digit! Three hearts, three levels, lots of fun.</p>
+      <button class="go-btn" id="startBtn">Start the Safari</button>
+    </div>
+
+    <div class="overlay hidden" id="endOverlay">
+      <h1 id="endTitle">Safari Complete!</h1>
+      <div class="stars-row" id="endStars">⭐⭐⭐</div>
+      <p id="endMsg">You matched every word like a true safari guide.</p>
+      <button class="go-btn" id="restartBtn">Play Again</button>
+    </div>
+  </div>
+
+  <div class="msg-strip" id="msgStrip">&nbsp;</div>
+</div>
+
+<script>
+(function(){
+  const WORDS = ["zero","one","two","three","four","five","six","seven","eight","nine","ten",
+    "eleven","twelve","thirteen","fourteen","fifteen","sixteen","seventeen","eighteen","nineteen","twenty"];
+
+  const CRITTERS = ["🐒","🦋","🐸","🐢","🦎","🐝","🦜","🐌","🐟","🐘","🦁","🐧","🐿️","🦔"];
+
+  const LEVELS = [
+    { name:"Level 1 · Cub Explorer", min:1, max:4, roundsToAdvance:4 },
+    { name:"Level 2 · Trail Tracker", min:3, max:7, roundsToAdvance:5 },
+    { name:"Level 3 · Safari Guide", min:5, max:10, roundsToAdvance:6 }
+  ];
+
+  let levelIdx = 0;
+  let hearts = 3;
+  let score = 0;
+  let streakThisLevel = 0;
+  let currentAnswer = 0;
+  let locked = false;
+
+  // ---------- Sound effects (synthesized, no audio files needed) ----------
+  const SFX = (function(){
+    let ctx = null;
+    function getCtx(){
+      if(!ctx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        ctx = new AC();
+      }
+      if(ctx.state === 'suspended') ctx.resume();
+      return ctx;
+    }
+
+    function tone(freq, startTime, duration, type, peakGain, glideTo){
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      if(glideTo) osc.frequency.exponentialRampToValueAtTime(glideTo, startTime + duration);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(peakGain || 0.2, startTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain).connect(c.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.02);
+    }
+
+    let muted = false;
+
+    return {
+      unlock(){ getCtx(); },
+      setMuted(v){ muted = v; },
+      isMuted(){ return muted; },
+      click(){
+        if(muted) return;
+        const c = getCtx();
+        tone(520, c.currentTime, 0.06, 'triangle', 0.12);
+      },
+      correct(){
+        if(muted) return;
+        const c = getCtx();
+        const t = c.currentTime;
+        tone(523.25, t, 0.13, 'triangle', 0.18);
+        tone(659.25, t + 0.09, 0.13, 'triangle', 0.18);
+        tone(783.99, t + 0.18, 0.2, 'triangle', 0.2);
+      },
+      wrong(){
+        if(muted) return;
+        const c = getCtx();
+        const t = c.currentTime;
+        tone(220, t, 0.22, 'sawtooth', 0.14, 140);
+      },
+      levelUp(){
+        if(muted) return;
+        const c = getCtx();
+        const t = c.currentTime;
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          tone(f, t + i * 0.11, 0.18, 'square', 0.14);
+        });
+      },
+      win(){
+        if(muted) return;
+        const c = getCtx();
+        const t = c.currentTime;
+        [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+          tone(f, t + i * 0.13, 0.25, 'triangle', 0.18);
+        });
+      },
+      gameOver(){
+        if(muted) return;
+        const c = getCtx();
+        const t = c.currentTime;
+        [392, 349.23, 293.66, 220].forEach((f, i) => {
+          tone(f, t + i * 0.16, 0.3, 'sawtooth', 0.12);
+        });
+      }
+    };
+  })();
+
+  const heartsEl = document.getElementById('hearts');
+  const scorePill = document.getElementById('scorePill');
+  const levelBanner = document.getElementById('levelBanner');
+  const critterField = document.getElementById('critterField');
+  const wordGrove = document.getElementById('wordGrove');
+  const msgStrip = document.getElementById('msgStrip');
+  const mascot = document.getElementById('mascot');
+  const startOverlay = document.getElementById('startOverlay');
+  const endOverlay = document.getElementById('endOverlay');
+  const endTitle = document.getElementById('endTitle');
+  const endStars = document.getElementById('endStars');
+  const endMsg = document.getElementById('endMsg');
+
+  function seedLeaves(){
+    const bg = document.getElementById('leafBg');
+    const glyphs = ["🍃","🌿","🍂"];
+    for(let i=0;i<10;i++){
+      const s = document.createElement('span');
+      s.textContent = glyphs[i % glyphs.length];
+      s.style.left = (Math.random()*100)+'vw';
+      s.style.animationDuration = (14 + Math.random()*10)+'s';
+      s.style.animationDelay = (Math.random()*10)+'s';
+      s.style.fontSize = (1.4 + Math.random()*1.6)+'rem';
+      bg.appendChild(s);
+    }
+  }
+  seedLeaves();
+
+  function renderHearts(){
+    heartsEl.innerHTML = '';
+    for(let i=0;i<3;i++){
+      const span = document.createElement('span');
+      span.textContent = i < hearts ? '❤️' : '🤍';
+      heartsEl.appendChild(span);
+    }
+  }
+
+  function renderScore(){
+    scorePill.textContent = '⭐ ' + score;
+  }
+
+  function randInt(min,max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function pickDistractors(correct, min, max){
+    const pool = new Set();
+    while(pool.size < 3){
+      let candidate = randInt(min, max);
+      if(candidate !== correct) pool.add(candidate);
+    }
+    return Array.from(pool);
+  }
+
+  function shuffle(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i+1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function burstConfetti(x, y){
+    const glyphs = ["🎉","✨","🌟","🍌","🦜"];
+    for(let i=0;i<10;i++){
+      const c = document.createElement('div');
+      c.className = 'confetti';
+      c.textContent = glyphs[randInt(0, glyphs.length-1)];
+      c.style.left = (x + randInt(-60,60)) + 'px';
+      c.style.top = (y - 10) + 'px';
+      c.style.animationDuration = (0.9 + Math.random()*0.6) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 1700);
+    }
+  }
+
+  function newRound(){
+    locked = false;
+    const lvl = LEVELS[levelIdx];
+    const n = randInt(lvl.min, lvl.max);
+    currentAnswer = n;
+
+    const critterEmoji = CRITTERS[randInt(0, CRITTERS.length - 1)];
+    critterField.innerHTML = '';
+    for(let i=0;i<n;i++){
+      const c = document.createElement('span');
+      c.className = 'critter';
+      c.textContent = critterEmoji;
+      c.style.animationDelay = (i * 0.05) + 's';
+      critterField.appendChild(c);
+    }
+
+    const options = shuffle([n, ...pickDistractors(n, Math.max(1,lvl.min-2), Math.min(10,lvl.max+2))]);
+    wordGrove.innerHTML = '';
+    options.forEach(optionNum => {
+      const btn = document.createElement('button');
+      btn.className = 'leaf-btn';
+      btn.textContent = WORDS[optionNum];
+      btn.addEventListener('click', () => { SFX.click(); handleAnswer(optionNum, btn); });
+      wordGrove.appendChild(btn);
+    });
+
+    msgStrip.textContent = '\u00A0';
+  }
+
+  function handleAnswer(chosen, btnEl){
+    if(locked) return;
+    locked = true;
+    const allBtns = wordGrove.querySelectorAll('.leaf-btn');
+    allBtns.forEach(b => b.disabled = true);
+
+    const rect = btnEl.getBoundingClientRect();
+
+    if(chosen === currentAnswer){
+      btnEl.classList.add('right');
+      score += 10;
+      streakThisLevel += 1;
+      renderScore();
+      mascot.classList.add('correct');
+      msgStrip.textContent = pickPraise();
+      burstConfetti(rect.left + rect.width/2, rect.top);
+      SFX.correct();
+      setTimeout(() => mascot.classList.remove('correct'), 650);
+
+      const lvl = LEVELS[levelIdx];
+      if(streakThisLevel >= lvl.roundsToAdvance){
+        streakThisLevel = 0;
+        if(levelIdx < LEVELS.length - 1){
+          levelIdx += 1;
+          levelBanner.textContent = LEVELS[levelIdx].name;
+          msgStrip.textContent = "Level up! Welcome to " + LEVELS[levelIdx].name + "!";
+          setTimeout(() => SFX.levelUp(), 200);
+        } else {
+          setTimeout(() => finishGame(true), 700);
+          return;
+        }
+      }
+      setTimeout(newRound, 900);
+    } else {
+      btnEl.classList.add('wrong');
+      allBtns.forEach(b => {
+        if(b.textContent === WORDS[currentAnswer]) b.classList.add('right');
+      });
+      hearts -= 1;
+      renderHearts();
+      mascot.classList.add('oops');
+      msgStrip.textContent = "Not quite — that group had " + WORDS[currentAnswer] + "!";
+      SFX.wrong();
+      setTimeout(() => mascot.classList.remove('oops'), 500);
+
+      if(hearts <= 0){
+        setTimeout(() => finishGame(false), 900);
+        return;
+      }
+      setTimeout(newRound, 1100);
+    }
+  }
+
+  const PRAISE = ["Great match!","Sharp eyes!","You got it!","Nice counting!","Safari star!","Wonderful!"];
+  function pickPraise(){
+    return PRAISE[randInt(0, PRAISE.length-1)];
+  }
+
+  function finishGame(won){
+    const overlay = endOverlay;
+    overlay.classList.remove('hidden');
+    if(won){
+      endTitle.textContent = "Safari Complete! 🏆";
+      endStars.textContent = "⭐⭐⭐";
+      endMsg.textContent = "You matched every critter to its word all the way through Level " + LEVELS.length + ". Final score: " + score + ".";
+      SFX.win();
+    } else {
+      endTitle.textContent = "Out of Hearts!";
+      const starCount = levelIdx + 1;
+      endStars.textContent = "⭐".repeat(starCount) + "🤍".repeat(3 - starCount);
+      endMsg.textContent = "You made it to " + LEVELS[levelIdx].name + " with a score of " + score + ". Try again to go further!";
+      SFX.gameOver();
+    }
+  }
+
+  function resetGame(){
+    levelIdx = 0;
+    hearts = 3;
+    score = 0;
+    streakThisLevel = 0;
+    renderHearts();
+    renderScore();
+    levelBanner.textContent = LEVELS[0].name;
+    endOverlay.classList.add('hidden');
+    newRound();
+  }
+
+  document.getElementById('startBtn').addEventListener('click', () => {
+    SFX.unlock();
+    SFX.click();
+    startOverlay.classList.add('hidden');
+    resetGame();
+  });
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    SFX.click();
+    resetGame();
+  });
+
+  const muteBtn = document.getElementById('muteBtn');
+  muteBtn.addEventListener('click', () => {
+    SFX.unlock();
+    const nowMuted = !SFX.isMuted();
+    SFX.setMuted(nowMuted);
+    muteBtn.textContent = nowMuted ? '🔇' : '🔊';
+    if(!nowMuted) SFX.click();
+  });
+
+  renderHearts();
+  renderScore();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Days of the Week Games</title>
+<style>
+  :root {
+    --sun: #FF6B6B;
+    --mon: #4ECDC4;
+    --tue: #FFD93D;
+    --wed: #6BCB77;
+    --thu: #4D96FF;
+    --fri: #B983FF;
+    --sat: #FF9F45;
+    --bg: #FFF8F0;
+    --ink: #2D2A32;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  html { touch-action: manipulation; }
+  body {
+    margin: 0;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+    background: linear-gradient(135deg, #FFF8F0, #E8F6F3);
+    color: var(--ink);
+    height: 100vh;
+    height: 100dvh;
+    padding: clamp(8px, 2vh, 20px);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+  }
+  .wrap {
+    width: 100%;
+    max-width: 720px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  h1 {
+    text-align: center;
+    font-size: clamp(1.1rem, 4vw, 2rem);
+    margin: 0 0 2px 0;
+    flex-shrink: 0;
+  }
+  .sub {
+    text-align: center;
+    color: #6b6b6b;
+    margin-bottom: clamp(8px, 2vh, 20px);
+    font-size: clamp(0.75rem, 2.6vw, 1rem);
+    flex-shrink: 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: clamp(8px, 2vh, 20px);
+    flex-wrap: wrap;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: clamp(8px, 1.6vh, 12px) 16px;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background: white;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: clamp(0.75rem, 2.6vw, 0.95rem);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    user-select: none;
+  }
+  .tab:hover { transform: translateY(-2px); }
+  .tab:active { transform: translateY(0) scale(0.96); }
+  .tab.active {
+    background: var(--ink);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: clamp(12px, 3vh, 24px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .game { display: none; }
+  .game.active { display: block; animation: fadeSlideIn 0.35s ease; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0.75); }
+    60% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.7); opacity: 0.3; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes glowPulse {
+    0%, 100% { box-shadow: 0 0 0 rgba(46,139,87,0.0); }
+    50% { box-shadow: 0 0 18px rgba(46,139,87,0.55); }
+  }
+  @keyframes confettiFall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(140px) rotate(360deg); opacity: 0; }
+  }
+  .shake-anim { animation: shake 0.45s ease; }
+  .pop-anim { animation: pop 0.4s ease; }
+  .bounce-anim { animation: bounceIn 0.3s ease; }
+  .glow-anim { animation: glowPulse 0.9s ease 2; }
+
+  .confetti-piece {
+    position: fixed;
+    top: 0;
+    font-size: 1.4rem;
+    pointer-events: none;
+    z-index: 9999;
+    animation: confettiFall 1.1s ease-in forwards;
+  }
+
+  /* Buttons general */
+  button.action {
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: none;
+    background: var(--ink);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: clamp(0.85rem, 2.8vw, 0.95rem);
+    margin-top: 12px;
+    min-height: 44px;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+  }
+  button.action:hover { opacity: 0.9; }
+  button.action:active { transform: scale(0.95); }
+
+  .status {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 14px;
+    min-height: 24px;
+    font-size: clamp(0.9rem, 3vw, 1rem);
+  }
+  .status.correct { color: #2e8b57; }
+  .status.wrong { color: #d9534f; }
+
+  /* Game 1: Order (drag-and-drop) */
+  #order-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1.5vh, 10px);
+    justify-content: center;
+    min-height: 44px;
+    margin-bottom: clamp(8px, 2vh, 16px);
+    padding: clamp(6px, 1.5vh, 10px);
+    border-radius: 14px;
+  }
+  #order-slots {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: clamp(3px, 1vw, 10px);
+    min-height: 44px;
+    margin-bottom: clamp(8px, 2vh, 16px);
+    padding: clamp(6px, 1.5vh, 10px);
+    border-radius: 14px;
+    background: #f2f2f2;
+    border: 2px dashed #ccc;
+  }
+  #order-slots .day-chip {
+    width: 100%;
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: clamp(0.55rem, 2.4vw, 0.85rem);
+    white-space: normal;
+    line-height: 1.15;
+    text-align: center;
+    word-break: break-word;
+  }
+  .day-chip {
+    padding: 12px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    font-size: clamp(0.72rem, 2.4vw, 0.95rem);
+    min-height: 44px;
+    width: clamp(82px, 13vw, 112px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    animation: popIn 0.3s ease;
+  }
+  .day-chip:active { transform: scale(0.94); }
+  .day-chip.selected {
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.3);
+    outline: 3px solid var(--ink);
+  }
+  .day-chip.placeholder {
+    background: #ddd !important;
+    color: #999;
+    cursor: pointer;
+    box-shadow: none;
+    text-align: center;
+    animation: none;
+  }
+  .day-chip.placeholder.hint {
+    background: #e8f6f3 !important;
+    outline: 2px dashed var(--ink);
+  }
+  .day-chip[data-day="Sunday"] { background: var(--sun); }
+  .day-chip[data-day="Monday"] { background: var(--mon); }
+  .day-chip[data-day="Tuesday"] { background: var(--tue); color:#5a4600; }
+  .day-chip[data-day="Wednesday"] { background: var(--wed); }
+  .day-chip[data-day="Thursday"] { background: var(--thu); }
+  .day-chip[data-day="Friday"] { background: var(--fri); }
+  .day-chip[data-day="Saturday"] { background: var(--sat); }
+
+  /* Game 2: missing days */
+  .seq-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1.5vh, 10px);
+    justify-content: center;
+    margin-bottom: clamp(10px, 2.5vh, 20px);
+  }
+  .seq-item {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-weight: bold;
+    min-width: 80px;
+    text-align: center;
+    color: white;
+    font-size: clamp(0.8rem, 2.8vw, 0.95rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+  .seq-item.blank {
+    background: white;
+    border: 2px solid var(--ink);
+    color: var(--ink);
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+  .seq-item.blank.filled {
+    color: white;
+    animation: popIn 0.3s ease;
+  }
+
+  #missing-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  .choice-group-label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #6b6b6b;
+    text-align: center;
+  }
+  .choice-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .choice-btn {
+    padding: 12px 6px;
+    border-radius: 12px;
+    border: 2px solid #eee;
+    background: #fafafa;
+    font-weight: bold;
+    font-size: clamp(0.75rem, 2.6vw, 0.9rem);
+    cursor: pointer;
+    min-height: 44px;
+    transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .choice-btn:hover { border-color: var(--ink); }
+  .choice-btn:active { transform: scale(0.94); }
+  .choice-btn.selected {
+    border-color: var(--ink);
+    background: #e8e8e8;
+  }
+  .choice-btn.correct { background: #d4f4dd; border-color: #2e8b57; }
+  .choice-btn.wrong { background: #fbdcdc; border-color: #d9534f; }
+
+  /* Game 3: abbreviations */
+  #abbr-question {
+    text-align: center;
+    font-size: clamp(0.95rem, 3.6vw, 1.3rem);
+    font-weight: bold;
+    margin-bottom: clamp(10px, 2.5vh, 20px);
+  }
+  #abbr-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .abbr-btn {
+    padding: 14px;
+    border-radius: 14px;
+    border: 2px solid #eee;
+    background: #fafafa;
+    font-weight: bold;
+    font-size: clamp(0.85rem, 3vw, 1rem);
+    cursor: pointer;
+    min-height: 48px;
+    transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+  }
+  .abbr-btn:hover { border-color: var(--ink); }
+  .abbr-btn:active { transform: scale(0.95); }
+  .abbr-btn.correct { background: #d4f4dd; border-color: #2e8b57; }
+  .abbr-btn.wrong { background: #fbdcdc; border-color: #d9534f; }
+
+  .score {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6b6b6b;
+    margin-top: 8px;
+  }
+
+  .sound-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    background: white;
+    border: none;
+    border-radius: 999px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: pointer;
+    z-index: 100;
+  }
+  .sound-toggle:active { transform: scale(0.92); }
+
+  /* ===== Responsive: Tablet ===== */
+  @media (max-width: 900px) {
+    .wrap { max-width: 100%; }
+  }
+
+  /* ===== Responsive: Phone ===== */
+  @media (max-width: 560px) {
+    body { padding: 12px; padding-top: 56px; }
+    .card { padding: 14px; border-radius: 16px; }
+    .choice-group { grid-template-columns: repeat(2, 1fr); }
+    #abbr-options { grid-template-columns: 1fr; }
+    .day-chip { padding: 10px 12px; }
+    .seq-item { min-width: 66px; padding: 8px 10px; }
+    .tab { padding: 10px 12px; }
+  }
+
+  /* ===== Responsive: short viewports (landscape phones, small laptop windows) ===== */
+  @media (max-height: 700px) {
+    body { padding-top: 44px; }
+    h1 { font-size: clamp(1rem, 3.4vh, 1.4rem); margin-bottom: 0; }
+    .sub { margin-bottom: 6px; font-size: 0.75rem; }
+    .tabs { margin-bottom: 8px; }
+    .tab { min-height: 32px; padding: 6px 12px; font-size: 0.75rem; }
+    .card { padding: 10px; }
+    p { margin: 0 0 8px 0; font-size: 0.85rem; }
+    #order-pool, #order-slots { min-height: 36px; margin-bottom: 8px; padding: 6px; }
+    .day-chip { min-height: 34px; padding: 6px 10px; font-size: 0.75rem; }
+    .seq-item { min-height: 34px; padding: 6px 10px; }
+    .choice-btn, .abbr-btn { min-height: 34px; padding: 8px 6px; }
+    button.action { min-height: 34px; padding: 8px 14px; margin-top: 6px; }
+    .status { margin-top: 6px; min-height: 18px; font-size: 0.8rem; }
+    .score { margin-top: 4px; }
+    #missing-choices { gap: 8px; }
+  }
+</style>
+</head>
+<body>
+<button class="sound-toggle" id="sound-toggle" title="Toggle sound" aria-label="Toggle sound">🔊</button>
+<div class="wrap">
+  <h1>📅 Days of the Week Games</h1>
+  <div class="sub">Pick a game to play!</div>
+
+  <div class="tabs">
+    <div class="tab active" data-game="order">🔀 Put in Order</div>
+    <div class="tab" data-game="missing">❓ Missing Days</div>
+    <div class="tab" data-game="abbr">🔤 Abbreviations</div>
+  </div>
+
+  <div style="text-align:center; flex-shrink:0; margin-bottom: clamp(8px, 2vh, 14px);">
+    <button class="action" id="play-again" style="background:#e07856; margin-top:0;">🔄 Play Again</button>
+  </div>
+
+  <div class="card">
+    <!-- GAME 1: Order -->
+    <div class="game active" id="game-order">
+      <p style="text-align:center; font-weight:bold;">Tap a day, then tap a slot to place it (starting with Sunday or Monday — both are correct!).</p>
+      <div id="order-slots"></div>
+      <div id="order-pool"></div>
+      <div style="text-align:center;">
+        <button class="action" id="order-check">Check Order</button>
+      </div>
+      <div class="status" id="order-status"></div>
+    </div>
+
+    <!-- GAME 2: Missing days -->
+    <div class="game" id="game-missing">
+      <p style="text-align:center; font-weight:bold;" id="missing-instruction">Choose the correct day to fill in the blank.</p>
+      <div class="seq-row" id="missing-row"></div>
+      <div id="missing-choices"></div>
+      <div style="text-align:center;">
+        <button class="action" id="missing-check">Check Answer</button>
+      </div>
+      <div class="status" id="missing-status"></div>
+    </div>
+
+    <!-- GAME 3: Abbreviations -->
+    <div class="game" id="game-abbr">
+      <p style="text-align:center; font-weight:bold;">Match the day to its correct abbreviation!</p>
+      <div id="abbr-question"></div>
+      <div id="abbr-options"></div>
+      <div class="status" id="abbr-status"></div>
+      <div class="score" id="abbr-score">Score: 0 / 0</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DAYS = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const ABBR = {
+  Sunday: "Sun",
+  Monday: "Mon",
+  Tuesday: "Tue",
+  Wednesday: "Wed",
+  Thursday: "Thu",
+  Friday: "Fri",
+  Saturday: "Sat"
+};
+
+/* ===================== SOUND ENGINE ===================== */
+let soundOn = true;
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+function playTone(freq, duration, type, delay) {
+  if (!soundOn) return;
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || "sine";
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    const startTime = ctx.currentTime + (delay || 0);
+    gain.gain.setValueAtTime(0.0001, startTime);
+    gain.gain.exponentialRampToValueAtTime(0.28, startTime + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.05);
+  } catch (e) { /* audio not available, fail silently */ }
+}
+function playCorrectSound() {
+  playTone(523.25, 0.15, "sine", 0);
+  playTone(659.25, 0.15, "sine", 0.12);
+  playTone(783.99, 0.28, "sine", 0.24);
+}
+function playWrongSound() {
+  playTone(220, 0.25, "sawtooth", 0);
+  playTone(160, 0.3, "sawtooth", 0.12);
+}
+function playClickSound() {
+  playTone(500, 0.05, "sine", 0);
+}
+function playCompleteSound() {
+  playTone(523.25, 0.14, "sine", 0);
+  playTone(659.25, 0.14, "sine", 0.1);
+  playTone(783.99, 0.14, "sine", 0.2);
+  playTone(1046.5, 0.3, "sine", 0.3);
+}
+
+const soundToggleBtn = document.getElementById("sound-toggle");
+soundToggleBtn.addEventListener("click", () => {
+  soundOn = !soundOn;
+  soundToggleBtn.textContent = soundOn ? "🔊" : "🔇";
+  if (soundOn) { getAudioCtx(); playClickSound(); }
+});
+
+/* ===================== CONFETTI ===================== */
+const CONFETTI_EMOJI = ["🎉","⭐","✨","🎊","🌟"];
+function burstConfetti(x, y) {
+  const count = 10;
+  for (let i = 0; i < count; i++) {
+    const piece = document.createElement("div");
+    piece.className = "confetti-piece";
+    piece.textContent = CONFETTI_EMOJI[Math.floor(Math.random() * CONFETTI_EMOJI.length)];
+    const offsetX = (Math.random() - 0.5) * 160;
+    piece.style.left = (x + offsetX) + "px";
+    piece.style.top = y + "px";
+    piece.style.animationDelay = (Math.random() * 0.15) + "s";
+    document.body.appendChild(piece);
+    setTimeout(() => piece.remove(), 1300);
+  }
+}
+function burstConfettiFromElement(el) {
+  const rect = el.getBoundingClientRect();
+  burstConfetti(rect.left + rect.width / 2, rect.top);
+}
+
+/* ===================== TAB SWITCHING ===================== */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    if (tab.classList.contains("active")) return;
+    playClickSound();
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".game").forEach(g => g.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById("game-" + tab.dataset.game).classList.add("active");
+  });
+});
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ===================== GAME 1: ORDER (tap-to-select, tap-to-place) ===================== */
+const orderPool = document.getElementById("order-pool");
+const orderSlots = document.getElementById("order-slots");
+const orderStatus = document.getElementById("order-status");
+let selectedChip = null;
+
+function buildOrderGame() {
+  orderStatus.textContent = "";
+  orderStatus.className = "status";
+  orderPool.innerHTML = "";
+  orderSlots.innerHTML = "";
+  selectedChip = null;
+
+  for (let i = 0; i < 7; i++) {
+    const slot = document.createElement("div");
+    slot.className = "day-chip placeholder";
+    slot.dataset.index = i;
+    slot.textContent = "?";
+    slot.addEventListener("click", () => handleSlotClick(slot));
+    orderSlots.appendChild(slot);
+  }
+
+  const shuffled = shuffle(DAYS);
+  shuffled.forEach(day => {
+    const chip = document.createElement("div");
+    chip.className = "day-chip";
+    chip.dataset.day = day;
+    chip.textContent = day;
+    chip.addEventListener("click", () => handlePoolChipClick(chip));
+    orderPool.appendChild(chip);
+  });
+}
+
+function clearSelection() {
+  if (selectedChip) selectedChip.classList.remove("selected");
+  selectedChip = null;
+  orderSlots.querySelectorAll(".placeholder").forEach(s => s.classList.remove("hint"));
+}
+
+function handlePoolChipClick(chip) {
+  if (selectedChip === chip) {
+    playClickSound();
+    clearSelection();
+    return;
+  }
+  playClickSound();
+  clearSelection();
+  selectedChip = chip;
+  chip.classList.add("selected");
+  orderSlots.querySelectorAll(".placeholder").forEach(s => s.classList.add("hint"));
+}
+
+function handleSlotClick(slot) {
+  // If slot already holds a placed day, send it back to the pool
+  if (!slot.classList.contains("placeholder")) {
+    playClickSound();
+    const day = slot.dataset.day;
+    const idx = slot.dataset.index;
+    const placeholder = document.createElement("div");
+    placeholder.className = "day-chip placeholder";
+    placeholder.dataset.index = idx;
+    placeholder.textContent = "?";
+    placeholder.addEventListener("click", () => handleSlotClick(placeholder));
+    if (selectedChip) placeholder.classList.add("hint");
+    slot.replaceWith(placeholder);
+
+    const chip = document.createElement("div");
+    chip.className = "day-chip bounce-anim";
+    chip.dataset.day = day;
+    chip.textContent = day;
+    chip.addEventListener("click", () => handlePoolChipClick(chip));
+    orderPool.appendChild(chip);
+    setTimeout(() => chip.classList.remove("bounce-anim"), 350);
+    return;
+  }
+
+  // Empty slot: place the currently selected chip here
+  if (!selectedChip) return;
+  playClickSound();
+  const day = selectedChip.dataset.day;
+  const idx = slot.dataset.index;
+
+  const placedChip = document.createElement("div");
+  placedChip.className = "day-chip bounce-anim";
+  placedChip.dataset.day = day;
+  placedChip.dataset.index = idx;
+  placedChip.textContent = day;
+  placedChip.addEventListener("click", () => handleSlotClick(placedChip));
+  slot.replaceWith(placedChip);
+  setTimeout(() => placedChip.classList.remove("bounce-anim"), 350);
+
+  selectedChip.remove();
+  clearSelection();
+}
+
+document.getElementById("order-check").addEventListener("click", () => {
+  const chips = [...orderSlots.children];
+  if (chips.some(c => c.classList.contains("placeholder"))) {
+    orderStatus.textContent = "Fill in all 7 days first!";
+    orderStatus.className = "status wrong shake-anim";
+    playWrongSound();
+    setTimeout(() => orderStatus.classList.remove("shake-anim"), 500);
+    return;
+  }
+  const answer = chips.map(c => c.dataset.day);
+
+  const sundayFirst = DAYS;
+  const mondayFirst = [...DAYS.slice(1), DAYS[0]];
+
+  const matchesSundayFirst = answer.every((d, i) => d === sundayFirst[i]);
+  const matchesMondayFirst = answer.every((d, i) => d === mondayFirst[i]);
+  const correct = matchesSundayFirst || matchesMondayFirst;
+
+  if (correct) {
+    orderStatus.textContent = "🎉 Correct! Great job!";
+    orderStatus.className = "status correct pop-anim";
+    playCompleteSound();
+    burstConfettiFromElement(orderStatus);
+    chips.forEach(c => c.classList.add("glow-anim"));
+  } else {
+    orderStatus.textContent = "❌ Not quite right, try again!";
+    orderStatus.className = "status wrong shake-anim";
+    playWrongSound();
+  }
+  setTimeout(() => orderStatus.classList.remove("pop-anim", "shake-anim"), 600);
+});
+
+buildOrderGame();
+
+/* ===================== GAME 2: MISSING DAYS ===================== */
+const missingRow = document.getElementById("missing-row");
+const missingChoices = document.getElementById("missing-choices");
+const missingStatus = document.getElementById("missing-status");
+let currentMissingAnswers = [];
+let selectedAnswers = [];
+
+function buildMissingGame() {
+  missingStatus.textContent = "";
+  missingStatus.className = "status";
+  missingRow.innerHTML = "";
+  missingChoices.innerHTML = "";
+  currentMissingAnswers = [];
+  selectedAnswers = [];
+
+  const start = Math.floor(Math.random() * 7);
+  const length = 3;
+  const sequence = [];
+  for (let i = 0; i < length; i++) {
+    sequence.push(DAYS[(start + i) % 7]);
+  }
+
+  const numBlanks = 1;
+  const blankIndices = new Set();
+  while (blankIndices.size < numBlanks) {
+    blankIndices.add(Math.floor(Math.random() * length));
+  }
+  const sortedBlankIndices = [...blankIndices].sort((a, b) => a - b);
+
+  sequence.forEach((day, i) => {
+    if (blankIndices.has(i)) {
+      const div = document.createElement("div");
+      div.className = "seq-item blank";
+      div.textContent = "?";
+      div.dataset.blankNum = sortedBlankIndices.indexOf(i);
+      missingRow.appendChild(div);
+      currentMissingAnswers.push(day);
+      selectedAnswers.push(null);
+    } else {
+      const div = document.createElement("div");
+      div.className = "seq-item";
+      div.style.background = colorFor(day);
+      div.textContent = day;
+      missingRow.appendChild(div);
+    }
+  });
+
+  currentMissingAnswers.forEach((correctDay, blankNum) => {
+    const label = document.createElement("div");
+    label.className = "choice-group-label";
+    label.textContent = currentMissingAnswers.length > 1 ? `Blank #${blankNum + 1}` : "Choose the missing day:";
+    missingChoices.appendChild(label);
+
+    const group = document.createElement("div");
+    group.className = "choice-group";
+    group.dataset.blankNum = blankNum;
+
+    const others = DAYS.filter(d => d !== correctDay);
+    const options = shuffle([correctDay, ...shuffle(others).slice(0, 1)]);
+
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "choice-btn";
+      btn.textContent = opt;
+      btn.addEventListener("click", () => {
+        playClickSound();
+        group.querySelectorAll(".choice-btn").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedAnswers[blankNum] = opt;
+
+        const blankEl = missingRow.querySelector(`[data-blank-num="${blankNum}"]`);
+        blankEl.textContent = opt;
+        blankEl.classList.add("filled");
+        blankEl.style.background = colorFor(opt);
+      });
+      group.appendChild(btn);
+    });
+
+    missingChoices.appendChild(group);
+  });
+}
+
+function colorFor(day) {
+  const map = {
+    Sunday: "var(--sun)", Monday: "var(--mon)", Tuesday: "var(--tue)",
+    Wednesday: "var(--wed)", Thursday: "var(--thu)", Friday: "var(--fri)", Saturday: "var(--sat)"
+  };
+  return map[day];
+}
+
+document.getElementById("missing-check").addEventListener("click", () => {
+  if (selectedAnswers.some(a => a === null)) {
+    missingStatus.textContent = "Pick an answer for every blank first!";
+    missingStatus.className = "status wrong shake-anim";
+    playWrongSound();
+    setTimeout(() => missingStatus.classList.remove("shake-anim"), 500);
+    return;
+  }
+
+  let allCorrect = true;
+  currentMissingAnswers.forEach((correctDay, blankNum) => {
+    const group = missingChoices.querySelector(`.choice-group[data-blank-num="${blankNum}"]`);
+    const buttons = [...group.querySelectorAll(".choice-btn")];
+    const userChoice = selectedAnswers[blankNum];
+
+    buttons.forEach(b => {
+      b.disabled = true;
+      if (b.textContent === correctDay) b.classList.add("correct");
+      else if (b.textContent === userChoice && userChoice !== correctDay) b.classList.add("wrong");
+    });
+
+    if (userChoice !== correctDay) allCorrect = false;
+  });
+
+  if (allCorrect) {
+    missingStatus.textContent = "🎉 Correct! Great job!";
+    missingStatus.className = "status correct pop-anim";
+    playCompleteSound();
+    burstConfettiFromElement(missingStatus);
+  } else {
+    missingStatus.textContent = "❌ Some answers are wrong, try again!";
+    missingStatus.className = "status wrong shake-anim";
+    playWrongSound();
+  }
+  setTimeout(() => missingStatus.classList.remove("pop-anim", "shake-anim"), 600);
+});
+
+buildMissingGame();
+
+/* ===================== GAME 3: ABBREVIATIONS ===================== */
+const abbrQuestion = document.getElementById("abbr-question");
+const abbrOptions = document.getElementById("abbr-options");
+const abbrStatus = document.getElementById("abbr-status");
+const abbrScoreEl = document.getElementById("abbr-score");
+let abbrScore = { correct: 0, total: 0 };
+let currentAbbrDay = null;
+
+function buildAbbrQuestion() {
+  abbrStatus.textContent = "";
+  abbrStatus.className = "status";
+  currentAbbrDay = DAYS[Math.floor(Math.random() * DAYS.length)];
+  abbrQuestion.textContent = `What is the abbreviation for "${currentAbbrDay}"?`;
+  abbrQuestion.classList.remove("bounce-anim");
+  void abbrQuestion.offsetWidth;
+  abbrQuestion.classList.add("bounce-anim");
+
+  const correctAnswer = ABBR[currentAbbrDay];
+  const otherAbbrs = Object.values(ABBR).filter(a => a !== correctAnswer);
+  const shuffledOthers = shuffle(otherAbbrs).slice(0, 2);
+  const options = shuffle([correctAnswer, ...shuffledOthers]);
+
+  abbrOptions.innerHTML = "";
+  options.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "abbr-btn";
+    btn.textContent = opt;
+    btn.addEventListener("click", () => handleAbbrAnswer(btn, opt, correctAnswer));
+    abbrOptions.appendChild(btn);
+  });
+}
+
+function handleAbbrAnswer(btn, chosen, correctAnswer) {
+  const allBtns = [...abbrOptions.children];
+  allBtns.forEach(b => b.disabled = true);
+
+  abbrScore.total++;
+  if (chosen === correctAnswer) {
+    abbrScore.correct++;
+    btn.classList.add("correct", "pop-anim");
+    abbrStatus.textContent = "🎉 Correct!";
+    abbrStatus.className = "status correct";
+    playCorrectSound();
+    burstConfettiFromElement(btn);
+  } else {
+    btn.classList.add("wrong", "shake-anim");
+    allBtns.forEach(b => { if (b.textContent === correctAnswer) b.classList.add("correct", "pop-anim"); });
+    abbrStatus.textContent = `❌ Oops! "${currentAbbrDay}" is "${correctAnswer}".`;
+    abbrStatus.className = "status wrong";
+    playWrongSound();
+  }
+  abbrScoreEl.textContent = `Score: ${abbrScore.correct} / ${abbrScore.total}`;
+
+  setTimeout(buildAbbrQuestion, 1400);
+}
+
+buildAbbrQuestion();
+
+/* ===================== GLOBAL PLAY AGAIN ===================== */
+document.getElementById("play-again").addEventListener("click", () => {
+  playClickSound();
+  buildOrderGame();
+  buildMissingGame();
+  abbrScore = { correct: 0, total: 0 };
+  abbrScoreEl.textContent = `Score: ${abbrScore.correct} / ${abbrScore.total}`;
+  buildAbbrQuestion();
+});
+</script>
+</body>
+</html>
