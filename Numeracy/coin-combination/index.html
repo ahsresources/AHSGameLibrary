@@ -1,0 +1,62 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#eef6ff"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Coin Finder"><title>Coin Combination Finder</title><link rel="manifest" href="manifest.webmanifest"><style>:root{--navy:#10265f;--blue:#1671e8;--bg:#eef6ff;--line:#d8e4f3;--green:#237a3a;--greenbg:#eaf7ed}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;background:var(--bg);color:#121a2f}body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}.app{width:min(1050px,100%);margin:auto;padding:20px 14px 40px}h1{margin:8px 0 4px;text-align:center;color:var(--navy);font-size:clamp(28px,5vw,44px)}.subtitle{text-align:center;font-size:clamp(15px,2.6vw,21px);margin:0 0 18px}.picker-panel{background:#fff;border:1px solid var(--line);border-radius:24px;padding:18px 10px;box-shadow:0 8px 28px rgba(47,77,120,.08)}.picker-row{display:flex;align-items:center;justify-content:center;gap:8px}.currency{font-size:50px;color:var(--navy);font-weight:700}.dot{font-size:38px;color:var(--navy);font-weight:800}.wheel-wrap{text-align:center}.wheel-label{font-size:11px;font-weight:800;color:var(--navy);margin-bottom:6px}.wheel{width:78px;height:156px;overflow-y:auto;scroll-snap-type:y mandatory;border:1px solid #cfd7e2;border-radius:16px;background:linear-gradient(#fbfcfe,#fff 33%,#f4f8fd 33%,#f4f8fd 67%,#fff 67%,#fbfcfe);scrollbar-width:none;overscroll-behavior:contain}.wheel::-webkit-scrollbar{display:none}.spacer{height:52px}.wheel-item{height:52px;display:flex;align-items:center;justify-content:center;scroll-snap-align:center;font-size:31px;font-weight:700;color:#9aa1ac}.wheel-item.selected{color:var(--blue)}.wheel.fixed{overflow:hidden}.wheel{cursor:grab;user-select:none;-webkit-user-select:none;outline:none}.wheel.dragging{cursor:grabbing}.wheel:focus-visible{box-shadow:0 0 0 3px #9cc4ff}.wheel-item{cursor:pointer}.wheel.fixed{cursor:default}.amount{margin-top:15px;background:#f1f7ff;border:1px solid #c7ddff;border-radius:16px;text-align:center;padding:10px;color:var(--blue);font-size:clamp(36px,7vw,54px);font-weight:800}.section-title{text-align:center;margin:22px 0 2px;color:var(--navy);font-size:clamp(22px,4vw,31px)}.count{text-align:center;color:#34405b;margin-bottom:14px}.grid{display:grid;grid-template-columns:1fr;gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:0 4px 12px rgba(48,72,105,.05)}.card-title{text-align:center;color:var(--navy);font-weight:800;margin-bottom:10px}.coins{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}.coin{flex:0 0 auto}.coin img{width:64px;height:64px;object-fit:contain;display:block}.total{width:max-content;min-width:140px;margin:10px auto 0;padding:5px 16px;border-radius:999px;background:var(--greenbg);color:var(--green);font-weight:800}.info{margin-top:16px;background:#f7fbff;border:1px solid #cbdff8;border-radius:16px;padding:13px 16px;color:#293854;font-size:14px;line-height:1.45}.empty{background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px;text-align:center}@media(max-width:430px){.coins{gap:7px}.coin img{width:54px;height:54px}}@media(max-width:360px){.coin img{width:48px;height:48px}}@media(min-width:700px){.app{padding:30px 28px 50px}.grid{grid-template-columns:repeat(2,1fr)}.wheel{width:110px}.wheel-label{font-size:13px}}@media(min-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}}</style></head><body><main class="app"><h1>Coin Combination Finder</h1><p class="subtitle">Select an amount up to $2.00</p><section class="picker-panel"><div class="picker-row"><div class="currency">$</div><div class="wheel-wrap"><div class="wheel-label">DOLLARS</div><div class="wheel" id="dollarWheel"></div></div><div class="dot">.</div><div class="wheel-wrap"><div class="wheel-label">TENS</div><div class="wheel" id="tensWheel"></div></div><div class="wheel-wrap"><div class="wheel-label">ONES</div><div class="wheel fixed"><div class="spacer"></div><div class="wheel-item selected">0</div><div class="spacer"></div></div></div></div><div class="amount" id="amount">$0.80</div></section><h2 class="section-title">All Possible Combinations</h2><div class="count" id="count"></div><section class="grid" id="grid"></section><div class="info"><strong>Coins used:</strong> $1, 50¢, 20¢ and 10¢.<br>The last digit is fixed at 0, so amounts are selected in 10¢ steps from $0.00 to $2.00.</div></main><script>const coinImages={100:"images/1-dollar.png",50:"images/50-cent.png",20:"images/20-cent.png",10:"images/10-cent.png"},labels={100:"$1",50:"50¢",20:"20¢",10:"10¢"};let dollars=0,tens=8,lock=false;function buildWheel(el,values,selected){el.innerHTML='<div class="spacer"></div>'+values.map(v=>`<div class="wheel-item" data-value="${v}">${v}</div>`).join('')+'<div class="spacer"></div>';requestAnimationFrame(()=>setWheel(el,selected,false))}function setWheel(el,value,smooth=true){const items=[...el.querySelectorAll('.wheel-item')],idx=items.findIndex(x=>+x.dataset.value===+value);if(idx<0)return;el.scrollTo({top:idx*52,behavior:smooth?'smooth':'auto'});items.forEach(x=>x.classList.toggle('selected',+x.dataset.value===+value))}function nearest(el){const items=[...el.querySelectorAll('.wheel-item')];let idx=Math.round(el.scrollTop/52);idx=Math.max(0,Math.min(items.length-1,idx));return+items[idx].dataset.value}function attach(el,type){
+let timer,target=null,acc=0,cool=0;
+el.tabIndex=0;
+function commit(v){
+ if(type==='d'){dollars=v;if(dollars===2){tens=0;lock=true;setWheel(tensWheel,0,true);setTimeout(()=>lock=false,220)}}
+ else{if(dollars===2)v=0;tens=v}
+ setWheel(el,v,true);render()
+}
+function count(){return el.querySelectorAll('.wheel-item').length}
+function step(dir){
+ let idx=target!==null?target:Math.round(el.scrollTop/52);
+ idx=Math.max(0,Math.min(count()-1,idx+dir));
+ target=idx;
+ commit(+el.querySelectorAll('.wheel-item')[idx].dataset.value)
+}
+el.addEventListener('scroll',()=>{
+ clearTimeout(timer);
+ timer=setTimeout(()=>{
+  target=null;
+  if(lock||dragging)return;
+  commit(nearest(el))
+ },110)
+});
+/* Mouse wheel / trackpad on laptops: one item per notch */
+el.addEventListener('wheel',e=>{
+ e.preventDefault();
+ acc+=e.deltaY;
+ const now=Date.now();
+ if(Math.abs(acc)>=40&&now-cool>90){step(acc>0?1:-1);acc=0;cool=now}
+},{passive:false});
+/* Keyboard */
+el.addEventListener('keydown',e=>{
+ if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();step(-1)}
+ else if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();step(1)}
+});
+/* Mouse drag + click (touch keeps native scrolling) */
+let dragging=false,startY=0,startTop=0,moved=0;
+el.addEventListener('pointerdown',e=>{
+ if(e.pointerType!=='mouse'||e.button!==0)return;
+ dragging=true;moved=0;startY=e.clientY;startTop=el.scrollTop;
+ el.style.scrollSnapType='none';el.classList.add('dragging');
+ el.setPointerCapture(e.pointerId);el.focus({preventScroll:true})
+});
+el.addEventListener('pointermove',e=>{
+ if(!dragging)return;
+ const dy=e.clientY-startY;moved=Math.max(moved,Math.abs(dy));
+ el.scrollTop=startTop-dy
+});
+function endDrag(e){
+ if(!dragging)return;
+ dragging=false;el.classList.remove('dragging');el.style.scrollSnapType='';
+ if(moved<5){
+  const item=document.elementFromPoint(e.clientX,e.clientY);
+  const it=item&&item.closest&&item.closest('.wheel-item');
+  if(it&&el.contains(it)){commit(+it.dataset.value);return}
+ }
+ commit(nearest(el))
+}
+el.addEventListener('pointerup',endDrag);
+el.addEventListener('pointercancel',endDrag);
+}
+function combos(target){const out=[];for(let a=Math.floor(target/100);a>=0;a--)for(let b=Math.floor((target-a*100)/50);b>=0;b--)for(let c=Math.floor((target-a*100-b*50)/20);c>=0;c--){const rem=target-a*100-b*50-c*20;if(rem>=0&&rem%10===0)out.push({100:a,50:b,20:c,10:rem/10})}return out}function render(){const target=dollars===2?200:dollars*100+tens*10;amount.textContent='$'+(target/100).toFixed(2);const all=combos(target);count.textContent=all.length+(all.length===1?' combination':' combinations');if(target===0){grid.innerHTML='<div class="empty">Roll the wheels to choose an amount.</div>';return}grid.innerHTML=all.map((c,i)=>{const individual=[];[100,50,20,10].forEach(v=>{for(let n=0;n<c[v];n++)individual.push(`<div class="coin" data-value="${v}"><img src="${coinImages[v]}" alt="${labels[v]} coin"></div>`)});return`<article class="card"><div class="card-title">Combination ${i+1}</div><div class="coins">${individual.join('')}</div><div class="total">Total: $${(target/100).toFixed(2)}</div></article>`}).join('')}const dollarWheel=document.getElementById('dollarWheel'),tensWheel=document.getElementById('tensWheel');buildWheel(dollarWheel,[0,1,2],0);buildWheel(tensWheel,[0,1,2,3,4,5,6,7,8,9],8);attach(dollarWheel,'d');attach(tensWheel,'t');render();if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script></body></html>
