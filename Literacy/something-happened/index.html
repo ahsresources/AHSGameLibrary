@@ -126,6 +126,32 @@
   .mediaActions{display:flex; gap:6px; flex-wrap:wrap;}
   .fileBtn{position:relative; overflow:hidden; display:inline-block;}
   .fileBtn input[type=file]{position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%;}
+
+  /* ===== Game screen layout ===== */
+  /* Portrait: wrappers are transparent, so the original stacked layout is unchanged */
+  .gameLayout, .gameMedia, .gameSide{display:contents;}
+
+  /* Landscape: video fixed on the left, question + answers on the right */
+  @media (orientation:landscape){
+    #screen-game{overflow:hidden; padding:12px 16px;}
+    #screen-game .progressBar{margin:2px 0 10px; flex-shrink:0;}
+    #screen-game .gameLayout{display:flex; flex-direction:row; gap:16px; width:100%;
+      flex:1; min-height:0; align-items:stretch;}
+    #screen-game .gameMedia{display:flex; flex:1.25; min-width:0; align-items:center; justify-content:center;}
+    #screen-game .stage{max-width:none; height:100%; margin:0;}
+    #screen-game .gameSide{display:flex; flex-direction:column; flex:1; min-width:0;
+      overflow-y:auto; align-items:center; justify-content:center; justify-content:safe center;
+      padding:8px 4px 8px 0;}
+    #screen-game .speechBubble{max-width:100%; width:100%; margin:0 0 10px;}
+    #screen-game .choiceGrid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; max-width:100%;}
+    #screen-game .whChoice{min-height:78px; padding:10px 10px; gap:4px;}
+    #screen-game .choiceIcon{margin-bottom:2px;}
+    #screen-game .choiceIcon svg{width:clamp(32px,5vw,48px); height:clamp(32px,5vw,48px);}
+    #screen-game .choiceIcon img{width:clamp(36px,6vw,52px); height:clamp(36px,6vw,52px);}
+    #screen-game .tokenTray, #screen-game .sentenceStrip, #screen-game .revealPanel{max-width:100%; width:100%;}
+    #screen-game .revealPanel{margin-top:0; padding:12px 16px;}
+    #screen-game #revealEmoji img{max-width:90px !important; max-height:90px !important;}
+  }
 </style>
 </head>
 <body>
@@ -158,16 +184,22 @@
   <!-- GAME SCREEN -->
   <div class="screen" id="screen-game">
     <div class="progressBar"><div class="progressFill" id="progressFill"></div></div>
-    <div class="stage"><div class="sceneEmoji" id="gameEmoji">❓</div></div>
-    <div class="speechBubble" id="speechBubble">Get ready...</div>
-    <div class="choiceGrid" id="choiceGrid"></div>
-    <div class="tokenTray" id="tokenTray" style="display:none;"></div>
-    <div class="sentenceStrip" id="sentenceStrip" style="display:none;"></div>
-    <div class="revealPanel" id="revealPanel" style="display:none;">
-      <div class="emoji" id="revealEmoji">🎉</div>
-      <div id="revealAnswer" style="font-size:clamp(18px,3vw,24px);font-weight:800;color:#4a4a5a;margin:6px 0 2px;"></div>
-      <div id="revealText"></div>
-      <button class="bigBtn btn-mint" id="nextRoundBtn">Next ➜</button>
+    <div class="gameLayout">
+      <div class="gameMedia">
+        <div class="stage"><div class="sceneEmoji" id="gameEmoji">❓</div></div>
+      </div>
+      <div class="gameSide">
+        <div class="speechBubble" id="speechBubble">Get ready...</div>
+        <div class="choiceGrid" id="choiceGrid"></div>
+        <div class="tokenTray" id="tokenTray" style="display:none;"></div>
+        <div class="sentenceStrip" id="sentenceStrip" style="display:none;"></div>
+        <div class="revealPanel" id="revealPanel" style="display:none;">
+          <div class="emoji" id="revealEmoji">🎉</div>
+          <div id="revealAnswer" style="font-size:clamp(18px,3vw,24px);font-weight:800;color:#4a4a5a;margin:6px 0 2px;"></div>
+          <div id="revealText"></div>
+          <button class="bigBtn btn-mint" id="nextRoundBtn">Next ➜</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -930,7 +962,7 @@ function loadRound(){
 /* ---- STEP 1: choose the WH-word ('ask' and 'both' modes) ---- */
 function startAskStep(){
   document.getElementById('speechBubble').textContent=currentScenario.prompt;
-  setTimeout(()=>{ playSound(currentScenario.sound); speak(currentScenario.prompt); },250);
+  setTimeout(()=>{ speak(currentScenario.prompt); },250);
   renderWHChoices();
 }
 function renderWHChoices(){
@@ -978,7 +1010,6 @@ function startAnswerStep(){
   document.getElementById('speechBubble').innerHTML = SETTINGS.mode==='both'
     ? `Now answer: <br><b>${q}</b>` : `<b>${q}</b>`;
   setTimeout(()=>{
-    if(SETTINGS.mode==='answer'){ playSound(currentScenario.sound); }
     speak(q);
   },250);
   renderAnswerChoices();
