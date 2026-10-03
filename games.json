@@ -1,5 +1,15 @@
 [
   {
+    "id": "show-and-tell",
+    "title": "Show and Tell",
+    "description": "Practise answering Who and What questions with a show and tell game.",
+    "creatorName": "Teacher Carmina",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["questions", "comprehension", "LC.RD.2.6"],
+    "uploadDate": "2026-10-03"
+  },
+  {
     "id": "money-calculator",
     "title": "Money Calculator",
     "description": "Use this tool to add up multiple coins.",
