@@ -1,4 +1,14 @@
 [
+    {
+    "id": "ab-ag-word-family",
+    "title": "Word Families ab/ag",
+    "description": "Learn about word families (ab) and (ag).",
+    "creatorName": "Teacher Najeer",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["reading", "phonics", "blending"],
+    "uploadDate": "2026-10-03"
+  },
   {
     "id": "show-and-tell",
     "title": "Show and Tell",
