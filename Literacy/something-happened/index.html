@@ -329,8 +329,24 @@ let customMediaCache={}; // scenarioId -> {type:'image'|'video', url, thumb}
    If the file doesn't exist, this fails silently and falls back to the
    default pictogram — nothing breaks if you don't add any videos. */
 let bundledMediaCache={}; // scenarioId -> {url, thumb}
+
+/* ---- Default snapshot time (seconds into the video) ----
+   Add a line per video to choose which moment is used as the default picture.
+   Anything not listed uses DEFAULT_THUMB_TIME. The time is capped to the video's length.
+   A frame picked in Settings (📸 Use This Frame) always overrides these. */
+const DEFAULT_THUMB_TIME=0.3;
+const THUMB_TIMES={
+  cup_break: 5,
+  ipad_stuck: 8,
+  // egg_crack: 1.5,
+};
+function thumbTimeFor(id,duration){
+  const t=(id in THUMB_TIMES)?THUMB_TIMES[id]:DEFAULT_THUMB_TIME;
+  const max=Math.max(0,(duration||1)-0.05);
+  return Math.min(t,max);
+}
 function bundledVideoUrl(id){ return 'media/'+id+'.mp4'; }
-function captureThumbFromVideoSrc(url){
+function captureThumbFromVideoSrc(url,id){
   return new Promise((resolve)=>{
     let settled=false;
     const done=(val)=>{ if(settled) return; settled=true; resolve(val); };
@@ -338,7 +354,7 @@ function captureThumbFromVideoSrc(url){
     const cx=canvas.getContext('2d');
     const vid=document.createElement('video');
     vid.muted=true; vid.playsInline=true; vid.src=url;
-    vid.onloadeddata=()=>{ try{ vid.currentTime=Math.min(0.3,(vid.duration||1)/2); }catch(e){ done(null); } };
+    vid.onloadeddata=()=>{ try{ vid.currentTime=thumbTimeFor(id,vid.duration); }catch(e){ done(null); } };
     vid.onseeked=()=>{
       try{
         const scale=Math.max(200/vid.videoWidth,200/vid.videoHeight);
@@ -363,7 +379,7 @@ async function probeBundledMedia(){
   await Promise.all(SCENARIOS.map(async sc=>{
     if(customMediaCache[sc.id]) return; // a teacher's own upload always wins, skip probing
     const url=bundledVideoUrl(sc.id);
-    const thumb=await captureThumbFromVideoSrc(url);
+    const thumb=await captureThumbFromVideoSrc(url,sc.id);
     if(thumb){
       const ov=loadThumbOverrides()[sc.id];
       bundledMediaCache[sc.id]={url,thumb:ov||thumb,defaultThumb:thumb};
@@ -425,7 +441,7 @@ function idbGetAll(){
     }catch(e){ res([]); }
   }));
 }
-function makeThumbnail(file){
+function makeThumbnail(file,id){
   return new Promise((resolve)=>{
     let settled=false;
     const done=(val,errMsg)=>{ if(settled) return; settled=true; resolve({thumb:val,error:errMsg||null}); };
@@ -433,7 +449,7 @@ function makeThumbnail(file){
     const cx=canvas.getContext('2d');
     const vid=document.createElement('video');
     vid.muted=true; vid.playsInline=true; vid.src=URL.createObjectURL(file);
-    vid.onloadeddata=()=>{ try{ vid.currentTime=Math.min(0.3, (vid.duration||1)/2); }catch(e){ done(null,'Could not seek into video.'); } };
+    vid.onloadeddata=()=>{ try{ vid.currentTime=thumbTimeFor(id,vid.duration); }catch(e){ done(null,'Could not seek into video.'); } };
     vid.onseeked=()=>{
       try{
         const scale=Math.max(200/vid.videoWidth,200/vid.videoHeight);
@@ -447,7 +463,7 @@ function makeThumbnail(file){
   });
 }
 async function saveScenarioMedia(scenarioId,file){
-  const result=await makeThumbnail(file);
+  const result=await makeThumbnail(file,scenarioId);
   const type='video';
   const ok=await idbPut({id:scenarioId,type,mime:file.type,blob:file,thumb:result.thumb,error:result.error});
   if(ok){
