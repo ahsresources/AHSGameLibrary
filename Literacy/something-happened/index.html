@@ -351,12 +351,23 @@ function captureThumbFromVideoSrc(url){
     setTimeout(()=>done(null),4000);
   });
 }
+/* Teacher-chosen snapshot for the shared example videos (stored on this device only) */
+const THUMB_KEY='whdet_thumbs';
+function loadThumbOverrides(){ try{ return JSON.parse(localStorage.getItem(THUMB_KEY))||{}; }catch(e){ return {}; } }
+function saveThumbOverride(id,url){
+  const o=loadThumbOverrides();
+  if(url) o[id]=url; else delete o[id];
+  try{ localStorage.setItem(THUMB_KEY,JSON.stringify(o)); return true; }catch(e){ return false; }
+}
 async function probeBundledMedia(){
   await Promise.all(SCENARIOS.map(async sc=>{
     if(customMediaCache[sc.id]) return; // a teacher's own upload always wins, skip probing
     const url=bundledVideoUrl(sc.id);
     const thumb=await captureThumbFromVideoSrc(url);
-    if(thumb){ bundledMediaCache[sc.id]={url,thumb}; }
+    if(thumb){
+      const ov=loadThumbOverrides()[sc.id];
+      bundledMediaCache[sc.id]={url,thumb:ov||thumb,defaultThumb:thumb};
+    }
   }));
 }
 /* Single place every part of the game asks "what should this scenario show?" —
@@ -769,6 +780,15 @@ function renderMediaManager(){
       resetVidBtn.onclick=async ()=>{ await removeScenarioMedia(sc.id); renderMediaManager(); };
       actions.appendChild(resetVidBtn);
     }
+    if(!custom && bundled && loadThumbOverrides()[sc.id]){
+      const resetPicBtn=document.createElement('button'); resetPicBtn.className='miniBtn'; resetPicBtn.textContent='Reset Picture';
+      resetPicBtn.onclick=()=>{
+        saveThumbOverride(sc.id,null);
+        bundled.thumb=bundled.defaultThumb;
+        renderMediaManager();
+      };
+      actions.appendChild(resetPicBtn);
+    }
     if(hasTextOverride){
       const resetTextBtn=document.createElement('button'); resetTextBtn.className='miniBtn'; resetTextBtn.textContent='Reset Text';
       resetTextBtn.onclick=()=>{ delete OVERRIDES[sc.id]; saveOverrides(); renderMediaManager(); };
@@ -796,10 +816,10 @@ function togglePreview(scenarioId,btn,card){
   const isCustom=!!customMediaCache[scenarioId];
   const display=getScenarioMedia(scenarioId);
   if(!display){ return; }
-  const frameBtnHtml = isCustom
-    ? `<div style="display:flex;justify-content:center;margin-top:6px;"><button class="miniBtn" id="setframe-${scenarioId}">📸 Use This Frame as Picture</button></div>`
-    : '';
-  slot.innerHTML=`<video src="${display.url}" controls playsinline style="width:100%;max-height:180px;border-radius:14px;background:#111;"></video>
+  const frameBtnHtml = `<div style="margin-top:6px;text-align:center;">
+      <div style="font-size:12px;opacity:.7;margin-bottom:4px;">Pause on the moment you want as the picture, then tap the button.</div>
+      <button class="miniBtn" id="setframe-${scenarioId}">📸 Use This Frame as Picture</button></div>`;
+  slot.innerHTML=`<video src="${display.url}" controls playsinline style="width:100%;max-height:240px;border-radius:14px;background:#111;"></video>
     ${frameBtnHtml}
     <div class="mediaWarning" id="preview-err-${scenarioId}" style="display:none;"></div>`;
   const vid=slot.querySelector('video');
@@ -812,6 +832,7 @@ function togglePreview(scenarioId,btn,card){
   if(setFrameBtn){
     setFrameBtn.onclick=async ()=>{
       setFrameBtn.textContent='Saving…';
+      vid.pause();
       try{
         const canvas=document.createElement('canvas'); canvas.width=200; canvas.height=200;
         const cx=canvas.getContext('2d');
@@ -819,7 +840,11 @@ function togglePreview(scenarioId,btn,card){
         const w=vid.videoWidth*scale,h=vid.videoHeight*scale;
         cx.drawImage(vid,(200-w)/2,(200-h)/2,w,h);
         const newThumb=canvas.toDataURL('image/jpeg',0.8);
-        await setScenarioThumbnail(scenarioId,newThumb);
+        if(isCustom){ await setScenarioThumbnail(scenarioId,newThumb); }
+        else {
+          saveThumbOverride(scenarioId,newThumb);
+          if(bundledMediaCache[scenarioId]) bundledMediaCache[scenarioId].thumb=newThumb;
+        }
         setFrameBtn.textContent='✓ Picture Updated';
         setTimeout(()=>renderMediaManager(),700);
       }catch(e){ setFrameBtn.textContent='Could not capture — try pausing the video first'; }
