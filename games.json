@@ -12,7 +12,7 @@
   {
     "id": "coin-combination",
     "title": "Coin Combination Finder",
-    "description": "Generate all possible coin combinations to form a total value up to $2.",
+    "description": "Find all possible coin combinations to form a total value up to $2.",
     "creatorName": "Teacher Keith",
     "category": "Numeracy",
     "compatibility": ["desktop", "tablet", "mobile"],
