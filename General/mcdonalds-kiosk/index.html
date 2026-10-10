@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>McDonald's Singapore Kiosk</title>
+<style>
+:root{--red:#DA291C;--yellow:#FFC72C;--yellow-h:#FFB300;--ink:#1A1A1A;--ink2:#444;--ink3:#888;--bg:#F0F0F0;--border:#DEDEDE;--green:#2E7D32;--r:10px;--rsm:6px;--rlg:16px;--rf:9999px;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;}
+.screen.active{display:flex;}
+/* ATTRACT */
+#scr-attract{background:#111;}
+.attract-ad{flex:1;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;}
+.attract-ad img{width:100%;height:100%;object-fit:cover;filter:brightness(.82);}
+.attract-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(0,0,0,.72)100%);}
+.attract-copy{position:absolute;bottom:24px;left:28px;color:#fff;}
+.attract-copy h2{font-size:clamp(1.5rem,3.8vw,2.6rem);font-weight:900;line-height:1.1;}
+.attract-copy p{font-size:.9rem;opacity:.78;margin-top:4px;}
+.attract-bar{background:#fff;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:28px 40px;gap:0;border-top:3px solid var(--yellow);min-height:180px;}
+.attract-btns{display:flex;flex-direction:column;gap:14px;width:300px;margin-right:40px;}
+.btn-start-order{padding:18px 28px;border-radius:var(--r);background:#fff;border:2px solid var(--border);cursor:pointer;text-align:left;transition:all .15s;width:100%;}
+.btn-start-order:hover{border-color:var(--yellow);background:#FFFBEF;}
+.bso-t{font-weight:800;font-size:1.15rem;color:var(--ink);}
+.bso-s{font-size:.82rem;color:var(--ink3);margin-top:3px;}
+.btn-reach{padding:16px 28px;border-radius:var(--r);background:#fff;border:2px solid var(--border);font-weight:700;font-size:1rem;color:var(--ink);cursor:pointer;text-align:left;width:100%;}
+.btn-reach:hover{border-color:#aaa;}
+.attract-mym{flex-shrink:0;width:160px;height:130px;background:var(--yellow);border-radius:var(--r);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px 14px;text-align:center;gap:6px;cursor:pointer;}
+.mym-logo{font-size:1.9rem;font-weight:900;color:var(--red);font-style:italic;line-height:1;}
+.mym-t1{font-weight:800;font-size:.82rem;color:var(--ink);line-height:1.3;}
+.mym-t2{font-size:.72rem;color:var(--ink2);line-height:1.3;}
+.mym-arr{font-size:1.1rem;color:var(--ink);}
+/* DINING */
+#scr-dining{background:var(--bg);align-items:center;justify-content:center;gap:24px;}
+.big-m{width:68px;height:68px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:2.2rem;font-weight:900;color:var(--red);}
+.dining-sub{font-weight:900;font-size:1.3rem;color:var(--ink);}
+.dining-btns{display:flex;gap:28px;}
+.dining-btn{width:200px;padding:30px 20px;border-radius:var(--rlg);background:#fff;border:2px solid var(--border);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.dining-btn:hover{border-color:var(--yellow);background:#FFFBEF;transform:translateY(-3px);}
+.dining-btn-icon{font-size:3.4rem;}
+.dining-btn-title{font-weight:800;font-size:1.15rem;}
+.dining-btn-sub{font-size:.85rem;color:var(--ink3);}
+/* MENU */
+#scr-menu{flex-direction:column;}
+#menu-hdr{background:var(--red);height:50px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:10;}
+.mhdr-l{display:flex;align-items:center;gap:8px;}
+.sm-m{width:30px;height:30px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;color:var(--red);}
+.mhdr-brand{font-weight:800;font-size:.82rem;color:#fff;}
+.mhdr-sub{font-size:.54rem;color:rgba(255,255,255,.7);}
+.mhdr-mode{font-weight:700;font-size:.7rem;background:rgba(0,0,0,.2);padding:2px 8px;border-radius:var(--rf);color:#fff;}
+.mhdr-time{font-size:.6rem;color:rgba(255,255,255,.65);margin-top:1px;}
+#menu-body{flex:1;display:flex;min-height:0;}
+#cat-sidebar{width:128px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);overflow-y:auto;scrollbar-width:none;}
+#cat-sidebar::-webkit-scrollbar{display:none;}
+.cat-btn{width:100%;min-height:64px;padding:7px 7px;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px;border:none;background:#fff;cursor:pointer;border-left:4px solid transparent;transition:all .15s;text-align:left;border-bottom:1px solid #E8E8E8;}
+.cat-btn:hover{background:#FAFAFA;}
+.cat-btn.active{background:#fff;border-left-color:transparent;box-shadow:inset 0 0 0 1.5px #CFCFCF;border-radius:7px;}
+.cat-icon{width:46px;height:46px;flex:0 0 46px;display:flex;align-items:center;justify-content:center;font-size:1.35rem;line-height:1;overflow:hidden;}
+.cat-icon img{width:100%;height:100%;object-fit:contain;display:block;}
+.cat-label{font-size:.68rem;font-weight:500;line-height:1.12;color:#333;flex:1;}
+.cat-btn.active .cat-label{color:#222;font-weight:700;}
+.cat-btn.active .cat-label:after{content:"";display:block;width:28px;height:3px;background:var(--yellow);border-radius:2px;margin-top:5px;}
+#menu-grid-area{flex:1;overflow-y:auto;padding:10px 11px;scrollbar-width:thin;scrollbar-color:#ccc transparent;}
+#menu-grid-area::-webkit-scrollbar{width:4px;}
+#menu-grid-area::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px;}
+.cat-heading{font-weight:800;font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--red);margin-bottom:7px;padding-bottom:4px;border-bottom:2px solid var(--red);}
+.items-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:7px;margin-bottom:16px;}
+.item-card{background:#fff;border-radius:var(--r);border:1.5px solid var(--border);cursor:pointer;transition:all .15s;overflow:hidden;display:flex;flex-direction:column;}
+.item-card:hover{border-color:var(--yellow);box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-2px);}
+.item-img-wrap{width:100%;aspect-ratio:1;background:#f8f8f8;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.item-img{width:100%;height:100%;object-fit:contain;}
+.item-emoji-pl{font-size:2.2rem;}
+.item-info{padding:5px 6px 7px;display:flex;flex-direction:column;gap:2px;}
+.item-name{font-weight:700;font-size:.64rem;line-height:1.3;color:var(--ink);}
+.item-cal{font-size:.55rem;color:var(--ink3);}
+.item-price{font-weight:800;font-size:.76rem;color:var(--red);margin-top:2px;}
+/* BOTTOM BAR */
+#menu-bottom{height:172px;flex-shrink:0;background:#fff;border-top:1px solid var(--border);display:flex;flex-direction:column;box-shadow:0 -2px 8px rgba(0,0,0,.07);position:relative;}
+.mb-r1{flex:1;display:flex;align-items:center;padding:10px 14px 6px;gap:11px;border-bottom:1px solid #F2F2F2;}
+.mb-bag{position:relative;cursor:pointer;flex-shrink:0;}
+.mb-bag-icon{font-size:2.2rem;line-height:1;}
+.mb-badge{position:absolute;top:-4px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:.57rem;font-weight:800;display:flex;align-items:center;justify-content:center;}
+.mb-price{font-weight:800;font-size:1.15rem;color:var(--ink);margin-left:5px;}
+.mb-spacer{flex:1;}
+.btn-view-cart{padding:13px 24px;border-radius:var(--r);background:var(--yellow);color:var(--ink);font-weight:800;font-size:1rem;border:none;cursor:pointer;white-space:nowrap;margin-right:144px;}
+.btn-view-cart:hover{background:var(--yellow-h);}
+.btn-view-cart:disabled{background:#ddd;color:#888;cursor:not-allowed;}
+.mb-r2{display:flex;gap:10px;padding:5px 14px;align-items:center;padding-right:140px;}
+.mb-act{padding:9px 19px;border-radius:var(--rsm);background:#fff;border:1.5px solid var(--border);font-size:.84rem;font-weight:700;color:var(--ink);cursor:pointer;}
+.mb-act:hover{border-color:#aaa;background:#f5f5f5;}
+.mb-mym{position:absolute;right:8px;top:5px;width:126px;height:98px;background:var(--yellow);border-radius:var(--rsm);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px;text-align:center;cursor:pointer;gap:4px;}
+.mb-mym-logo{font-size:1.15rem;font-weight:900;color:var(--red);font-style:italic;}
+.mb-mym-t1{font-size:.64rem;font-weight:800;color:var(--ink);}
+.mb-mym-t2{font-size:.58rem;color:var(--ink2);}
+.mb-mym-arr{font-size:.78rem;}
+.mb-r3{padding:4px 14px;font-size:.62rem;color:var(--ink3);}
+/* FLOW HEADER */
+.flow-hdr{background:var(--red);height:50px;flex-shrink:0;display:flex;align-items:center;padding:0 12px;gap:8px;}
+.flow-item-name{font-weight:700;font-size:.82rem;color:#fff;}
+/* MEAL CHOICE */
+#scr-meal-choice{background:var(--bg);flex-direction:column;}
+.mc-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;}
+.mc-q{font-weight:900;font-size:clamp(1.15rem,3vw,1.75rem);text-align:center;color:var(--ink);}
+.mc-opts{display:flex;gap:15px;justify-content:center;}
+.mc-opt{width:180px;padding:19px 12px;border-radius:var(--rlg);background:#fff;border:2.5px solid var(--border);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .18s;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.mc-opt:hover{border-color:var(--yellow);transform:translateY(-3px);}
+.mc-opt-icon{font-size:2.4rem;}
+.mc-opt-title{font-weight:800;font-size:.85rem;color:var(--ink);}
+.mc-opt-price{font-size:.76rem;font-weight:700;color:var(--red);}
+.btn-cancel-w{width:100%;max-width:390px;padding:11px;border-radius:var(--r);background:#fff;border:2px solid var(--border);font-weight:700;font-size:.8rem;color:var(--ink);cursor:pointer;}
+/* MEAL SIZE */
+#scr-meal-size{background:var(--bg);flex-direction:column;}
+.ms-body{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:18px;}
+.ms-title{font-weight:900;font-size:1.1rem;color:var(--ink);}
+.ms-opts{display:flex;flex-direction:column;gap:8px;width:100%;max-width:350px;}
+.ms-opt{padding:13px 17px;border-radius:var(--r);background:#fff;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .15s;}
+.ms-opt:hover{border-color:var(--yellow);background:#FFFBEF;}
+.ms-opt-title{font-weight:800;font-size:.85rem;color:var(--ink);}
+.ms-opt-desc{font-size:.68rem;color:var(--ink3);margin-top:2px;}
+.ms-opt-price{font-weight:800;font-size:.92rem;color:var(--red);}
+/* BUILD MEAL */
+#scr-build{background:var(--bg);flex-direction:column;}
+#build-body{flex:1;display:flex;min-height:0;}
+#build-sidebar{width:104px;flex-shrink:0;background:#fff;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.build-tab{padding:9px 5px;border:none;background:transparent;border-left:4px solid transparent;border-bottom:1px solid #F2F2F2;cursor:pointer;text-align:center;font-size:.54rem;font-weight:700;color:var(--ink3);line-height:1.3;transition:all .15s;}
+.build-tab.active{background:#FFF3CD;border-left-color:var(--red);color:var(--red);}
+.build-tab.done{color:var(--green);}
+#build-content{flex:1;overflow-y:auto;padding:11px;}
+.build-sec-title{font-weight:800;font-size:.9rem;color:var(--ink);margin-bottom:9px;}
+.build-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;}
+.build-item{background:#fff;border-radius:var(--r);border:2px solid var(--border);cursor:pointer;text-align:center;padding:8px 5px 9px;transition:all .15s;display:flex;flex-direction:column;align-items:center;}
+.build-item:hover{border-color:var(--yellow);}
+.build-item.selected{border-color:var(--red);background:#FFF3CD;}
+.build-item img{width:60px;height:60px;object-fit:cover;display:block;margin:0 auto 5px;border-radius:5px;flex-shrink:0;}
+.build-item-emoji{font-size:1.85rem;margin-bottom:5px;}
+.build-item-name{font-size:.6rem;font-weight:700;color:var(--ink);line-height:1.3;}
+#build-footer{flex-shrink:0;min-height:96px;background:#fff;border-top:1px solid var(--border);padding:12px 11px 16px;display:flex;align-items:center;gap:8px;}
+.bqc{display:flex;align-items:center;gap:6px;}
+.bqc-btn{width:29px;height:29px;border-radius:50%;border:2px solid var(--border);background:#fff;font-size:.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.bqc-btn:hover{border-color:var(--red);}
+.bqc-num{font-weight:800;font-size:.88rem;min-width:20px;text-align:center;}
+.btn-cancel-item{padding:9px 15px;border-radius:var(--r);background:#fff;border:2px solid var(--border);font-weight:700;font-size:.82rem;color:var(--ink);cursor:pointer;}
+.btn-add-order{flex:1;padding:13px;border-radius:var(--r);background:var(--yellow);color:var(--ink);font-weight:800;font-size:.92rem;border:none;cursor:pointer;}
+.btn-add-order:hover{background:var(--yellow-h);}
+.review-sec{display:flex;flex-direction:column;gap:10px;}
+.review-row{background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:9px 11px;}
+.review-row-name{font-weight:800;font-size:.82rem;color:var(--ink);}
+.review-row-sub{font-size:.68rem;color:var(--ink3);margin-top:2px;}
+.review-btns{display:flex;gap:6px;margin-top:6px;}
+.review-btn{padding:4px 10px;border-radius:var(--rsm);background:#fff;border:1.5px solid var(--border);font-size:.64rem;font-weight:700;color:var(--ink);cursor:pointer;}
+.review-btn:hover{border-color:var(--red);}
+/* ITEM ADDED */
+#scr-added{align-items:center;justify-content:center;background:rgba(0,0,0,.55);}
+.added-card{background:#fff;border-radius:var(--rlg);padding:34px 42px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:11px;box-shadow:0 16px 48px rgba(0,0,0,.25);animation:popin .4s cubic-bezier(.34,1.56,.64,1);}
+@keyframes popin{0%{transform:scale(.82);opacity:0}100%{transform:scale(1);opacity:1}}
+.added-anim{font-size:3.4rem;position:relative;display:inline-block;}
+.added-tick{position:absolute;bottom:-3px;right:-3px;width:23px;height:23px;border-radius:50%;background:var(--green);color:#fff;font-size:.8rem;display:flex;align-items:center;justify-content:center;font-weight:800;}
+.added-title{font-weight:900;font-size:1.15rem;color:var(--ink);}
+.added-sub{font-size:.8rem;color:var(--ink3);}
+.added-price{font-weight:900;font-size:1.3rem;color:var(--red);}
+/* UPSELL */
+#scr-upsell{background:var(--bg);flex-direction:column;}
+.upsell-title{font-weight:900;font-size:1.1rem;color:var(--ink);text-align:center;padding:14px 14px 6px;}
+.upsell-items{flex:1;overflow-y:auto;display:flex;gap:9px;flex-wrap:wrap;padding:6px 14px;justify-content:center;align-content:flex-start;}
+.upsell-item{width:126px;background:#fff;border-radius:var(--r);border:2px solid var(--border);cursor:pointer;text-align:center;padding:9px 6px;transition:all .15s;}
+.upsell-item:hover{border-color:var(--yellow);transform:translateY(-2px);}
+.upsell-media{height:82px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;overflow:hidden;}
+.upsell-img{width:100%;height:100%;object-fit:contain;display:block;}
+.upsell-emoji{font-size:2.1rem;line-height:1;}
+.upsell-name{font-size:.66rem;font-weight:700;color:var(--ink);}
+.upsell-price{font-size:.68rem;font-weight:800;color:var(--red);margin-top:2px;}
+.upsell-footer{padding:11px 14px;border-top:1px solid var(--border);background:#fff;}
+.btn-no-thanks{width:100%;padding:11px;border-radius:var(--r);background:#fff;border:2px solid var(--border);font-weight:700;font-size:.83rem;color:var(--ink);cursor:pointer;}
+/* CART */
+#scr-cart{background:var(--bg);flex-direction:column;}
+.cart-hdr{background:var(--red);padding:16px 18px;flex-shrink:0;display:flex;align-items:center;gap:11px;}
+.cart-hdr-title{font-weight:900;font-size:1.2rem;color:#fff;}
+.cart-body{flex:1;overflow-y:auto;padding:11px;}
+.cart-item{background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:14px 15px;margin-bottom:10px;}
+.cart-item-name{font-weight:800;font-size:1rem;color:var(--ink);}
+.cart-item-detail{font-size:.82rem;color:var(--ink3);margin-top:4px;line-height:1.6;}
+.cart-item-price{font-weight:800;font-size:1rem;color:var(--red);margin-top:6px;}
+.cart-footer{flex-shrink:0;background:#fff;border-top:1px solid var(--border);padding:16px 14px 26px;}
+.cart-totals{display:flex;flex-direction:column;gap:5px;margin-bottom:11px;}
+.cart-row{display:flex;justify-content:space-between;font-size:.9rem;color:var(--ink3);}
+.cart-row.total{color:var(--ink);font-weight:900;font-size:1.15rem;margin-top:5px;}
+.cart-btns{display:flex;gap:8px;}
+.btn-order-more{padding:14px 20px;border-radius:var(--r);background:#fff;border:2px solid var(--border);font-weight:700;font-size:.92rem;color:var(--ink);cursor:pointer;}
+.btn-complete{flex:1;padding:14px;border-radius:var(--r);background:var(--yellow);color:var(--ink);font-weight:800;font-size:1rem;border:none;cursor:pointer;}
+.btn-complete:hover{background:var(--yellow-h);}
+/* PAYMENT */
+#scr-payment{background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:16px;padding-bottom:48px;}
+.pay-title{font-weight:900;font-size:1.5rem;color:var(--ink);}
+.pay-methods{display:flex;flex-direction:column;gap:9px;width:100%;max-width:300px;}
+.pay-card-btn{padding:22px 26px;border-radius:var(--rlg);background:#fff;border:2px solid var(--border);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px;transition:all .18s;}
+.pay-card-btn:hover{border-color:var(--yellow);background:#FFFBEF;}
+.pay-card-icon{font-size:2.5rem;}
+.pay-card-label{font-weight:800;font-size:1rem;color:var(--ink);}
+.pay-or{text-align:center;font-size:.74rem;color:var(--ink3);font-weight:600;}
+.btn-cash{width:100%;padding:18px;border-radius:var(--r);background:#fff;border:2px solid var(--border);font-weight:800;font-size:1.05rem;color:var(--ink);cursor:pointer;}
+.btn-cash:hover{border-color:var(--yellow);background:#FFFBEF;}
+.btn-back-pay{padding:11px 24px;border-radius:var(--rsm);background:#fff;border:1.5px solid var(--border);font-size:.9rem;font-weight:700;color:var(--ink3);cursor:pointer;}
+/* COUNTER */
+#scr-counter{background:var(--bg);align-items:center;justify-content:center;flex-direction:column;gap:15px;text-align:center;padding:24px;}
+.counter-msg{font-weight:900;font-size:1.3rem;color:var(--ink);max-width:380px;line-height:1.4;}
+.receipt-chit{background:#fff;border-radius:var(--rlg);padding:36px 48px;max-width:340px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.1);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:7px;}
+.chit-top{font-size:1rem;color:var(--ink3);font-weight:600;}
+.chit-label{font-size:1.05rem;color:var(--ink2);text-decoration:underline;}
+.chit-num{font-size:4.5rem;font-weight:900;color:var(--ink);line-height:1;}
+/* THANK YOU */
+#scr-ty{background:var(--red);align-items:center;justify-content:center;flex-direction:column;gap:17px;text-align:center;padding:34px;}
+.ty-arch{width:100px;height:100px;border-radius:50%;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-size:3.5rem;font-weight:900;color:var(--red);}
+.ty-title{font-weight:900;font-size:clamp(2rem,5.5vw,3.2rem);color:#fff;line-height:1.1;}
+.ty-num{font-size:4rem;font-weight:900;color:var(--yellow);line-height:1;}
+.ty-sub{font-size:1.05rem;color:rgba(255,255,255,.78);max-width:320px;line-height:1.5;}
+.btn-ty-new{padding:16px 42px;border-radius:var(--rlg);background:var(--yellow);color:var(--ink);font-weight:800;font-size:1.1rem;border:none;cursor:pointer;}
+.btn-ty-new:hover{background:var(--yellow-h);}
+
+/* INGREDIENT CUSTOMISE */
+.ingr-panel{margin-top:16px;background:#fff;border-radius:var(--r);border:1px solid var(--border);padding:14px 16px;width:100%;max-width:500px;}
+.ingr-panel-title{font-weight:800;font-size:.82rem;color:var(--ink2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;}
+.ingr-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #F5F5F5;}
+.ingr-row:last-child{border-bottom:none;}
+.ingr-name{font-size:.88rem;font-weight:600;color:var(--ink);}
+.ingr-ctrl{display:flex;align-items:center;gap:6px;}
+.ingr-btn{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);background:#fff;font-size:1rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--ink2);transition:all .15s;}
+.ingr-btn:hover{border-color:var(--red);color:var(--red);}
+.ingr-qty{min-width:28px;text-align:center;font-weight:800;font-size:.9rem;color:var(--ink);}
+
+#toast{position:fixed;bottom:114px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:7px 14px;border-radius:var(--rf);font-size:.74rem;font-weight:700;border-left:3px solid var(--yellow);opacity:0;pointer-events:none;transition:opacity .2s;z-index:999;white-space:nowrap;}
+#toast.show{opacity:1;}
+
+/* ── iPAD PORTRAIT OPTIMISATION ──
+   Designed for 10.2–13 inch iPads held vertically.
+   Larger touch targets and fewer menu columns make product images and labels
+   easier for students to see and tap. */
+@media (orientation:portrait) and (min-width:700px){
+  .attract-bar{min-height:205px;padding:24px 32px;}
+  .attract-btns{width:min(360px,46vw);gap:16px;margin-right:28px;}
+  .btn-start-order{padding:22px 26px;min-height:78px;}
+  .btn-reach{min-height:62px;}
+  .attract-mym{width:190px;height:150px;}
+  .bso-t{font-size:1.3rem;}
+  .bso-s{font-size:.9rem;}
+
+  #menu-hdr{height:58px;padding:0 16px;}
+  .sm-m{width:34px;height:34px;font-size:1.1rem;}
+  .mhdr-brand{font-size:.9rem;}
+  .mhdr-sub{font-size:.6rem;}
+  .mhdr-mode{font-size:.76rem;padding:3px 9px;}
+  .mhdr-time{font-size:.65rem;}
+
+  #cat-sidebar{width:132px;}
+  .cat-btn{min-height:78px;padding:12px 6px;gap:6px;}
+  .cat-icon{font-size:1.7rem;}
+  .cat-label{font-size:.7rem;}
+  #menu-grid-area{padding:14px 14px 12px;}
+  .cat-heading{font-size:.78rem;margin-bottom:10px;padding-bottom:6px;}
+  .items-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:20px;}
+  .item-card{min-height:210px;}
+  .item-img-wrap{aspect-ratio:1;}
+  .item-info{padding:8px 8px 10px;gap:3px;}
+  .item-name{font-size:.72rem;line-height:1.28;}
+  .item-cal{font-size:.62rem;}
+  .item-price{font-size:.84rem;}
+  .item-emoji-pl{font-size:2.7rem;}
+
+  #menu-bottom{height:186px;}
+  .mb-r1{padding:10px 16px 7px;gap:13px;}
+  .mb-bag-icon{font-size:2.4rem;}
+  .mb-badge{width:21px;height:21px;font-size:.64rem;}
+  .mb-price{font-size:1.25rem;}
+  .btn-view-cart{padding:15px 27px;font-size:1.1rem;min-height:52px;margin-right:155px;}
+  .mb-r2{gap:11px;padding:6px 16px;padding-right:155px;}
+  .mb-act{padding:10px 20px;font-size:.9rem;min-height:47px;}
+  .mb-mym{right:10px;top:6px;width:136px;height:108px;}
+  .mb-r3{padding:5px 16px;font-size:.66rem;}
+
+  .dining-btns{gap:20px;}
+  .dining-btn{width:260px;min-height:190px;padding:28px 20px;}
+  .dining-btn-icon{font-size:3.8rem;}
+  .dining-btn-title{font-size:1.25rem;}
+  .dining-btn-sub{font-size:.9rem;}
+
+  .mc-body{gap:22px;padding:30px;}
+  .mc-opts{gap:18px;}
+  .mc-opt{width:250px;min-height:170px;padding:24px 16px;}
+  .mc-opt-icon{font-size:2.8rem;}
+  .mc-opt-title{font-size:.98rem;}
+  .mc-opt-price{font-size:.84rem;}
+  .btn-cancel-w{max-width:520px;min-height:48px;font-size:.9rem;}
+
+  .ms-body{gap:18px;padding:24px;}
+  .ms-title{font-size:1.25rem;}
+  .ms-opts{max-width:520px;gap:11px;}
+  .ms-opt{min-height:68px;padding:15px 20px;}
+  .ms-opt-title{font-size:.95rem;}
+  .ms-opt-desc{font-size:.75rem;}
+  .ms-opt-price{font-size:1rem;}
+
+  #build-sidebar{width:122px;}
+  .build-tab{min-height:70px;padding:11px 6px;font-size:.62rem;}
+  #build-content{padding:14px;}
+  .build-sec-title{font-size:1rem;margin-bottom:11px;}
+  .build-items{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  .build-item{min-height:150px;padding:10px 7px 11px;}
+  .build-item img{width:72px;height:72px;}
+  .build-item-emoji{font-size:2.1rem;}
+  .build-item-name{font-size:.68rem;}
+  #build-footer{min-height:108px;padding:18px 14px 32px;gap:11px;}
+  .bqc-btn{width:38px;height:38px;font-size:1rem;}
+  .bqc-num{font-size:1rem;min-width:24px;}
+  .btn-cancel-item,.btn-add-order{min-height:56px;font-size:.96rem;}
+
+  .upsell-item{width:160px;min-height:130px;padding:12px 8px;}
+  .upsell-emoji{font-size:2.5rem;}
+  .upsell-name{font-size:.72rem;}
+  .upsell-price{font-size:.76rem;}
+  .btn-no-thanks{min-height:48px;font-size:.9rem;}
+
+  .cart-body{padding:14px;}
+  .cart-item{padding:16px;margin-bottom:12px;}
+  .cart-item-name{font-size:1.05rem;}
+  .cart-item-detail{font-size:.86rem;}
+  .cart-item-price{font-size:1.05rem;}
+  .cart-footer{padding:20px 16px 48px;}
+  .btn-order-more,.btn-complete{min-height:60px;font-size:1.08rem;}
+
+  #scr-payment{padding-bottom:64px;}
+  .pay-title{font-size:1.65rem;}
+  .pay-methods{max-width:420px;gap:12px;}
+  .pay-card-btn{min-height:132px;padding:27px;}
+  .pay-card-label{font-size:1.14rem;}
+  .btn-cash{min-height:66px;font-size:1.12rem;}
+  .btn-back-pay{min-height:52px;font-size:.94rem;}
+
+  .counter-msg{font-size:1.45rem;max-width:520px;}
+  .receipt-chit{max-width:420px;padding:40px 50px;}
+
+  .ty-title{font-size:clamp(2.2rem,5vw,3.5rem);}
+  .ty-sub{font-size:1.1rem;}
+  .btn-ty-new{min-height:58px;padding:16px 48px;}
+
+  .ingr-panel{max-width:620px;}
+  .ingr-row{min-height:50px;}
+  .ingr-btn{width:38px;height:38px;}
+}
+@media (orientation:portrait) and (max-width:699px){
+  .items-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #cat-sidebar{width:104px;}
+  .cat-label{font-size:.58rem;}
+  .cat-icon{font-size:1.35rem;}
+}
+button,.item-card,.cat-btn,.build-item,.upsell-item,.dining-btn,.mc-opt,.ms-opt,.pay-card-btn{
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;
+}
+
+
+/* ── ACCURATE MEAL / REVIEW / CUSTOMISE FLOW (reference IMG_2793–2795) ── */
+#ingr-panel{display:none!important;}
+#scr-build .flow-hdr{background:#fff;border-bottom:1px solid var(--border);}
+#scr-build .flow-item-name{color:var(--ink);font-weight:800;}
+#scr-build .sm-m{color:#FFC72C;background:transparent;font-size:1.65rem;}
+#build-sidebar{width:132px!important;border-right:1px solid #d8d8d8!important;}
+.build-tab{min-height:78px!important;text-align:left!important;padding:14px 10px 14px 26px!important;font-size:.78rem!important;position:relative;border-left:5px solid transparent!important;}
+.build-tab.active{background:#fff!important;border-left-color:#FFC72C!important;font-weight:900!important;color:#202020!important;}
+.build-tab.done:before{content:'✓';position:absolute;left:7px;top:50%;transform:translateY(-50%);width:16px;height:16px;border:1.5px solid #555;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.64rem;}
+#build-content{background:#fff!important;padding:24px 24px 140px!important;}
+.build-sec-title{font-size:1.65rem!important;margin:0 0 18px!important;text-transform:none!important;letter-spacing:0!important;}
+.build-items{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;}
+.build-item{min-height:178px!important;border:1.5px solid #bdbdbd!important;border-radius:2px!important;padding:10px!important;box-shadow:none!important;background:#fff!important;}
+.build-item.selected{border:3px solid #FFC72C!important;background:#fffdf4!important;}
+.build-item img{height:102px!important;object-fit:contain!important;}
+.build-item-name{font-size:.73rem!important;font-weight:800!important;line-height:1.2!important;text-align:left!important;width:100%;}
+#build-footer{height:118px!important;padding:12px 20px!important;background:#fff!important;border-top:1px solid #d0d0d0!important;display:flex!important;align-items:center!important;gap:14px!important;}
+#build-footer .bqc{display:none!important;}
+#btn-add-order{background:#FFC72C!important;color:#222!important;font-size:1rem!important;min-height:62px!important;padding:14px 22px!important;}
+#btn-cancel-build{font-size:.95rem!important;min-height:62px!important;}
+
+/* Review screen */
+#scr-meal-review{background:#fff;flex-direction:column;overflow:hidden;}
+.mr-head{height:64px;display:flex;align-items:center;padding:0 24px;border-bottom:1px solid #e2e2e2;flex-shrink:0;}
+.mr-logo{font-size:2rem;color:#FFC72C;font-weight:900;margin-right:14px;}
+.mr-title-wrap{display:flex;flex-direction:column;}
+.mr-title{font-size:1.48rem;font-weight:900;line-height:1.1;color:#222;}
+.mr-price{font-size:.86rem;color:#555;margin-top:2px;}
+.mr-scroll{flex:1;overflow-y:auto;padding:26px 26px 160px;}
+.mr-hero{height:240px;position:relative;display:flex;align-items:center;justify-content:center;margin-bottom:18px;}
+.mr-arch{font-size:12rem;line-height:1;color:#FFC72C;font-weight:900;opacity:.88;position:absolute;z-index:0;}
+.mr-main-img{max-height:178px;max-width:250px;object-fit:contain;position:relative;z-index:2;filter:drop-shadow(0 10px 10px rgba(0,0,0,.15));}
+.mr-selected-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;max-width:760px;margin:0 auto;}
+.mr-part{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;min-width:0;}
+.mr-part-img{height:82px;width:100%;object-fit:contain;}
+.mr-part-label{font-size:.72rem;font-weight:800;line-height:1.15;min-height:32px;}
+.mr-part-sub{font-size:.66rem;color:#666;}
+.mr-small-btn{width:100%;min-height:38px;background:#fff;border:1.5px solid #999;border-radius:2px;font-weight:700;font-size:.72rem;cursor:pointer;}
+.mr-footer{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #d6d6d6;padding:12px 24px 18px;display:grid;grid-template-columns:1fr 1.65fr;gap:14px;z-index:10;}
+.mr-qty{grid-column:1 / -1;height:46px;border:1px solid #aaa;display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;text-align:center;font-weight:800;}
+.mr-qty button{height:100%;border:0;background:#fff;font-size:1.45rem;cursor:pointer;}
+.mr-cancel,.mr-add{min-height:62px;font-size:1rem;font-weight:800;border-radius:2px;cursor:pointer;}
+.mr-cancel{background:#fff;border:1.5px solid #999;}.mr-add{background:#FFC72C;border:1px solid #e3ad00;color:#222;}
+
+/* Customise screen */
+#scr-customise{background:#f8f8f8;flex-direction:column;overflow:hidden;}
+.cus-title{font-size:2rem;font-weight:900;text-align:center;padding:24px 18px 10px;}
+.cus-scroll{flex:1;overflow-y:auto;padding:12px 28px 170px;}
+.cus-item-card{max-width:650px;margin:0 auto 18px;background:#fff;border:1px solid #aaa;padding:20px;display:flex;align-items:center;gap:18px;}
+.cus-item-card img{width:92px;height:72px;object-fit:contain;}.cus-item-name{font-weight:900;font-size:1rem;}
+.cus-reset{max-width:650px;margin:0 auto 28px;background:#fff;border:1px solid #aaa;padding:18px;cursor:pointer;}
+.cus-reset b{display:block;margin-bottom:4px}.cus-reset span{font-size:.76rem;color:#666;}
+.cus-section{max-width:650px;margin:0 auto 18px;background:#fff;border:1px solid #aaa;}
+.cus-section h3{font-size:1rem;font-weight:500;padding:18px;margin:0;border-bottom:1px solid #aaa;}
+.cus-row{min-height:76px;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d7d7d7;gap:20px;}
+.cus-row:last-child{border-bottom:0}.cus-ing-name{font-size:.9rem;}.cus-ctrl{display:grid;grid-template-columns:38px 48px 38px;border:1px solid #aaa;height:38px;}
+.cus-ctrl button{border:0;background:#fff;font-size:1.2rem;cursor:pointer}.cus-ctrl span{display:flex;align-items:center;justify-content:center;border-left:1px solid #aaa;border-right:1px solid #aaa;font-weight:800;}
+.cus-footer{position:absolute;left:0;right:0;bottom:0;background:#fff;border-top:1px solid #ccc;padding:16px 24px 20px;display:grid;grid-template-columns:1fr 1.15fr;gap:14px;z-index:12;}
+.cus-footer button{min-height:64px;font-size:1rem;font-weight:800;border-radius:2px;cursor:pointer}.cus-cancel{background:#fff;border:1.5px solid #999}.cus-save{background:#FFC72C;border:1px solid #e3ad00;}
+@media (orientation:portrait) and (min-width:700px){
+  #build-sidebar{width:165px!important}.build-tab{font-size:.92rem!important;min-height:92px!important}.build-items{gap:16px!important}.build-item{min-height:210px!important}.build-item img{height:128px!important}.build-item-name{font-size:.86rem!important}.mr-scroll{padding-left:54px;padding-right:54px}.mr-selected-grid{gap:24px}.mr-part-img{height:104px}.mr-part-label{font-size:.84rem}.cus-scroll{padding-left:60px;padding-right:60px}
+}
+
+/* ── VISUAL REFINEMENT v103 — closer to kiosk references IMG_2793–2795 ── */
+#scr-build,#scr-meal-review,#scr-customise{font-family:Arial,Helvetica,sans-serif;color:#252525;background:#f7f7f5!important}
+#scr-build .flow-hdr{height:108px!important;padding:24px 54px 12px!important;border:0!important;align-items:flex-start!important;gap:28px!important}
+#scr-build .sm-m{font-size:2.2rem!important;line-height:1!important;margin-top:4px}
+#scr-build .flow-item-name{font-size:1.22rem!important;line-height:1.15!important;max-width:360px}
+#build-body{margin:0 48px 0!important;border:0!important;background:#f7f7f5!important;min-height:0!important}
+#build-sidebar{width:154px!important;background:#f7f7f5!important;border-right:1px solid #d3d3d3!important;padding-top:8px}
+.build-tab{min-height:82px!important;background:transparent!important;border-bottom:0!important;border-left:0!important;padding:16px 12px 16px 40px!important;font-size:.82rem!important;font-weight:500!important;line-height:1.25!important}
+.build-tab.active{border-left:6px solid #f3bd00!important;background:#f7f7f5!important;font-weight:800!important}
+.build-tab.done:before{left:14px!important;width:18px!important;height:18px!important;background:#f7f7f5}
+#build-content{background:#f7f7f5!important;padding:10px 22px 145px 30px!important}
+.build-sec-title{font-size:1.55rem!important;font-weight:800!important;margin:0 0 26px!important}
+.build-items{gap:13px!important}
+.build-item{min-height:190px!important;background:#fafafa!important;border:1px solid #aaa!important;padding:8px 9px 12px!important}
+.build-item.selected{border:2px solid #d7a900!important;box-shadow:inset 0 0 0 1px #f5ca24!important;background:#fff!important}
+.build-item img{height:108px!important;margin-bottom:5px!important}.build-item-name{font-size:.72rem!important;color:#222!important}
+#build-footer{height:132px!important;margin:0 48px!important;padding:14px 0 48px!important;background:#f7f7f5!important;border-top:0!important;gap:14px!important}
+#btn-cancel-build,#btn-add-order{height:54px!important;min-height:54px!important;border:1px solid #aaa!important;background:#f8f8f8!important;color:#333!important;font-size:.92rem!important;font-weight:500!important}
+#btn-add-order{background:#f4c400!important;border-color:#d8ad00!important;font-weight:700!important}
+/* Review: large title at upper left, airy hero, compact component strip */
+#scr-meal-review{padding:0 56px!important}
+.mr-head{height:auto!important;min-height:170px!important;padding:44px 0 12px!important;border:0!important;align-items:flex-start!important;gap:22px}
+.mr-logo{font-size:2.1rem!important;line-height:1;color:#e8b500!important;margin:4px 0 0!important}.mr-title-wrap{max-width:420px}.mr-title{font-size:2.45rem!important;line-height:1.05!important;letter-spacing:-.03em}.mr-price{font-size:1rem!important;margin-top:12px!important}
+.mr-scroll{padding:0 0 205px!important}.mr-hero{height:320px!important;margin:0 0 18px!important}.mr-arch{font-size:18rem!important;color:#e9b600!important;opacity:.92!important;transform:scaleX(1.12)}.mr-main-img{max-height:185px!important;max-width:270px!important;transform:translateY(52px)}
+.mr-selected-grid{max-width:none!important;grid-template-columns:repeat(3,1fr)!important;gap:26px!important;align-items:start}.mr-part-img{height:72px!important}.mr-part-label{font-size:.7rem!important;min-height:28px!important;text-align:left!important;width:100%}.mr-part-sub{font-size:.64rem!important;text-align:left!important;width:100%}.mr-small-btn{height:32px!important;min-height:32px!important;background:#f7f7f5!important;border:1px solid #999!important;font-size:.66rem!important;font-weight:500!important}
+.mr-footer{left:56px!important;right:56px!important;bottom:42px!important;background:#f7f7f5!important;border:0!important;padding:8px 0 0!important;grid-template-columns:1fr 1.75fr!important;gap:14px!important}.mr-qty{height:42px!important;background:#f7f7f5!important}.mr-cancel,.mr-add{min-height:54px!important;font-size:.98rem!important}.mr-add{background:#f4c400!important}
+/* Customise: centered title, thin grey outlined cards and spacious ingredient rows */
+#scr-customise{padding:0 46px!important}.cus-title{font-size:2.45rem!important;line-height:1!important;padding:52px 0 38px!important;letter-spacing:-.025em}.cus-scroll{padding:0 0 190px!important}.cus-item-card{max-width:none!important;margin:0 0 0!important;min-height:155px!important;padding:28px 42px!important;border:1px solid #9e9e9e!important;background:#fafafa!important;gap:34px!important}.cus-item-card img{width:100px!important;height:78px!important}.cus-item-name{font-size:.98rem!important}.cus-reset{display:block!important;max-width:none!important;width:calc(100% - 34px)!important;margin:-78px 17px 54px!important;position:relative!important;z-index:2!important;text-align:left!important;padding:17px 22px!important;border:1px solid #aaa!important;background:#fafafa!important}.cus-reset b{font-size:.82rem!important}.cus-reset span{font-size:.72rem!important}.cus-section{max-width:none!important;margin:0 17px 24px!important;background:#fafafa!important;border:1px solid #9f9f9f!important}.cus-section h3{font-size:1.08rem!important;padding:26px 22px!important;font-weight:400!important}.cus-row{min-height:92px!important;padding:14px 30px!important}.cus-ing-name{font-size:.86rem!important}.cus-ctrl{height:34px!important;grid-template-columns:34px 48px 34px!important}.cus-footer{left:46px!important;right:46px!important;bottom:44px!important;background:#f7f7f5!important;border:0!important;padding:12px 0 0!important;gap:16px!important}.cus-footer button{min-height:58px!important;font-size:1rem!important}.cus-save{background:#f4c400!important}
+/* subtle kiosk utility row seen at the bottom of all three reference screens */
+.ref-util{position:absolute;left:56px;right:56px;bottom:8px;height:28px;display:flex;align-items:center;gap:12px;font-size:.58rem;color:#555;z-index:20}.ref-util button{height:24px;min-width:150px;background:#f7f7f5;border:1px solid #aaa;font-size:.58rem;color:#555}.ref-util .points{margin-left:0;white-space:nowrap}
+@media (orientation:portrait) and (min-width:700px){#scr-build .flow-hdr{padding-left:70px!important;padding-right:70px!important}#build-body,#build-footer{margin-left:70px!important;margin-right:70px!important}#build-sidebar{width:172px!important}.build-item{min-height:215px!important}.build-item img{height:132px!important}#scr-meal-review{padding-left:70px!important;padding-right:70px!important}.mr-head{min-height:190px!important}.mr-hero{height:360px!important}.mr-arch{font-size:20rem!important}.mr-main-img{max-height:205px!important}.mr-footer{left:70px!important;right:70px!important}.mr-part-img{height:88px!important}#scr-customise{padding-left:62px!important;padding-right:62px!important}.cus-title{padding-top:58px!important}.cus-footer{left:62px!important;right:62px!important}.ref-util{left:70px;right:70px}}
+
+
+/* Minor visual polish requested after review */
+#scr-build .build-item{justify-content:flex-start!important;}
+#scr-build .build-item img{width:82px!important;height:132px!important;object-fit:contain!important;margin:0 auto 8px!important;}
+#scr-build .build-item-name{width:100%!important;min-height:36px!important;display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;}
+#scr-build .build-item-name .extra,#scr-build .build-item-name small{display:block!important;width:100%!important;text-align:center!important;}
+#scr-build .build-item.upsell-no-thanks img{width:82px!important;height:132px!important;}
+.mr-part-img{object-fit:contain!important;background:transparent!important;mix-blend-mode:multiply;}
+.mr-qty span,#mr-qty-num{background:#fff!important;}
+.cus-footer button{color:#252525!important;}
+
+
+/* v105 refinements requested: customisation reset position, unified review quantity bar */
+#scr-customise .cus-reset{
+  margin:18px 17px 54px!important;
+  position:relative!important;
+  z-index:1!important;
+}
+#scr-meal-review .mr-qty{
+  background:#fff!important;
+  border:1px solid #999!important;
+  overflow:hidden!important;
+}
+#scr-meal-review .mr-qty button,
+#scr-meal-review .mr-qty span,
+#scr-meal-review #mr-qty-num{
+  background:#fff!important;
+}
+#scr-meal-review #mr-qty-num{
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-left:1px solid #999!important;
+  border-right:1px solid #999!important;
+}
+
+
+/* v106 minor visual polish requested from IMG_6693 / IMG_6694 */
+/* Larger, more prominent product artwork on Sides / Drink / Value Buys selection. */
+#scr-build .build-item img{
+  width:150px!important;
+  height:146px!important;
+  max-width:92%!important;
+  object-fit:contain!important;
+  margin:0 auto 8px!important;
+}
+#scr-build .build-item{
+  justify-content:flex-start!important;
+  align-items:center!important;
+}
+#scr-build .build-item-name{
+  width:100%!important;
+  min-height:38px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+}
+/* Give the No thanks symbol the same artwork area/vertical baseline as the image cards. */
+#scr-build .build-item.upsell-no-thanks .build-item-emoji{
+  width:150px!important;
+  max-width:92%!important;
+  height:146px!important;
+  margin:0 auto 8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  font-size:3.35rem!important;
+  line-height:1!important;
+}
+#scr-build .build-item.upsell-no-thanks .build-item-name{
+  min-height:38px!important;
+}
+/* Keep the +$0.30 supplements centered beneath their item names. */
+#scr-build .build-item > div[style*="var(--red)"]{
+  width:100%!important;
+  text-align:center!important;
+}
+/* Review-page controls should use kiosk-style black text, not browser link-blue. */
+#scr-meal-review .mr-small-btn,
+#scr-meal-review .mr-qty button,
+#scr-meal-review .mr-cancel,
+#scr-meal-review #mr-minus,
+#scr-meal-review #mr-plus{
+  color:#222!important;
+  -webkit-text-fill-color:#222!important;
+}
+#scr-meal-review button:link,
+#scr-meal-review button:visited,
+#scr-meal-review button:hover,
+#scr-meal-review button:active{
+  color:#222!important;
+}
+
+</style>
+
+<style id="v110-sidebar-refinement">
+/* V110: slightly wider category sidebar so labels fit more comfortably */
+:root { --category-sidebar-width: 255px; }
+.menu-sidebar,
+.category-sidebar,
+.categories-sidebar,
+.sidebar.categories {
+  width: 255px !important;
+  min-width: 255px !important;
+  flex-basis: 255px !important;
+}
+.cat-btn {
+  width: 100% !important;
+}
+.cat-label {
+  line-height: 1.16 !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+</style>
+
+
+<style id="v112-refinements">
+/* V112: wider menu category sidebar */
+#cat-sidebar{
+  width:172px !important;
+  min-width:172px !important;
+  flex:0 0 172px !important;
+}
+.cat-btn{padding-left:10px !important;padding-right:10px !important;gap:10px !important;}
+.cat-label{font-size:.74rem !important;line-height:1.16 !important;}
+
+/* V112: Dining Location screen closer to supplied kiosk reference */
+#scr-dining{
+  background:#f7f7f5 !important;
+  justify-content:flex-start !important;
+  gap:0 !important;
+  padding-top:64px !important;
+}
+#scr-dining .big-m{
+  width:auto !important;height:auto !important;border-radius:0 !important;
+  background:transparent !important;color:#f2b900 !important;
+  font-size:3.1rem !important;font-weight:900 !important;line-height:1 !important;
+  margin-bottom:92px !important;
+}
+#scr-dining .dining-sub{
+  font-size:3.45rem !important;font-weight:800 !important;line-height:1 !important;
+  margin-bottom:86px !important;color:#222 !important;
+}
+#scr-dining .dining-btns{gap:20px !important;}
+#scr-dining .dining-btn{
+  width:310px !important;height:405px !important;padding:0 !important;
+  border:1.5px solid #999 !important;border-radius:3px !important;
+  box-shadow:none !important;background:#fff !important;overflow:hidden !important;
+  display:grid !important;grid-template-rows:108px 1fr 76px !important;gap:0 !important;
+}
+#scr-dining .dining-btn:hover{transform:none !important;background:#fff !important;border-color:#777 !important;}
+#scr-dining .dining-btn-title{
+  grid-row:1;align-self:end;padding-bottom:22px;
+  font-size:1.95rem !important;font-weight:400 !important;color:#222 !important;
+}
+#scr-dining .dining-btn-icon{
+  grid-row:2;width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  font-size:0 !important;
+}
+#scr-dining .dining-btn-sub{
+  grid-row:3;width:100%;height:100%;background:#e5e5e3;
+  font-size:0 !important;border-top:1px solid #ddd;
+}
+#scr-dining .dining-btn-icon svg{width:78%;height:78%;display:block;}
+@media (max-width:760px){
+  #scr-dining .dining-sub{font-size:2.8rem !important;margin-bottom:60px !important}
+  #scr-dining .dining-btn{width:270px !important;height:370px !important}
+}
+</style>
+
+
+<style id="v113-refinements">
+#scr-dining .dining-btn-icon img{
+  width:88% !important;height:88% !important;object-fit:contain !important;
+  display:block !important;margin:auto !important;
+}
+</style>
+
+
+<style id="v115-image-fixes">
+#scr-dining .dining-btn-icon{
+  overflow:hidden !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+#scr-dining .dining-btn-icon .dining-photo-icon{
+  display:block !important;
+  width:94% !important;
+  height:94% !important;
+  object-fit:contain !important;
+}
+</style>
+
+
+<style id="v119-drink-customisation">
+.drink-custom-control{margin-top:6px;padding-top:5px;border-top:1px solid #ddd;width:100%;}
+.drink-custom-label{font-size:.56rem;font-weight:700;color:var(--ink2);margin-bottom:4px;text-align:center;}
+.drink-custom-qty{display:flex;align-items:center;justify-content:center;gap:0;}
+.drink-custom-qty button,.drink-custom-qty span{
+  width:30px;height:25px;border:1px solid #aaa;background:#fff;color:#111;
+  display:flex;align-items:center;justify-content:center;font-size:.7rem;
+}
+.drink-custom-qty button{cursor:pointer;font-weight:800;}
+.drink-custom-qty span{border-left:0;border-right:0;width:38px;}
+</style>
+
+
+<style id="v120-eatin-collection">
+#scr-eatin-collection,#scr-tent-number{background:#f7f7f5;color:#222;align-items:center;justify-content:flex-start;}
+.eatcollect-wrap,.tent-wrap{width:100%;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;padding:56px 70px 42px;}
+.eatcollect-m{font-family:Arial,sans-serif;font-weight:800;font-size:1.55rem;color:#d7a900;margin:5px 0 42px;}
+.eatcollect-title,.tent-title{font-size:2rem;line-height:1.15;text-align:center;font-weight:800;margin:0 0 50px;color:#252525;}
+.eatcollect-options{display:flex;gap:18px;width:72%;justify-content:center;}
+.eatcollect-card{width:50%;height:345px;background:transparent;border:1px solid #9c9c9c;border-radius:2px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:48px 18px 25px;color:#222;}
+.eatcollect-card-title{font-size:1.35rem;line-height:1.2;min-height:66px;display:flex;align-items:center;justify-content:center;text-align:center;}
+.eatcollect-icon{margin-top:45px;position:relative;display:block;}
+.table-icon{width:78px;height:65px;border:5px solid #333;border-radius:50% 50% 42% 42%;}
+.table-icon:after{content:"";position:absolute;bottom:-12px;left:27px;width:18px;height:18px;background:#f7f7f5;border-left:5px solid #333;border-bottom:5px solid #333;transform:rotate(-45deg);}
+.table-m,.self-m{position:absolute;color:#d7a900;font-weight:800;font-size:1.05rem;left:50%;top:50%;transform:translate(-50%,-50%);}
+.self-icon{width:96px;height:55px;border:6px solid #333;margin-top:52px;}
+.eatcollect-back{margin-top:auto;width:72%;height:62px;background:#fff;border:1px solid #999;border-radius:3px;font-size:1.15rem;color:#222;}
+.tent-wrap{padding-top:55px;}
+.tent-title{margin-bottom:28px;}
+.tent-display{width:300px;height:68px;border:1px solid #999;background:#fff;border-radius:3px;font-size:2rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
+.tent-keypad{display:grid;grid-template-columns:repeat(3,92px);gap:10px;}
+.tent-keypad button{height:66px;background:#fff;border:1px solid #999;border-radius:3px;font-size:1.3rem;color:#222;}
+#tent-clear{font-size:.9rem;}
+.tent-actions{margin-top:auto;width:72%;display:flex;gap:16px;}
+.tent-back,.tent-confirm{height:62px;flex:1;border:1px solid #999;border-radius:3px;font-size:1.1rem;color:#222;}
+.tent-back{background:#fff;}
+.tent-confirm{background:#ffcc00;border-color:#d3a900;font-weight:700;}
+.tent-confirm:disabled{opacity:.45;}
+@media(max-width:700px){
+ .eatcollect-wrap,.tent-wrap{padding-left:35px;padding-right:35px}
+ .eatcollect-options,.eatcollect-back,.tent-actions{width:88%}
+}
+</style>
+
+
+<style id="v122-shopping-bag-image">
+.mb-bag-icon{width:48px;height:48px;display:flex;align-items:center;justify-content:center;overflow:visible;}
+.mb-bag-icon .mb-bag-photo{display:block;width:46px;height:46px;object-fit:contain;}
+@media(min-width:700px){.mb-bag-icon{width:52px;height:52px}.mb-bag-icon .mb-bag-photo{width:50px;height:50px}}
+</style>
+
+<style id="v123-added-bag">
+#scr-added .added-anim{width:92px;height:92px;display:flex!important;align-items:center;justify-content:center;position:relative;font-size:0!important;}
+#scr-added .added-bag-img{width:100%;height:100%;object-fit:contain;display:block;}
+#scr-added .added-tick{position:absolute;}
+</style>
+
+</head>
+<body>
+
+<!-- ATTRACT -->
+<div class="screen active" id="scr-attract">
+  <div class="attract-ad">
+    <img id="attract-feature-img" alt="Featured" onerror="this.parentElement.style.background='#DA291C'">
+    <div class="attract-overlay"></div>
+    <div class="attract-copy"><h2>McSpicy&#174;<br>Always Fiery. Always Fresh.</h2><p>Available now at McDonald's&#174; Singapore</p></div>
+  </div>
+  <div class="attract-bar">
+    <div class="attract-btns">
+      <button class="btn-start-order" id="btn-start-order">
+        <div class="bso-t">Start Order</div>
+        <div class="bso-s">to get deliciousness</div>
+      </button>
+      <button class="btn-reach">Reach Mode</button>
+    </div>
+    <div class="attract-mym">
+      <div class="mym-logo">MyM</div>
+      <div class="mym-t1">Scan or tap for</div>
+      <div class="mym-t2">McDonald's Rewards and more</div>
+      <div class="mym-arr">&#8595;</div>
+    </div>
+  </div>
+</div>
+
+<!-- DINING LOCATION -->
+<div class="screen" id="scr-dining">
+  <div class="big-m">M</div>
+  <div class="dining-sub">Dining Location</div>
+  <div class="dining-btns">
+    <button class="dining-btn" id="btn-eatin">
+      <span class="dining-btn-icon"><img class="dining-photo-icon" src="images/image_1.jpg" alt="Dine In"></span>
+      <span class="dining-btn-title">Eat In</span>
+      <span class="dining-btn-sub">Dine with us</span>
+    </button>
+    <button class="dining-btn" id="btn-takeout">
+      <span class="dining-btn-icon"><img class="dining-photo-icon" src="images/image_2.jpg" alt="Take Out"></span>
+      <span class="dining-btn-title">Take Out</span>
+      <span class="dining-btn-sub">Order to go</span>
+    </button>
+  </div>
+</div>
+
+<!-- MAIN MENU -->
+<div class="screen" id="scr-menu">
+  <div id="menu-hdr">
+    <div class="mhdr-l">
+      <div class="sm-m">M</div>
+      <div><div class="mhdr-brand">McDonald's&#174; Singapore</div><div class="mhdr-sub">Self-Order Kiosk</div></div>
+    </div>
+    <div style="text-align:right">
+      <div class="mhdr-mode" id="hdr-mode">Eat In</div>
+      <div class="mhdr-time" id="hdr-time"></div>
+    </div>
+  </div>
+  <div id="menu-body">
+    <div id="cat-sidebar">
+      
+      <button class="cat-btn" data-cat="new"><span class="cat-icon"><img src="images/image_3.jpg" alt="What&#x27;s New"></span><span class="cat-label">What's New</span></button>
+      <button class="cat-btn" data-cat="burgers"><span class="cat-icon"><img src="images/image_4.png" alt="Burgers"></span><span class="cat-label">Burgers</span></button>
+      <button class="cat-btn" data-cat="doubleprotein"><span class="cat-icon"><img src="images/image_5.png" alt="Double Protein"></span><span class="cat-label">Double Protein</span></button>
+      <button class="cat-btn" data-cat="mcsaver"><span class="cat-icon"><img src="images/image_6.jpg" alt="McSaver Meals"></span><span class="cat-label">McSaver&#8482;<br>Meals</span></button>
+      <button class="cat-btn" data-cat="mcwraps"><span class="cat-icon"><img src="images/image_7.jpg" alt="McWraps &amp; Eat Light"></span><span class="cat-label">McWraps&#174; &amp;<br>Eat Light</span></button>
+      <button class="cat-btn" data-cat="nuggets"><span class="cat-icon"><img src="images/image_8.png" alt="McNuggets &amp; McWings"></span><span class="cat-label">McNuggets&#174; &amp;<br>McWings&#174;</span></button>
+      <button class="cat-btn" data-cat="mccrispy"><span class="cat-icon"><img src="images/image_9.jpg" alt="Chicken McCrispy"></span><span class="cat-label">Chicken<br>McCrispy&#174;</span></button>
+      <button class="cat-btn" data-cat="sharing"><span class="cat-icon"><img src="images/image_10.png" alt="Sharing"></span><span class="cat-label">Sharing</span></button>
+      <button class="cat-btn" data-cat="family"><span class="cat-icon"><img src="images/image_11.jpg" alt="Happy Meal and Family Meal"></span><span class="cat-label">Happy Meal&#174;<br>and Family Meal</span></button>
+      <button class="cat-btn" data-cat="sides"><span class="cat-icon"><img src="images/image_12.png" alt="Pies, Fries &amp; Sides"></span><span class="cat-label">Pies, Fries &amp;<br>Sides</span></button>
+      <button class="cat-btn" data-cat="desserts"><span class="cat-icon"><img src="images/image_13.png" alt="Desserts"></span><span class="cat-label">Desserts</span></button>
+      <button class="cat-btn" data-cat="mccafe"><span class="cat-icon"><img src="images/image_14.png" alt="McCafé Drinks & Frappé"></span><span class="cat-label">McCaf&#233; Drinks<br>&amp; Frapp&#233;</span></button>
+      <button class="cat-btn" data-cat="drinks"><span class="cat-icon"><img src="images/image_15.png" alt="Drinks"></span><span class="cat-label">Drinks</span></button>
+      <button class="cat-btn" data-cat="sauces"><span class="cat-icon"><img src="images/image_16.jpg" alt="Sauces & Condiments"></span><span class="cat-label">Sauces &amp;<br>Condiments</span></button>
+    </div>
+    <div id="menu-grid-area"><div id="menu-grid"></div></div>
+  </div>
+  <div id="menu-bottom">
+    <div class="mb-r1">
+      <div class="mb-bag"><div class="mb-bag-icon"><img class="mb-bag-photo" src="images/image_17.jpg" alt="Shopping bag"></div><div class="mb-badge" id="mb-badge">0</div></div>
+      <div class="mb-price" id="mb-price">$0.00</div>
+      <div class="mb-spacer"></div>
+      <button class="btn-view-cart" id="btn-view-cart" disabled>View Cart / Check Out</button>
+    </div>
+    <div class="mb-r2">
+      <button class="mb-act" id="btn-start-over">Start Over</button>
+      <button class="mb-act">Reach Mode</button>
+      <div class="mb-mym"><div class="mb-mym-logo">MyM</div><div class="mb-mym-t1">Want to earn points?</div><div class="mb-mym-t2">Scan here</div><div class="mb-mym-arr">&#8595;</div></div>
+    </div>
+    <div class="mb-r3">MyM Rewards members earn 10 points for every $1 spent</div>
+  </div>
+</div>
+
+<!-- MEAL CHOICE -->
+<div class="screen" id="scr-meal-choice">
+  <div class="flow-hdr"><div class="sm-m">M</div><div class="flow-item-name" id="mc-item-name">Big Mac&#174;</div></div>
+  <div class="mc-body">
+    <div class="mc-q">Would you like to make it a Meal?</div>
+    <div class="mc-opts">
+      <button class="mc-opt" id="btn-yes-meal">
+        <span class="mc-opt-icon">&#127828;&#127839;&#129380;</span>
+        <span class="mc-opt-title">Yes, Make It a Meal</span>
+        <span class="mc-opt-price" id="mc-meal-from">from +$3.70</span>
+      </button>
+      <button class="mc-opt" id="btn-no-meal">
+        <span class="mc-opt-icon">&#127828;</span>
+        <span class="mc-opt-title">No, just this item</span>
+        <span class="mc-opt-price" id="mc-alacarte-price">$8.50</span>
+      </button>
+    </div>
+    <div class="ingr-panel" id="ingr-panel" style="display:none">
+      <div class="ingr-panel-title">Customise Ingredients</div>
+      <div id="ingr-list"></div>
+    </div>
+    <button class="btn-cancel-w" id="btn-cancel-mc">Cancel</button>
+  </div>
+</div>
+
+<!-- MEAL SIZE -->
+<div class="screen" id="scr-meal-size">
+  <div class="flow-hdr"><div class="sm-m">M</div><div class="flow-item-name" id="ms-item-name">Big Mac&#174;</div></div>
+  <div class="ms-body">
+    <div class="ms-title">Choose your Meal size</div>
+    <div class="ms-opts" id="ms-opts"></div>
+    <button class="btn-cancel-w" id="btn-cancel-ms">Cancel</button>
+  </div>
+</div>
+
+<!-- BUILD MEAL -->
+<div class="screen" id="scr-build">
+  <div class="flow-hdr"><div class="sm-m">M</div><div class="flow-item-name" id="build-item-name">Big Mac&#174; Meal</div></div>
+  <div id="build-body">
+    <div id="build-sidebar"></div>
+    <div id="build-content"></div>
+  </div>
+  <div id="build-footer">
+    <div class="bqc">
+      <button class="bqc-btn" id="bqc-minus">&#8722;</button>
+      <span class="bqc-num" id="build-qty">1</span>
+      <button class="bqc-btn" id="bqc-plus">&#43;</button>
+    </div>
+    <button class="btn-cancel-item" id="btn-cancel-build">Cancel Item</button>
+    <button class="btn-add-order" id="btn-add-order">Review Meal &#8212; <span id="build-price-disp">$0.00</span></button>
+  </div>
+  <div class="ref-util"><button type="button">Start Over</button><button type="button">♿ &nbsp; Reach Mode</button><span class="points">MyM Rewards members earn 10 points for every $1 spent</span></div>
+</div>
+
+
+<!-- ACCURATE MEAL REVIEW -->
+<div class="screen" id="scr-meal-review">
+  <div class="mr-head"><div class="mr-logo">M</div><div class="mr-title-wrap"><div class="mr-title" id="mr-title">Meal</div><div class="mr-price" id="mr-price">$0.00</div></div></div>
+  <div class="mr-scroll">
+    <div class="mr-hero"><div class="mr-arch">M</div><img id="mr-main-img" class="mr-main-img" alt="Main item"></div>
+    <div class="mr-selected-grid" id="mr-selected-grid"></div>
+  </div>
+  <div class="mr-footer">
+    <div class="mr-qty"><button id="mr-minus">−</button><span id="mr-qty-num">1</span><button id="mr-plus">+</button></div>
+    <button class="mr-cancel" id="mr-cancel">Cancel Item</button>
+    <button class="mr-add" id="mr-add">Add To Order</button>
+  </div>
+  <div class="ref-util"><button type="button">Start Over</button><button type="button">♿ &nbsp; Reach Mode</button><span class="points">MyM Rewards members earn 10 points for every $1 spent</span></div>
+</div>
+
+<!-- ACCURATE INGREDIENT CUSTOMISATION -->
+<div class="screen" id="scr-customise">
+  <div class="cus-title">Customise</div>
+  <div class="cus-scroll">
+    <div class="cus-item-card"><img id="cus-main-img" alt="Item"><div class="cus-item-name" id="cus-item-name"></div></div>
+    <button class="cus-reset" id="cus-reset"><b>Reset Changes</b><span>Clear any changes you've made</span></button>
+    <div class="cus-section"><h3>Comes With</h3><div id="cus-comes-with"></div></div>
+  </div>
+  <div class="cus-footer"><button class="cus-cancel" id="cus-cancel">Cancel Changes</button><button class="cus-save" id="cus-save">Save Changes</button></div>
+  <div class="ref-util"><button type="button">Start Over</button><button type="button">♿ &nbsp; Reach Mode</button><span class="points">MyM Rewards members earn 10 points for every $1 spent</span></div>
+</div>
+
+<!-- ITEM ADDED -->
+<div class="screen" id="scr-added">
+  <div class="added-card">
+    <div class="added-anim"><img class="added-bag-img" src="images/image_18.jpg" alt="Shopping bag"><div class="added-tick">&#10003;</div></div>
+    <div class="added-title">Item Added!</div>
+    <div class="added-sub">Your cart has been updated.</div>
+    <div class="added-price" id="added-price">$9.80</div>
+  </div>
+</div>
+
+<!-- UPSELL -->
+<div class="screen" id="scr-upsell">
+  <div class="upsell-title">Satisfy your Cravings &#128523;</div>
+  <div class="upsell-items" id="upsell-items"></div>
+  <div class="upsell-footer"><button class="btn-no-thanks" id="btn-no-thanks">No Thanks</button></div>
+</div>
+
+<!-- CART -->
+<div class="screen" id="scr-cart">
+  <div class="cart-hdr"><div style="font-size:1.4rem">&#128717;</div><div class="cart-hdr-title">Your Order</div></div>
+  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-footer">
+    <div class="cart-totals">
+      <div class="cart-row"><span>Sub Total</span><span id="ct-sub">$0.00</span></div>
+      <div class="cart-row"><span>Tax (GST 9%)</span><span id="ct-gst">$0.00</span></div>
+      <div class="cart-row total"><span>Total</span><span id="ct-total">$0.00</span></div>
+    </div>
+    <div class="cart-btns">
+      <button class="btn-order-more" id="btn-order-more">Order More</button>
+      <button class="btn-complete" id="btn-complete">Complete Order</button>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT -->
+<div class="screen" id="scr-payment">
+  <div class="big-m">M</div>
+  <div class="pay-title">How would you like to pay?</div>
+  <div class="pay-methods">
+    <button class="pay-card-btn" id="btn-pay-card"><span class="pay-card-icon">&#128179;&#128241;</span><span class="pay-card-label">Card &amp; Mobile Payment</span></button>
+    <div class="pay-or">Or</div>
+    <button class="btn-cash" id="btn-pay-cash">Cash &amp; Vouchers Payment</button>
+    <button class="btn-back-pay" id="btn-back-pay">Back</button>
+  </div>
+</div>
+
+
+<!-- EAT IN COLLECTION METHOD -->
+<div class="screen" id="scr-eatin-collection">
+  <div class="eatcollect-wrap">
+    <div class="eatcollect-m">M</div>
+    <h2 class="eatcollect-title">Would you like table<br>service or self-collect?</h2>
+    <div class="eatcollect-options">
+      <button class="eatcollect-card" id="btn-table-service">
+        <span class="eatcollect-card-title">Table Service</span>
+        <span class="eatcollect-icon table-icon"><span class="table-m">M</span></span>
+      </button>
+      <button class="eatcollect-card" id="btn-self-collect">
+        <span class="eatcollect-card-title">I'll collect it<br>myself</span>
+        <span class="eatcollect-icon self-icon"><span class="self-m">M</span></span>
+      </button>
+    </div>
+    <button class="eatcollect-back" id="btn-eatcollect-back">Back</button>
+  </div>
+</div>
+
+<!-- TABLE SERVICE TENT NUMBER -->
+<div class="screen" id="scr-tent-number">
+  <div class="tent-wrap">
+    <div class="eatcollect-m">M</div>
+    <h2 class="tent-title">Please key in your tent number</h2>
+    <div class="tent-display" id="tent-display">—</div>
+    <div class="tent-keypad">
+      <button data-tent="1">1</button><button data-tent="2">2</button><button data-tent="3">3</button>
+      <button data-tent="4">4</button><button data-tent="5">5</button><button data-tent="6">6</button>
+      <button data-tent="7">7</button><button data-tent="8">8</button><button data-tent="9">9</button>
+      <button id="tent-clear">Clear</button><button data-tent="0">0</button><button id="tent-delete">⌫</button>
+    </div>
+    <div class="tent-actions">
+      <button class="tent-back" id="btn-tent-back">Back</button>
+      <button class="tent-confirm" id="btn-tent-confirm" disabled>Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- COUNTER -->
+<div class="screen" id="scr-counter">
+  <div class="big-m">M</div>
+  <div class="counter-msg" id="counter-msg">Please proceed to the Front Counter to complete your payment</div>
+  <div class="receipt-chit" id="receipt-chit">
+    <div class="chit-top">Your Order No. is</div>
+    <div class="chit-label">No</div>
+    <div class="chit-num" id="chit-num">#42</div>
+  </div>
+</div>
+
+<!-- THANK YOU -->
+<div class="screen" id="scr-ty">
+  <div class="ty-arch">M</div>
+  <h2 class="ty-title">Thank You!<br>Enjoy your meal! &#128522;</h2>
+  <div class="ty-num" id="ty-num">#42</div>
+  <p class="ty-sub">Your order is being prepared.<br>Please collect when your number is called.</p>
+  <button class="btn-ty-new" id="btn-ty-new">&#127828; New Order</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+
+/* OFFLINE BUILD: supplied menu images are embedded directly in this HTML file. No external image, font, or CDN request is required. */
+
+/* ── DATA ── */
+const EMBEDDED_IMAGES={
+  barbeque_sauce:"images/image_19.png",
+  plain_sundae:"images/image_20.jpg",
+
+  mccafe_premium_roast:"images/image_21.png",
+  mccafe_iced_americano:"images/image_22.png",
+  mccafe_americano:"images/image_23.png",
+  mccafe_cappuccino:"images/image_24.png",
+  mccafe_latte:"images/image_25.png",
+  mccafe_iced_latte:"images/image_26.png",
+  mocha_frappe:"images/image_27.png",
+  caramel_frappe:"images/image_28.png",
+  double_chocolate_frappe:"images/image_29.png",
+  kiyo_grape:"images/image_30.png",
+  oatside_original:"images/image_31.png",
+  oatside_chocolate:"images/image_32.png",
+  curry_sauce:"images/image_33.png",
+  honey_mustard_sauce:"images/image_34.png",
+  roasted_sesame_dressing:"images/image_35.png",
+  triplecheese:"images/image_36.png",
+  qpc:"images/image_37.png",
+  dqpc:"images/image_38.png",
+  cheeseburger:"images/image_39.png",
+  dblcheese:"images/image_40.png",
+  mccrispy:"images/image_41.png",
+  dblmccrispy:"images/image_42.png",
+  mcspicy:"images/image_43.png",
+  dblmcspicy:"images/image_44.png",
+  dblmcspicycheese:"images/image_45.png",
+  mcspicycheese:"images/image_46.png",
+  fof:"images/image_47.png",
+  hamburger:"images/image_48.png",
+  mcchicken:"images/image_49.png",
+  dblfof:"images/image_50.png",
+  mcchickencheese:"images/image_51.png",
+  buttermilk:"images/image_52.png",
+  bigmac:"images/image_53.png",
+  mccrispysig2:"images/image_54.png",
+  mccrispyspicy2:"images/image_55.png",
+  mccrispysig6:"images/image_56.png",
+  mccrispyspicy6:"images/image_57.png",
+  mccrispymix6:"images/image_58.png",
+  mccrispysig6bundle:"images/image_59.png",
+  mccrispyspicy6bundle:"images/image_60.png",
+  mccrispymix6bundle:"images/image_61.png",
+  nuggets6:"images/image_62.png",
+  nuggets9:"images/image_63.png",
+  nuggets20:"images/image_64.png",
+  mcwings2:"images/image_65.png",
+  mcwings4:"images/image_66.png",
+  gardensalad:"images/image_67.jpg",
+  buttermilksalad:"images/image_68.jpg",
+  buttermilkwrap:"images/image_69.jpg",
+  spicywrap:"images/image_70.png",
+  happysnacks:"images/image_71.png",
+  happycombo:"images/image_72.png",
+  happyboxa:"images/image_73.png",
+  happyboxb:"images/image_74.png",
+  cheeseburgerhappy:"images/image_75.png",
+  happy_nug4:"images/image_76.png",
+  fm_cb:"images/image_77.png",
+  fm_nug:"images/image_78.png",
+  hamburger_salad_water:"images/image_79.png",
+  cheeseburger_corn_water:"images/image_80.png",
+  fof_corn_water:"images/image_81.png",
+  fof_salad_water:"images/image_82.png",
+  mcchicken_corn_water:"images/image_83.png",
+  mcchicken_salad_water:"images/image_84.png",
+  fries_s:"images/image_85.png",
+  fries_m:"images/image_86.jpg",
+  fries_l:"images/image_87.jpg",
+  corn_jr:"images/image_88.png",
+  corn:"images/image_89.png",
+  applepie:"images/image_90.png",
+  vanilla_cone:"images/image_91.png",
+  strawberry_cone:"images/image_92.png",
+  chococone:"images/image_93.png",
+  strawberry_chococone:"images/image_94.png",
+  hot_fudge_sundae:"images/image_95.png",
+  strawberry_sundae:"images/image_96.png",
+  strawberry_hot_fudge_sundae:"images/image_97.png",
+  strawberry_bliss_sundae:"images/image_98.png",
+  oreo_mcflurry:"images/image_99.png",
+  strawberry_oreo_mcflurry:"images/image_100.png",
+  ice_mountain:"images/image_101.png",
+  coke_less_s:"images/image_102.png",
+  coke_less_m:"images/image_103.png",
+  coke_less_l:"images/image_104.png",
+  coke_zero_s:"images/image_105.png",
+  coke_zero_m:"images/image_106.png",
+  coke_zero_l:"images/image_107.png",
+  sprite_s:"images/image_108.png",
+  sprite_m:"images/image_109.png",
+  sprite_l:"images/image_110.png",
+  milo_s:"images/image_111.png",
+  milo_m:"images/image_112.png",
+  jasmine_s:"images/image_113.png",
+  jasmine_m:"images/image_114.png",
+  jasmine_l:"images/image_115.png",
+  iced_lemon_tea_s:"images/image_116.png",
+  lowfat_milk:"images/image_117.png",
+  hot_milo:"images/image_118.png",
+  hot_tea:"images/image_119.png",
+  dblmcspicycheese113:"images/image_120.jpg",
+  smokybeef113:"images/image_121.png"
+};
+function resolveImgSrc(key){
+  return EMBEDDED_IMAGES[key]||null;
+}
+
+const MEAL_OPTS=[
+  {label:'Meal',desc:'Regular Fries + Regular Drink',extra:3.70},
+  {label:'Upsized Meal',desc:'Large Fries + Large Drink',extra:4.50},
+];
+const MEAL_OPTS_FEAST=[
+  {label:'Meal',desc:'Regular Fries + Regular Drink',extra:3.70},
+  {label:'Upsized Meal',desc:'Large Fries + Large Drink',extra:4.50},
+  {label:'Feast',desc:'2 Large Fries + 2 Large Drinks',extra:7.50},
+];
+
+const BUILD_TABS={
+  sides:{label:'Sides',items:[
+    {name:'Medium French Fries',emoji:'\u{1F35F}',imgKey:'fries_m'},
+    {name:'Corn',emoji:'\u{1F33D}',imgKey:'corn'},
+    {name:'Garden Side Salad',emoji:'\u{1F957}',imgKey:'gardensalad'},
+  ]},
+  drink:{label:'Drink',items:[
+    {name:'McCafé Iced Latte (No Sugar)',emoji:'☕',imgKey:'mccafe_iced_latte',extra:1.50,custom:{name:'Sugar Syrup',min:0,max:1,qty:0}},
+    {name:'McCafé Iced Americano (No Sugar)',emoji:'☕',imgKey:'mccafe_iced_americano',extra:0.80,custom:{name:'Sugar Syrup',min:0,max:1,qty:0}},
+    {name:'Coke Zero Sugar Small',emoji:'🥤',imgKey:'coke_zero_s'},
+    {name:'Coke Zero Sugar Medium',emoji:'🥤',imgKey:'coke_zero_m',extra:0.70},
+    {name:'Coke Zero Sugar Large',emoji:'🥤',imgKey:'coke_zero_l',extra:1.65},
+    {name:'Coke Original Taste Less Sugar Small',emoji:'🥤',imgKey:'coke_less_s'},
+    {name:'Coke Original Taste Less Sugar Medium',emoji:'🥤',imgKey:'coke_less_m',extra:0.70},
+    {name:'Coke Original Taste Less Sugar Large',emoji:'🥤',imgKey:'coke_less_l',extra:1.65},
+    {name:'Sprite Small',emoji:'🥤',imgKey:'sprite_s'},
+    {name:'Sprite Medium',emoji:'🥤',imgKey:'sprite_m',extra:0.70},
+    {name:'Sprite Large',emoji:'🥤',imgKey:'sprite_l',extra:1.65},
+    {name:'Fuze Tea Iced Lemon Tea Small',emoji:'🍵',imgKey:'iced_lemon_tea_s',extra:1.00},
+    {name:'Fuze Tea Iced Lemon Tea Medium',emoji:'🍵',imgKey:'iced_lemon_tea_s',extra:1.30},
+    {name:'Fuze Tea Iced Lemon Tea Large',emoji:'🍵',imgKey:'iced_lemon_tea_s',extra:1.50},
+    {name:'Canned Green Tea',emoji:'🍵',imgKey:'jasmine_m',extra:1.10,displayExtra:1.00,note:'Bottle deposit +$0.10'},
+    {name:'Iced Milo Small',emoji:'🥛',imgKey:'milo_s',extra:1.00},
+    {name:'Iced Milo Medium',emoji:'🥛',imgKey:'milo_m',extra:1.65},
+    {name:'Mocha Frappe Medium',emoji:'🧋',imgKey:'mocha_frappe',extra:2.05},
+    {name:'Double Chocolate Frappe Medium',emoji:'🧋',imgKey:'double_chocolate_frappe',extra:2.05},
+    {name:'Low-fat High-Calcium Milk',emoji:'🥛',imgKey:'lowfat_milk'},
+    {name:'Oatside Chocolate Flavoured Oatmilk',emoji:'🥛',imgKey:'oatside_chocolate'},
+    {name:'Oatside Original Flavoured Oatmilk',emoji:'🥛',imgKey:'oatside_original'},
+    {name:'Kiyoshi Grape Juice',emoji:'🧃',imgKey:'kiyo_grape'},
+    {name:'Ice Mountain Drinking Water',emoji:'💧',imgKey:'ice_mountain',extra:0.10,displayExtra:0.00,note:'Bottle deposit +$0.10'}
+  ]},
+  value:{label:'Value Buys',items:[
+    {name:'Apple Pie',emoji:'\u{1F967}',imgKey:'applepie'},
+    {name:'Vanilla Cone',emoji:'\u{1F366}',imgKey:'vanilla_cone'},
+    {name:'No thanks',emoji:'\u{1F6AB}',imgKey:null},
+  ]},
+};
+
+const MENU={
+  new:[
+    {id:'n1',cat:'new',name:'Double McSpicy\u00AE with Cheese',price:10.80,cal:650,imgKey:'dblmcspicycheese',emoji:'\u{1F336}\uFE0F',meal:true,mealOpts:'feast'},
+    {id:'n2',cat:'new',name:'Strawberry Bliss Sundae',price:2.80,cal:295,imgKey:'strawberry_bliss_sundae',emoji:'\u{1F353}',meal:false},
+    {id:'n3',cat:'new',name:'Caramel Frapp\u00E9',price:6.50,cal:370,imgKey:'caramel_frappe',emoji:'\u{1F9CB}',meal:false},
+  ],
+  'happy-treats':[
+    {id:'ht1',cat:'happy-treats',name:'Iced MILO® Junior',price:2.00,cal:null,imgKey:'milo_s',emoji:'\u{1F95B}',meal:false},
+    {id:'ht2',cat:'happy-treats',name:'Plain Sundae',price:2.00,cal:null,imgKey:'plain_sundae',emoji:'\u{1F368}',meal:false},
+    {id:'ht3',cat:'happy-treats',name:'French Fries (Small)',price:2.00,cal:224,imgKey:'fries_s',emoji:'\u{1F35F}',meal:false},
+    {id:'ht4',cat:'happy-treats',name:'Corn',price:2.00,cal:null,imgKey:'corn',emoji:'\u{1F33D}',meal:false},
+  ],
+  burgers:[
+    {id:'b1',cat:'burgers',name:'Big Mac\u00AE',price:7.45,cal:558,imgKey:'bigmac',emoji:'\u{1F354}',meal:true,mealOpts:'feast'},
+    {id:'b2',cat:'burgers',name:'Quarter Pounder\u00AE with Cheese',price:7.45,cal:590,imgKey:'qpc',emoji:'\u{1F354}',meal:true,mealOpts:'feast'},
+    {id:'b3',cat:'burgers',name:'Double Quarter Pounder\u00AE',price:9.10,cal:770,imgKey:'dqpc',emoji:'\u{1F354}',meal:true,mealOpts:'feast'},
+    {id:'b4',cat:'burgers',name:'Triple Cheeseburger',price:7.35,cal:610,imgKey:'triplecheese',emoji:'\u{1F354}',meal:true,mealOpts:'standard'},
+    {id:'b5',cat:'burgers',name:'Double Cheeseburger',price:5.65,cal:460,imgKey:'dblcheese',emoji:'\u{1F354}',meal:true,mealOpts:'standard'},
+    {id:'b6',cat:'burgers',name:'Cheeseburger',price:3.85,cal:310,imgKey:'cheeseburger',emoji:'\u{1F354}',meal:true,mealOpts:'standard'},
+    {id:'b7',cat:'burgers',name:'Hamburger',price:2.70,cal:253,imgKey:'hamburger',emoji:'\u{1F354}',meal:true,mealOpts:'standard'},
+    {id:'b8',cat:'burgers',name:'McSpicy\u00AE',price:7.30,cal:541,imgKey:'mcspicy',emoji:'\u{1F336}\uFE0F',meal:true,mealOpts:'feast'},
+    {id:'b9',cat:'burgers',name:'Double McSpicy\u00AE',price:8.55,cal:720,imgKey:'dblmcspicy',emoji:'\u{1F336}\uFE0F',meal:true,mealOpts:'feast'},
+    {id:'b9a',cat:'burgers',name:'Double McSpicy\u00AE with Cheese',price:9.85,cal:null,imgKey:'dblmcspicycheese113',emoji:'\u{1F336}\uFE0F',meal:true,mealOpts:'feast'},
+    {id:'b9b',cat:'burgers',name:'Smoky Beef',price:4.70,cal:null,imgKey:'smokybeef113',emoji:'\u{1F354}',meal:true,mealOpts:'feast'},
+    {id:'b9c',cat:'burgers',name:'McSpicy\u00AE with Cheese',price:8.70,cal:591,imgKey:'mcspicycheese',emoji:'\u{1F336}\uFE0F',meal:true,mealOpts:'feast'},
+    {id:'b10',cat:'burgers',name:'McCrispy\u00AE',price:7.50,cal:480,imgKey:'mccrispy',emoji:'\u{1F357}',meal:true,mealOpts:'feast'},
+    {id:'b11',cat:'burgers',name:'Double McCrispy\u00AE',price:9.25,cal:670,imgKey:'dblmccrispy',emoji:'\u{1F357}',meal:true,mealOpts:'feast'},
+    {id:'b12',cat:'burgers',name:'Filet-O-Fish\u00AE',price:4.75,cal:348,imgKey:'fof',emoji:'\u{1F41F}',meal:true,mealOpts:'standard'},
+    {id:'b13',cat:'burgers',name:'Double Filet-O-Fish\u00AE',price:7.25,cal:498,imgKey:'dblfof',emoji:'\u{1F41F}',meal:true,mealOpts:'standard'},
+    {id:'b14',cat:'burgers',name:'McChicken\u00AE',price:3.55,cal:395,imgKey:'mcchicken',emoji:'\u{1F357}',meal:true,mealOpts:'standard'},
+    {id:'b14c',cat:'burgers',name:'McChicken\u00AE with Cheese',price:5.15,cal:441,imgKey:'mcchickencheese',emoji:'\u{1F357}',meal:true,mealOpts:'standard'},
+    {id:'b15',cat:'burgers',name:'Buttermilk Crispy Chicken',price:9.25,cal:460,imgKey:'buttermilk',emoji:'\u{1F357}',meal:true,mealOpts:'feast'},
+  ],
+  mcwraps:[
+    {id:'mw1',cat:'mcwraps',name:'Buttermilk Chicken McWrap\u00AE',price:7.50,cal:380,imgKey:'buttermilkwrap',emoji:'\u{1FAD4}',meal:false},
+    {id:'mw2',cat:'mcwraps',name:'Spicy Chicken McWrap\u00AE',price:7.50,cal:400,imgKey:'spicywrap',emoji:'\u{1FAD4}',meal:false},
+    {id:'mw2s',cat:'mcwraps',name:'Buttermilk Chicken Salad',price:7.50,cal:400,imgKey:'buttermilksalad',emoji:'\u{1F957}',meal:false},
+    {id:'mw3',cat:'mcwraps',name:'Hamburger Meal with Salad',price:7.50,cal:398,imgKey:'hamburger_salad_water',emoji:'\u{1F957}',meal:false},
+    {id:'mw4',cat:'mcwraps',name:'Cheeseburger with Corn',price:8.00,cal:461,imgKey:'cheeseburger_corn_water',emoji:'\u{1F957}',meal:false},
+    {id:'mw5',cat:'mcwraps',name:'Filet-O-Fish\u00AE with Salad',price:9.50,cal:460,imgKey:'fof_salad_water',emoji:'\u{1F957}',meal:false},
+    {id:'mw6',cat:'mcwraps',name:'McChicken\u00AE with Corn',price:7.50,cal:495,imgKey:'mcchicken_corn_water',emoji:'\u{1F957}',meal:false},
+  ],
+  nuggets:[
+    {id:'nu1',cat:'nuggets',name:'Chicken McNuggets\u00AE (6pc)',price:6.00,cal:276,imgKey:'nuggets6',emoji:'\u{1F357}',meal:false},
+    {id:'nu2',cat:'nuggets',name:'Chicken McNuggets\u00AE (9pc)',price:8.50,cal:414,imgKey:'nuggets9',emoji:'\u{1F357}',meal:false},
+    {id:'nu3',cat:'nuggets',name:'Chicken McNuggets\u00AE (20pc)',price:16.90,cal:920,imgKey:'nuggets20',emoji:'\u{1F357}',meal:false},
+    {id:'nu4',cat:'nuggets',name:'McWings\u00AE (2pc)',price:3.50,cal:185,imgKey:'mcwings2',emoji:'\u{1F357}',meal:false},
+    {id:'nu5',cat:'nuggets',name:'McWings\u00AE (4pc)',price:6.50,cal:370,imgKey:'mcwings4',emoji:'\u{1F357}',meal:false},
+  ],
+  mccrispy:[
+    {id:'mc1',cat:'mccrispy',name:'Chicken McCrispy\u00AE Signature (2pc)',price:7.50,cal:368,imgKey:'mccrispysig2',emoji:'\u{1F357}',meal:false},
+    {id:'mc2',cat:'mccrispy',name:'Chicken McCrispy\u00AE Spicy (2pc)',price:7.50,cal:368,imgKey:'mccrispyspicy2',emoji:'\u{1F336}\uFE0F',meal:false},
+    {id:'mc3',cat:'mccrispy',name:'Chicken McCrispy\u00AE Signature (6pc)',price:17.90,cal:1100,imgKey:'mccrispysig6',emoji:'\u{1F357}',meal:false},
+    {id:'mc4',cat:'mccrispy',name:'Chicken McCrispy\u00AE Mix (6pc)',price:17.90,cal:1100,imgKey:'mccrispymix6',emoji:'\u{1F357}',meal:false},
+    {id:'mc3s',cat:'mccrispy',name:'Chicken McCrispy\u00AE Spicy (6pc)',price:17.90,cal:1100,imgKey:'mccrispyspicy6',emoji:'\u{1F336}\uFE0F',meal:false},
+    {id:'mc5',cat:'mccrispy',name:'Chicken McCrispy\u00AE Signature (6pc) Bundle',price:17.90,cal:1100,imgKey:'mccrispysig6bundle',emoji:'\u{1F357}',meal:false},
+    {id:'mc6',cat:'mccrispy',name:'Chicken McCrispy\u00AE Spicy (6pc) Bundle',price:17.90,cal:1100,imgKey:'mccrispyspicy6bundle',emoji:'\u{1F336}\uFE0F',meal:false},
+    {id:'mc7',cat:'mccrispy',name:'Chicken McCrispy\u00AE Mix (6pc) Bundle',price:17.90,cal:1100,imgKey:'mccrispymix6bundle',emoji:'\u{1F357}',meal:false},
+  ],
+  sharing:[
+    {id:'sh1',cat:'sharing',name:'Happy Sharing Box\u00AE A',price:24.90,cal:1600,imgKey:'happyboxa',emoji:'\u{1F4E6}',meal:false},
+    {id:'sh2',cat:'sharing',name:'Happy Sharing Box\u00AE B',price:26.90,cal:1800,imgKey:'happyboxb',emoji:'\u{1F4E6}',meal:false},
+    {id:'sh3',cat:'sharing',name:'Happy Sharing Snacks',price:10.90,cal:700,imgKey:'happysnacks',emoji:'\u{1F35F}',meal:false},
+    {id:'sh4',cat:'sharing',name:'Happy Sharing Combo',price:14.90,cal:900,imgKey:'happycombo',emoji:'\u{1F35F}',meal:false},
+  ],
+  mcsaver:[
+    {id:'sv1',cat:'mcsaver',name:'McChicken\u00AE McSaver Meal',price:7.50,cal:750,imgKey:'mcchicken',emoji:'\u{1F357}',meal:false},
+    {id:'sv2',cat:'mcsaver',name:'Hamburger McSaver Meal',price:6.50,cal:650,imgKey:'hamburger',emoji:'\u{1F354}',meal:false},
+    {id:'sv3',cat:'mcsaver',name:'Cheeseburger McSaver Meal',price:7.00,cal:700,imgKey:'cheeseburger',emoji:'\u{1F354}',meal:false},
+    {id:'sv4',cat:'mcsaver',name:'Filet-O-Fish\u00AE McSaver Meal',price:9.00,cal:800,imgKey:'fof',emoji:'\u{1F41F}',meal:false},
+    {id:'sv5',cat:'mcsaver',name:'McNuggets\u00AE (6pc) McSaver Meal',price:9.50,cal:750,imgKey:'nuggets6',emoji:'\u{1F357}',meal:false},
+  ],
+  family:[
+    {id:'fm1',cat:'family',name:'Cheeseburger Happy Meal\u00AE',price:6.90,cal:490,imgKey:'cheeseburgerhappy',emoji:'\u{1F389}',meal:false},
+    {id:'fm2',cat:'family',name:'McNuggets\u00AE (4pc) Happy Meal\u00AE',price:6.90,cal:430,imgKey:'happy_nug4',emoji:'\u{1F389}',meal:false},
+    {id:'fm3',cat:'family',name:'Family Meal (Cheeseburger)',price:19.90,cal:1200,imgKey:'fm_cb',emoji:'\u{1F46A}',meal:false},
+    {id:'fm4',cat:'family',name:'Family Meal (McNuggets\u00AE)',price:19.90,cal:1100,imgKey:'fm_nug',emoji:'\u{1F46A}',meal:false},
+  ],
+  sides:[
+    {id:'sd1',cat:'sides',name:'French Fries (Small)',price:2.30,cal:224,imgKey:'fries_s',emoji:'\u{1F35F}',meal:false},
+    {id:'sd2',cat:'sides',name:'French Fries (Medium)',price:2.80,cal:330,imgKey:'fries_m',emoji:'\u{1F35F}',meal:false},
+    {id:'sd3',cat:'sides',name:'French Fries (Large)',price:3.30,cal:444,imgKey:'fries_l',emoji:'\u{1F35F}',meal:false},
+    {id:'sd4',cat:'sides',name:'Corn (Jr)',price:1.80,cal:65,imgKey:'corn_jr',emoji:'\u{1F33D}',meal:false},
+    {id:'sd5',cat:'sides',name:'Corn',price:2.50,cal:88,imgKey:'corn',emoji:'\u{1F33D}',meal:false},
+    {id:'sd6',cat:'sides',name:'Apple Pie',price:1.80,cal:253,imgKey:'applepie',emoji:'\u{1F967}',meal:false},
+    {id:'sd8',cat:'sides',name:'Garden Side Salad',price:3.50,cal:47,imgKey:'gardensalad',emoji:'\u{1F957}',meal:false},
+  ],
+  desserts:[
+    {id:'ds1',cat:'desserts',name:'Vanilla Cone',price:0.60,cal:140,imgKey:'vanilla_cone',emoji:'\u{1F366}',meal:false},
+    {id:'ds2',cat:'desserts',name:'Strawberry Cone',price:0.60,cal:145,imgKey:'strawberry_cone',emoji:'\u{1F366}',meal:false},
+    {id:'ds3',cat:'desserts',name:'ChocoCone\u00AE',price:1.20,cal:165,imgKey:'chococone',emoji:'\u{1F36B}',meal:false},
+    {id:'ds3b',cat:'desserts',name:'Strawberry ChocoCone\u00AE',price:1.50,cal:175,imgKey:'strawberry_chococone',emoji:'\u{1F353}',meal:false},
+    {id:'ds4',cat:'desserts',name:'Hot Fudge Sundae',price:2.50,cal:310,imgKey:'hot_fudge_sundae',emoji:'\u{1F368}',meal:false},
+    {id:'ds5',cat:'desserts',name:'Strawberry Sundae',price:2.50,cal:280,imgKey:'strawberry_sundae',emoji:'\u{1F353}',meal:false},
+    {id:'ds5b',cat:'desserts',name:'Strawberry Hot Fudge Sundae',price:2.50,cal:280,imgKey:'strawberry_hot_fudge_sundae',emoji:'\u{1F368}',meal:false},
+    {id:'ds6',cat:'desserts',name:'OREO\u00AE McFlurry\u00AE',price:4.00,cal:335,imgKey:'oreo_mcflurry',emoji:'\u{1F366}',meal:false},
+    {id:'ds7',cat:'desserts',name:'Strawberry OREO\u00AE McFlurry\u00AE',price:4.00,cal:355,imgKey:'strawberry_oreo_mcflurry',emoji:'\u{1F353}',meal:false},
+  ],
+  mccafe:[
+    {id:'cf1',cat:'mccafe',name:'McCaf\u00E9\u00AE Premium Roast Coffee',price:2.00,cal:5,imgKey:'mccafe_premium_roast',emoji:'\u2615',meal:false},
+    {id:'cf0a',cat:'mccafe',name:'McCaf\u00E9\u00AE Iced Americano',price:4.20,cal:1,imgKey:'mccafe_iced_americano',emoji:'\u2615',meal:false},
+    {id:'cf0b',cat:'mccafe',name:'McCaf\u00E9\u00AE Americano',price:3.60,cal:null,imgKey:'mccafe_americano',emoji:'\u2615',meal:false},
+    {id:'cf0c',cat:'mccafe',name:'McCaf\u00E9\u00AE Cappuccino',price:4.50,cal:null,imgKey:'mccafe_cappuccino',emoji:'\u2615',meal:false},
+    {id:'cf2',cat:'mccafe',name:'McCaf\u00E9\u00AE Latte',price:5.00,cal:140,imgKey:'mccafe_latte',emoji:'\u2615',meal:false},
+    {id:'cf3',cat:'mccafe',name:'McCaf\u00E9\u00AE Iced Latte',price:5.50,cal:145,imgKey:'mccafe_iced_latte',emoji:'\u2615',meal:false},
+    {id:'cf4',cat:'mccafe',name:'Mocha Frapp\u00E9',price:6.50,cal:390,imgKey:'mocha_frappe',emoji:'\u{1F9CB}',meal:false},
+    {id:'cf5',cat:'mccafe',name:'Caramel Frapp\u00E9',price:6.50,cal:370,imgKey:'caramel_frappe',emoji:'\u{1F9CB}',meal:false},
+    {id:'cf6',cat:'mccafe',name:'Double Chocolate Frapp\u00E9',price:6.50,cal:410,imgKey:'double_chocolate_frappe',emoji:'\u{1F9CB}',meal:false},
+  ],
+  drinks:[
+    {id:'dr1',cat:'drinks',name:'Coca-Cola\u00AE Less Sugar (S)',price:2.30,cal:97,imgKey:'coke_less_s',emoji:'\u{1F964}',meal:false},
+    {id:'dr2',cat:'drinks',name:'Coca-Cola\u00AE Less Sugar (M)',price:2.70,cal:145,imgKey:'coke_less_m',emoji:'\u{1F964}',meal:false},
+    {id:'dr3',cat:'drinks',name:'Coca-Cola\u00AE Less Sugar (L)',price:3.00,cal:194,imgKey:'coke_less_l',emoji:'\u{1F964}',meal:false},
+
+    {id:'dr4s',cat:'drinks',name:'Coca-Cola\u00AE Zero Sugar (S)',price:2.30,cal:1,imgKey:'coke_zero_s',emoji:'\u{1F964}',meal:false},
+    {id:'dr4',cat:'drinks',name:'Coca-Cola\u00AE Zero Sugar (M)',price:2.70,cal:1,imgKey:'coke_zero_m',emoji:'\u{1F964}',meal:false},
+    {id:'dr4l',cat:'drinks',name:'Coca-Cola\u00AE Zero Sugar (L)',price:3.00,cal:1,imgKey:'coke_zero_l',emoji:'\u{1F964}',meal:false},
+
+    {id:'dr5s',cat:'drinks',name:'Sprite\u00AE (S)',price:2.30,cal:87,imgKey:'sprite_s',emoji:'\u{1F964}',meal:false},
+    {id:'dr5',cat:'drinks',name:'Sprite\u00AE (M)',price:2.70,cal:130,imgKey:'sprite_m',emoji:'\u{1F964}',meal:false},
+    {id:'dr5l',cat:'drinks',name:'Sprite\u00AE (L)',price:3.00,cal:174,imgKey:'sprite_l',emoji:'\u{1F964}',meal:false},
+
+    {id:'dr6s',cat:'drinks',name:'Iced MILO\u00AE (S)',price:2.70,cal:137,imgKey:'milo_s',emoji:'\u{1F95B}',meal:false},
+    {id:'dr6',cat:'drinks',name:'Iced MILO\u00AE (M)',price:3.00,cal:205,imgKey:'milo_m',emoji:'\u{1F95B}',meal:false},
+
+    {id:'dr10s',cat:'drinks',name:'Jasmine Green Tea (S)',price:2.30,cal:null,imgKey:'jasmine_s',emoji:'\u{1F375}',meal:false},
+    {id:'dr10m',cat:'drinks',name:'Jasmine Green Tea (M)',price:2.70,cal:null,imgKey:'jasmine_m',emoji:'\u{1F375}',meal:false},
+
+    {id:'dr7s',cat:'drinks',name:'Iced Lemon Tea (S)',price:2.30,cal:null,imgKey:'iced_lemon_tea_s',emoji:'\u{1F375}',meal:false},
+    {id:'dr7',cat:'drinks',name:'Iced Lemon Tea (M)',price:2.70,cal:120,imgKey:'iced_lemon_tea_s',emoji:'\u{1F375}',meal:false},
+
+    {id:'dr8',cat:'drinks',name:'Ice Mountain Drinking Water',price:0.80,cal:0,imgKey:'ice_mountain',emoji:'\u{1F4A7}',meal:false},
+    {id:'dr11',cat:'drinks',name:'Low-Fat Hi-Calcium Milk',price:2.00,cal:null,imgKey:'lowfat_milk',emoji:'\u{1F95B}',meal:false},
+    {id:'dr9',cat:'drinks',name:'Hot MILO\u00AE',price:2.70,cal:130,imgKey:'hot_milo',emoji:'\u2615',meal:false},
+    {id:'dr12',cat:'drinks',name:'Hot Tea',price:2.00,cal:null,imgKey:'hot_tea',emoji:'\u2615',meal:false},
+    {id:'dr13',cat:'drinks',name:'Kiyo Grape Juice',price:2.50,cal:100,imgKey:'kiyo_grape',emoji:'\u{1F9C3}',meal:false},
+    {id:'dr14',cat:'drinks',name:'Oatside Original Flavoured Oatmilk',price:3.35,cal:130,imgKey:'oatside_original',emoji:'\u{1F95B}',meal:false},
+    {id:'dr15',cat:'drinks',name:'Oatside Chocolate Flavoured Oatmilk',price:3.35,cal:null,imgKey:'oatside_chocolate',emoji:'\u{1F95B}',meal:false},
+  ],
+  sauces:[
+    {id:'sa1',cat:'sauces',name:'Curry Sauce',price:0.50,cal:50,imgKey:'curry_sauce',emoji:'\u{1FAD9}',meal:false},
+    {id:'sa2',cat:'sauces',name:'Barbeque Sauce',price:0.50,cal:40,imgKey:'barbeque_sauce',emoji:'\u{1FAD9}',meal:false},
+    {id:'sa3',cat:'sauces',name:'Honey Mustard Sauce',price:0.50,cal:55,imgKey:'honey_mustard_sauce',emoji:'\u{1FAD9}',meal:false},
+    {id:'sa4',cat:'sauces',name:'Roasted Sesame Dressing',price:0.50,cal:60,imgKey:'roasted_sesame_dressing',emoji:'\u{1FAD9}',meal:false},
+  ],
+};
+
+MENU.home = MENU.new;
+MENU.doubleprotein = MENU.burgers.filter(item =>
+  /Double|Triple/.test(item.name)
+);
+
+const CAT_LABELS={
+  home:'Home',new:"What's New",burgers:'Burgers',doubleprotein:'Double Protein',
+  mcsaver:'McSaver Meals',mcwraps:'McWraps & Eat Light',nuggets:'McNuggets & McWings',mccrispy:'Chicken McCrispy',
+  sharing:'Sharing',family:'Happy Meal & Family Meals',
+  sides:'Pies, Fries & Sides',desserts:'Desserts',mccafe:'McCaf\u00E9 Drinks & Frapp\u00E9',
+  drinks:'Drinks',sauces:'Sauces & Condiments',
+};
+const UPSELL_IDS=['ht3','sd1','sa1','dr1','ds1'];
+
+/* ── STATE ── */
+let dineMode='Eat In';
+let cart=[];
+let currentItem=null;
+let buildState={mealLabel:'',mealExtra:0,qty:1,sideIdx:null,drinkIdx:null,valueIdx:null,drinkCustom:{},activeTab:'sides'};
+
+/* ── HELPERS ── */
+const $=id=>document.getElementById(id);
+
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const t=document.getElementById(id);
+  if(t) t.classList.add('active');
+}
+
+function toast(msg){
+  const t=$('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+/* ── SCREEN WIRING ── */
+$('btn-start-order').addEventListener('click',()=>goTo('scr-dining'));
+$('btn-eatin').addEventListener('click',()=>startSession('Eat In'));
+$('btn-takeout').addEventListener('click',()=>startSession('Take Out'));
+$('btn-cancel-mc').addEventListener('click',()=>goTo('scr-menu'));
+$('btn-cancel-ms').addEventListener('click',()=>goTo('scr-menu'));
+$('btn-cancel-build').addEventListener('click',()=>goTo('scr-menu'));
+$('btn-yes-meal').addEventListener('click',()=>chooseMeal(true));
+$('btn-no-meal').addEventListener('click',()=>chooseMeal(false));
+$('bqc-minus').addEventListener('click',()=>buildQty(-1));
+$('bqc-plus').addEventListener('click',()=>buildQty(1));
+$('btn-add-order').addEventListener('click',addOrderItem);
+$('btn-no-thanks').addEventListener('click',()=>{renderCart();goTo('scr-cart');});
+$('btn-view-cart').addEventListener('click',openUpsell);
+$('btn-order-more').addEventListener('click',()=>goTo('scr-menu'));
+$('btn-complete').addEventListener('click',()=>goTo('scr-payment'));
+$('btn-back-pay').addEventListener('click',()=>goTo('scr-cart'));
+$('btn-pay-card').addEventListener('click',()=>processPayment('card'));
+$('btn-pay-cash').addEventListener('click',()=>processPayment('cash'));
+$('btn-ty-new').addEventListener('click',resetKiosk);
+$('btn-start-over').addEventListener('click',()=>{cart=[];currentItem=null;updateCartBar();resetPaymentScreenState();goTo('scr-attract');});
+$('btn-table-service').addEventListener('click',openTentNumber);
+$('btn-self-collect').addEventListener('click',completeEatInCollection);
+$('btn-eatcollect-back').addEventListener('click',()=>goTo('scr-payment'));
+$('btn-tent-back').addEventListener('click',()=>goTo('scr-eatin-collection'));
+document.querySelectorAll('[data-tent]').forEach(btn=>btn.addEventListener('click',()=>{
+  if(tentNumber.length<4){tentNumber+=btn.dataset.tent;updateTentDisplay();}
+}));
+$('tent-clear').addEventListener('click',()=>{tentNumber='';updateTentDisplay();});
+$('tent-delete').addEventListener('click',()=>{tentNumber=tentNumber.slice(0,-1);updateTentDisplay();});
+$('btn-tent-confirm').addEventListener('click',()=>{
+  if(!tentNumber)return;
+  completeEatInCollection();
+});
+
+/* ── SESSION ── */
+function startSession(mode){
+  dineMode=mode;
+  $('hdr-mode').textContent=mode;
+  renderMenu('new');
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  const firstCategory=document.querySelector('.cat-btn[data-cat="new"]') || document.querySelector('.cat-btn');
+  if(firstCategory) firstCategory.classList.add('active');
+  goTo('scr-menu');
+}
+
+/* ── RENDER MENU ── */
+function renderMenu(cat){
+  const grid=$('menu-grid');grid.innerHTML='';
+  const items=MENU[cat]||[];
+  const h=document.createElement('div');h.className='cat-heading';h.textContent=CAT_LABELS[cat]||cat;
+  grid.appendChild(h);
+  const g=document.createElement('div');g.className='items-grid';
+  items.forEach(item=>{
+    const card=document.createElement('div');card.className='item-card';
+    const mw=document.createElement('div');mw.className='item-img-wrap';
+    const imgSrc=item.imgKey?resolveImgSrc(item.imgKey):null;
+    if(imgSrc){
+      const im=document.createElement('img');im.className='item-img';
+      im.src=imgSrc;im.alt=item.name;
+      im.onerror=function(){this.parentElement.innerHTML='<div class="item-emoji-pl">'+item.emoji+'</div>';};
+      mw.appendChild(im);
+    } else {
+      mw.innerHTML='<div class="item-emoji-pl">'+item.emoji+'</div>';
+    }
+    const info=document.createElement('div');info.className='item-info';
+    info.innerHTML='<div class="item-name">'+item.name+'</div>'+(item.cal==null?'':'<div class="item-cal">'+item.cal+' Cal</div>')+'<div class="item-price">$'+item.price.toFixed(2)+'</div>';
+    card.appendChild(mw);card.appendChild(info);
+    card.addEventListener('click',()=>tapItem(item));
+    g.appendChild(card);
+  });
+  grid.appendChild(g);
+}
+
+/* Sidebar tabs */
+document.querySelectorAll('.cat-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderMenu(btn.dataset.cat);
+    $('menu-grid-area').scrollTop=0;
+  });
+});
+
+
+/* ── INGREDIENT PRESETS ── */
+const INGR={
+  mcspicy_cheese:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'McSpicy Patty',q:1,mn:0,mx:1}
+  ],
+  mcspicy:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'McSpicy Patty',q:1,mn:0,mx:1}
+  ],
+  double_mcspicy_cheese:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40}
+  ],
+  double_mcspicy:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2}
+  ],
+  double_fof:[
+    {n:'Tartar Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40}
+  ],
+  double_mcchicken:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2}
+  ],
+  double_mccrispy:[
+    {n:'Smoky Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Whole Leaf Lettuce',q:1,mn:0,mx:2}
+  ],
+  mccrispy:[
+    {n:'Smoky Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Whole Leaf Lettuce',q:1,mn:0,mx:2}
+  ],
+  buttermilk:[
+    {n:'Black Pepper Mayo',q:1,mn:0,mx:2,c:0.30},
+    {n:'Pineapple',q:1,mn:0,mx:2,c:0.60},
+    {n:'Whole Leaf Lettuce',q:1,mn:0,mx:2},
+    {n:'Purple Cabbage Slaw',q:1,mn:0,mx:2,c:0.60},
+    {n:'White Cheddar Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'Buttermilk Chicken Patty',q:1,mn:0,mx:1}
+  ],
+  triple_cheeseburger:[
+    {n:'Mustard',q:1,mn:0,mx:2},
+    {n:'Ketchup',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'Onion',q:1,mn:0,mx:2}
+  ],
+  double_cheeseburger:[
+    {n:'Mustard',q:1,mn:0,mx:2},
+    {n:'Ketchup',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'Onion',q:1,mn:0,mx:2}
+  ],
+  bigmac:[
+    {n:'BigMac Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Onion',q:1,mn:0,mx:2},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40}
+  ],
+  double_qpc:[
+    {n:'Mustard',q:1,mn:0,mx:2},
+    {n:'Ketchup',q:1,mn:0,mx:2},
+    {n:'Sliced Onion',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40}
+  ],
+  qpc:[
+    {n:'Mustard',q:1,mn:0,mx:2},
+    {n:'Ketchup',q:1,mn:0,mx:2},
+    {n:'Sliced Onion',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'Qtr Pound Beef Patty',q:1,mn:0,mx:1}
+  ],
+  smoky_beef:[
+    {n:'Smoky Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'Onion',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40}
+  ],
+  fof:[
+    {n:'Tartar Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'Fish Portion',q:1,mn:0,mx:1}
+  ],
+  mcchicken_cheese:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'McChicken Patty',q:1,mn:0,mx:1}
+  ],
+  mcchicken:[
+    {n:'McChicken Sauce',q:1,mn:0,mx:2,c:0.30},
+    {n:'Shredded Lettuce',q:1,mn:0,mx:2},
+    {n:'McChicken Patty',q:1,mn:0,mx:1}
+  ],
+  cheeseburger:[
+    {n:'Mustard',q:1,mn:0,mx:2},
+    {n:'Ketchup',q:1,mn:0,mx:2},
+    {n:'Onion',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Cheese',q:1,mn:0,mx:2,c:1.40},
+    {n:'Beef Patty',q:1,mn:0,mx:1}
+  ],
+  hamburger:[
+    {n:'Mustard',q:1,mn:0,mx:2},
+    {n:'Ketchup',q:1,mn:0,mx:2},
+    {n:'Onion',q:1,mn:0,mx:2},
+    {n:'Pickle',q:1,mn:0,mx:2},
+    {n:'Beef Patty',q:1,mn:0,mx:1}
+  ]
+};
+const ITEM_INGR={
+  b1:'bigmac',
+  b2:'qpc',
+  b3:'double_qpc',
+  b4:'triple_cheeseburger',
+  b5:'double_cheeseburger',
+  b6:'cheeseburger',
+  b7:'hamburger',
+  b8:'mcspicy',
+  b9:'double_mcspicy',
+  b9a:'double_mcspicy_cheese',
+  b9b:'smoky_beef',
+  b9c:'mcspicy_cheese',
+  b10:'mccrispy',
+  b11:'double_mccrispy',
+  b12:'fof',
+  b13:'double_fof',
+  b14:'mcchicken',
+  b14c:'mcchicken_cheese',
+  b15:'buttermilk'
+};
+let customIngr=[];
+function customisationExtra(snapshot){
+  return (snapshot||[]).reduce((sum,ing)=>{
+    const charge=Number(ing.c||0);
+    return sum + (ing.q>1 ? (ing.q-1)*charge : 0);
+  },0);
+}
+
+function loadIngrPanel(item){
+  const key=ITEM_INGR[item.id];
+  const preset=key?INGR[key]:null;
+  const panel=document.getElementById('ingr-panel');
+  if(!preset||preset.length===0){panel.style.display='none';customIngr=[];return;}
+  customIngr=preset.map(i=>({...i}));
+  panel.style.display='block';
+  renderIngrPanel();
+}
+
+function renderIngrPanel(){
+  const list=document.getElementById('ingr-list');list.innerHTML='';
+  customIngr.forEach((ing,idx)=>{
+    const row=document.createElement('div');row.className='ingr-row';
+    const minus=document.createElement('button');minus.className='ingr-btn';minus.textContent='\u2212';
+    minus.addEventListener('click',()=>{if(ing.q>ing.mn){ing.q--;renderIngrPanel();}});
+    const plus=document.createElement('button');plus.className='ingr-btn';plus.textContent='+';
+    plus.addEventListener('click',()=>{if(ing.q<ing.mx){ing.q++;renderIngrPanel();}});
+    const qty=document.createElement('span');qty.className='ingr-qty';qty.textContent=ing.q;
+    const nm=document.createElement('span');nm.className='ingr-name';nm.textContent=ing.n;
+    const ctrl=document.createElement('div');ctrl.className='ingr-ctrl';
+    ctrl.appendChild(minus);ctrl.appendChild(qty);ctrl.appendChild(plus);
+    row.appendChild(nm);row.appendChild(ctrl);list.appendChild(row);
+  });
+}
+
+/* ── ITEM TAP ── */
+function tapItem(item){
+  currentItem=item;
+  if(item.meal){
+    $('mc-item-name').textContent=item.name;
+    $('mc-alacarte-price').textContent='$'+item.price.toFixed(2);
+    const fOpts=item.mealOpts==='feast'?MEAL_OPTS_FEAST:MEAL_OPTS;
+    $('mc-meal-from').textContent='from +$'+fOpts[0].extra.toFixed(2);
+    loadIngrPanel(item);
+    goTo('scr-meal-choice');
+  } else {
+    addDirectItem(item);
+  }
+}
+
+function addDirectItem(item,options={}){
+  cart.push({item,mealLabel:'Ala Carte',sideChoice:null,drinkChoice:null,valueChoice:null,qty:1,totalPrice:item.price,ingrSnapshot:[]});
+  // Recommended items are already being added from the checkout/review flow.
+  // Keep the customer on the cart review page instead of playing the normal
+  // item-added animation, whose timer returns to the main menu.
+  if(options.stayOnReview){
+    if(addedAnimTimer){clearTimeout(addedAnimTimer);addedAnimTimer=null;}
+    updateCartBar();
+    renderCart();
+    goTo('scr-cart');
+    toast('Added: '+item.name);
+    return;
+  }
+  showAddedAnim(item.price,item.name);
+}
+
+/* ── MEAL CHOICE ── */
+function chooseMeal(wantMeal){
+  if(!wantMeal){
+    buildState={mealLabel:'Ala Carte',mealExtra:0,qty:1,sideIdx:null,drinkIdx:null,valueIdx:null,drinkCustom:{},activeTab:'review'};
+    if(!customIngr.length) loadIngrPanel(currentItem);
+    openMealReview();
+    return;
+  }
+  $('ms-item-name').textContent=currentItem.name;
+  const opts=currentItem.mealOpts==='feast'?MEAL_OPTS_FEAST:MEAL_OPTS;
+  const c=$('ms-opts');c.innerHTML='';
+  opts.forEach(opt=>{
+    const total=currentItem.price+opt.extra;
+    const btn=document.createElement('button');btn.className='ms-opt';
+    btn.innerHTML='<div><div class="ms-opt-title">'+currentItem.name+' '+opt.label+'</div><div class="ms-opt-desc">'+opt.desc+'</div></div><div class="ms-opt-price">$'+total.toFixed(2)+'</div>';
+    btn.addEventListener('click',()=>chooseMealSize(opt));
+    c.appendChild(btn);
+  });
+  goTo('scr-meal-size');
+}
+
+function chooseMealSize(opt){
+  buildState={mealLabel:opt.label,mealExtra:opt.extra,qty:1,sideIdx:null,drinkIdx:null,valueIdx:null,drinkCustom:{},activeTab:'sides'};
+  $('build-item-name').textContent=currentItem.name+' '+opt.label;
+  renderBuildSidebar();renderBuildContent('sides');updateBuildPrice();
+  goTo('scr-build');
+}
+
+/* ── BUILD ── */
+function renderBuildSidebar(){
+  const sb=$('build-sidebar');sb.innerHTML='';
+  const tabs=[
+    {key:currentItem.name+' '+buildState.mealLabel,cat:'info'},
+    {key:'Sides',cat:'sides'},{key:'Drink',cat:'drink'},
+    {key:'Value Buys',cat:'value'},{key:'Review',cat:'review'},
+  ];
+  tabs.forEach(t=>{
+    const btn=document.createElement('button');
+    btn.className='build-tab'+(t.cat===buildState.activeTab?' active':'');
+    const done=(t.cat==='sides'&&buildState.sideIdx!==null)||(t.cat==='drink'&&buildState.drinkIdx!==null)||(t.cat==='value'&&buildState.valueIdx!==null);
+    if(done) btn.classList.add('done');
+    btn.textContent=t.key;
+    btn.addEventListener('click',()=>{buildState.activeTab=t.cat;renderBuildSidebar();renderBuildContent(t.cat);});
+    sb.appendChild(btn);
+  });
+}
+
+
+function getBuildImgKey(cat,it){
+  const large=/Upsized|Feast/i.test((buildState&&buildState.mealLabel)||'');
+  if(cat==='sides' && it.name==='Medium French Fries') return large?'fries_l':'fries_m';
+  if(cat==='drink'){
+    if(it.name.indexOf('Coca-Cola')===0 && it.name.indexOf('Less Sugar')>-1) return large?'coke_less_l':'coke_less_m';
+    if(it.name.indexOf('Coca-Cola')===0 && it.name.indexOf('Zero Sugar')>-1) return large?'coke_zero_l':'coke_zero_m';
+    if(it.name.indexOf('Sprite')===0) return large?'sprite_l':'sprite_m';
+    if(it.name.indexOf('Iced MILO')===0) return 'milo_m';
+    if(it.name.indexOf('Jasmine Green Tea')===0) return large?'jasmine_l':'jasmine_m';
+    if(it.name.indexOf('Ice Mountain')===0) return 'ice_mountain';
+  }
+  return it.imgKey||null;
+}
+
+function renderBuildContent(cat){
+  const content=$('build-content');buildState.activeTab=cat;
+  if(cat==='info'){
+    content.innerHTML='<div class="build-sec-title">'+currentItem.name+' '+buildState.mealLabel+'</div><div style="font-size:.8rem;color:var(--ink3)">Choose your Sides, Drink and Value Buy below.</div>';
+    return;
+  }
+  if(cat==='review'){renderReview(content);return;}
+  const tab=BUILD_TABS[cat];if(!tab)return;
+  content.innerHTML='<div class="build-sec-title">'+tab.label+'</div>';
+  const g=document.createElement('div');g.className='build-items';
+  const sk=cat==='sides'?'sideIdx':cat==='drink'?'drinkIdx':'valueIdx';
+  tab.items.forEach((it,idx)=>{
+    const d=document.createElement('div');
+    d.className='build-item'+(buildState[sk]===idx?' selected':'')+(it.name==='No thanks'?' upsell-no-thanks':'');
+    const buildImgKey=getBuildImgKey(cat,it);
+    if(buildImgKey && resolveImgSrc(buildImgKey)){
+      const im=document.createElement('img');
+      im.src=resolveImgSrc(buildImgKey);
+      im.alt=it.name;
+      im.onerror=()=>{im.remove();const e=document.createElement('div');e.className='build-item-emoji';e.textContent=it.emoji;d.insertBefore(e,d.firstChild);};
+      d.appendChild(im);
+    }else{
+      const e=document.createElement('div');e.className='build-item-emoji';e.textContent=it.emoji;
+      d.appendChild(e);
+    }
+    // Item name — always visible
+    const nm=document.createElement('div');nm.className='build-item-name';nm.textContent=it.name;
+    d.appendChild(nm);
+    // Extra charge shown in red below name
+    if(it.extra){
+      const ex=document.createElement('div');
+      ex.style.cssText='font-size:.6rem;font-weight:700;color:var(--red);margin-top:2px;';
+      ex.textContent='+$'+(it.displayExtra!==undefined?it.displayExtra:it.extra).toFixed(2);
+      d.appendChild(ex);
+    }
+    if(it.note){
+      const note=document.createElement('div');
+      note.style.cssText='font-size:.55rem;color:var(--ink3);margin-top:2px;line-height:1.2;';
+      note.textContent=it.note;
+      d.appendChild(note);
+    }
+    if(cat==='drink' && it.custom){
+      if(buildState.drinkCustom[idx]===undefined) buildState.drinkCustom[idx]=it.custom.qty||0;
+      const custom=document.createElement('div');
+      custom.className='drink-custom-control';
+      custom.addEventListener('click',e=>e.stopPropagation());
+      const label=document.createElement('div');label.className='drink-custom-label';label.textContent=it.custom.name;
+      const ctrl=document.createElement('div');ctrl.className='drink-custom-qty';
+      const minus=document.createElement('button');minus.textContent='−';
+      const val=document.createElement('span');val.textContent=buildState.drinkCustom[idx]===0?'None':String(buildState.drinkCustom[idx]);
+      const plus=document.createElement('button');plus.textContent='+';
+      minus.addEventListener('click',e=>{e.stopPropagation();buildState.drinkCustom[idx]=Math.max(it.custom.min,buildState.drinkCustom[idx]-1);renderBuildContent('drink');});
+      plus.addEventListener('click',e=>{e.stopPropagation();buildState.drinkCustom[idx]=Math.min(it.custom.max,buildState.drinkCustom[idx]+1);renderBuildContent('drink');});
+      ctrl.append(minus,val,plus);custom.append(label,ctrl);d.appendChild(custom);
+    }
+    d.addEventListener('click',()=>{
+      buildState[sk]=idx;
+      const nextMap={sides:'drink',drink:'value'};
+      if(cat==='value'){ renderBuildSidebar(); updateBuildPrice(); openMealReview(); return; }
+      buildState.activeTab=nextMap[cat]||cat;
+      renderBuildSidebar();renderBuildContent(buildState.activeTab);updateBuildPrice();
+    });
+    g.appendChild(d);
+  });
+  content.appendChild(g);
+}
+
+function renderReview(content){
+  openMealReview();
+}
+
+function buildQty(d){
+  buildState.qty=Math.max(1,Math.min(20,buildState.qty+d));
+  $('build-qty').textContent=buildState.qty;
+  updateBuildPrice();
+}
+
+function updateBuildPrice(){
+  if(!currentItem)return;
+  const p=(currentItem.price+buildState.mealExtra)*buildState.qty;
+  $('build-price-disp').textContent='$'+p.toFixed(2);
+}
+
+function addOrderItem(){
+  if(buildState.mealLabel!=='Ala Carte' && (buildState.sideIdx===null || buildState.drinkIdx===null || buildState.valueIdx===null)){
+    toast('Please choose your side, drink and value buy first.');
+    return;
+  }
+  openMealReview();
+}
+
+function commitOrderItem(){
+  const side=buildState.sideIdx!==null?BUILD_TABS.sides.items[buildState.sideIdx]:null;
+  const drink=buildState.drinkIdx!==null?BUILD_TABS.drink.items[buildState.drinkIdx]:null;
+  const value=buildState.valueIdx!==null?BUILD_TABS.value.items[buildState.valueIdx]:null;
+  const base=currentItem.price+(buildState.mealExtra||0);
+  const extras=(side&&side.extra||0)+(drink&&drink.extra||0)+(value&&value.extra||0)+customisationExtra(customIngr);
+  const total=(base+extras)*buildState.qty;
+  const drinkCustomText=(drink&&drink.custom&&buildState.drinkIdx!==null)
+    ? drink.custom.name+': '+((buildState.drinkCustom[buildState.drinkIdx]||0)===0?'None':buildState.drinkCustom[buildState.drinkIdx])
+    : null;
+  cart.push({item:currentItem,mealLabel:buildState.mealLabel,sideChoice:side?side.name:null,drinkChoice:drink?drink.name:null,drinkCustomText:drinkCustomText,valueChoice:value?value.name:null,qty:buildState.qty,totalPrice:total,ingrSnapshot:customIngr.map(i=>({...i}))});
+  showAddedAnim(total,currentItem.name+(buildState.mealLabel==='Ala Carte'?'':' '+buildState.mealLabel));
+}
+
+/* ── ITEM ADDED ANIMATION ── */
+let addedAnimTimer=null;
+function showAddedAnim(price,name){
+  if(addedAnimTimer){clearTimeout(addedAnimTimer);addedAnimTimer=null;}
+  $('added-price').textContent='$'+price.toFixed(2);
+  updateCartBar();
+  goTo('scr-added');
+  addedAnimTimer=setTimeout(()=>{
+    addedAnimTimer=null;
+    goTo('scr-menu');
+    toast('Added: '+name);
+  },1800);
+}
+
+/* ── CART BAR ── */
+function updateCartBar(){
+  const qty=cart.reduce((s,e)=>s+e.qty,0);
+  const sub=cart.reduce((s,e)=>s+e.totalPrice,0);
+  $('mb-badge').textContent=qty;
+  $('mb-price').textContent='$'+(sub*1.09).toFixed(2);
+  $('btn-view-cart').disabled=qty===0;
+}
+
+/* ── UPSELL ── */
+function openUpsell(){
+  const c=$('upsell-items');c.innerHTML='';
+  const allItems=Object.values(MENU).flat();
+  UPSELL_IDS.forEach(id=>{
+    const item=allItems.find(i=>i.id===id);if(!item)return;
+    const d=document.createElement('div');d.className='upsell-item';
+
+    const media=document.createElement('div');media.className='upsell-media';
+    const imgSrc=item.imgKey?resolveImgSrc(item.imgKey):null;
+    if(imgSrc){
+      const im=document.createElement('img');im.className='upsell-img';
+      im.src=imgSrc;im.alt=item.name;
+      im.onerror=function(){
+        media.innerHTML='';
+        const e=document.createElement('div');e.className='upsell-emoji';e.textContent=item.emoji;
+        media.appendChild(e);
+      };
+      media.appendChild(im);
+    } else {
+      const e=document.createElement('div');e.className='upsell-emoji';e.textContent=item.emoji;
+      media.appendChild(e);
+    }
+
+    const n=document.createElement('div');n.className='upsell-name';n.textContent=item.name;
+    const p=document.createElement('div');p.className='upsell-price';p.textContent='$'+item.price.toFixed(2);
+    d.appendChild(media);d.appendChild(n);d.appendChild(p);
+    d.addEventListener('click',()=>{addDirectItem(item,{stayOnReview:true});});
+    c.appendChild(d);
+  });
+  goTo('scr-upsell');
+}
+
+/* ── CART ── */
+function buildIngrLines(snapshot,presetKey){
+  const PRESETS_LOCAL=typeof INGR!=='undefined'?INGR:{};
+  const defaults=presetKey&&PRESETS_LOCAL[presetKey]?PRESETS_LOCAL[presetKey]:[];
+  if(!snapshot||snapshot.length===0) return [];
+  const lines=[];
+  snapshot.forEach(ing=>{
+    const def=defaults.find(d=>d.n===ing.n);
+    const defQ=def?def.q:1;
+    if(ing.q===0){
+      lines.push({text:'no '+ing.n,cost:0});
+    } else if(ing.q<defQ){
+      const diff=defQ-ing.q;
+      lines.push({text:'less '+ing.n+(diff>1?' ('+diff+')':''),cost:0});
+    } else if(ing.q>defQ){
+      const diff=ing.q-defQ;
+      const cost=diff*Number(ing.c||0);
+      lines.push({text:'add '+ing.n+(diff>1?' ('+diff+')':''),cost:cost});
+    }
+  });
+  return lines;
+}
+
+function renderCart(){
+  const body=$('cart-body');body.innerHTML='';
+  let sub=0;
+  if(!cart.length){body.innerHTML='<div style="padding:18px;text-align:center;color:var(--ink3)">Your cart is empty.</div>';}
+  cart.forEach((entry,idx)=>{
+    sub+=entry.totalPrice;
+    const d=document.createElement('div');d.className='cart-item';
+    // Header row: name + remove button
+    const hdr=document.createElement('div');
+    hdr.style.cssText='display:flex;justify-content:space-between;align-items:flex-start;';
+    const nm=document.createElement('div');nm.className='cart-item-name';
+    nm.textContent=(entry.qty>1?entry.qty+'x ':'')+entry.item.name+(entry.mealLabel!=='Ala Carte'?' '+entry.mealLabel:'');
+    const rmv=document.createElement('button');
+    rmv.style.cssText='background:none;border:none;color:var(--ink3);cursor:pointer;font-size:.85rem;';
+    rmv.textContent='x';rmv.addEventListener('click',()=>removeItem(idx));
+    hdr.appendChild(nm);hdr.appendChild(rmv);d.appendChild(hdr);
+    // Customisation lines
+    const ingrKey=typeof ITEM_INGR!=='undefined'?ITEM_INGR[entry.item.id]:null;
+    const ingrLines=buildIngrLines(entry.ingrSnapshot||[],ingrKey);
+    if(ingrLines.length){
+      const il=document.createElement('div');il.className='cart-item-detail';
+      il.style.cssText='margin-top:4px;';
+      ingrLines.forEach(line=>{
+        const li=document.createElement('div');
+        li.style.cssText='display:flex;justify-content:space-between;gap:12px;color:var(--ink2);font-size:.78rem;';
+        const txt=document.createElement('span');txt.textContent='- '+line.text;
+        li.appendChild(txt);
+        if(line.cost>0){
+          const cost=document.createElement('span');
+          cost.style.cssText='font-weight:700;white-space:nowrap;color:var(--ink);';
+          cost.textContent='+$'+line.cost.toFixed(2);
+          li.appendChild(cost);
+        }
+        il.appendChild(li);
+      });
+      d.appendChild(il);
+    }
+    // Side / drink / value
+    const details=[];
+    if(entry.sideChoice) details.push(entry.sideChoice);
+    if(entry.drinkChoice) details.push(entry.drinkChoice+(entry.drinkCustomText?' ('+entry.drinkCustomText+')':''));
+    if(entry.valueChoice) details.push(entry.valueChoice);
+    if(details.length){
+      const dl=document.createElement('div');dl.className='cart-item-detail';
+      dl.style.cssText='margin-top:4px;color:var(--ink3);font-size:.78rem;';
+      details.forEach(det=>{
+        const li=document.createElement('div');li.textContent=det;dl.appendChild(li);
+      });
+      d.appendChild(dl);
+    }
+    // Price
+    const pr=document.createElement('div');pr.className='cart-item-price';
+    pr.textContent='$'+entry.totalPrice.toFixed(2);
+    d.appendChild(pr);
+    body.appendChild(d);
+  });
+  const gst=sub*0.09;const total=sub+gst;
+  $('ct-sub').textContent='$'+sub.toFixed(2);
+  $('ct-gst').textContent='$'+gst.toFixed(2);
+  $('ct-total').textContent='$'+total.toFixed(2);
+}
+
+function removeItem(idx){cart.splice(idx,1);renderCart();updateCartBar();}
+
+
+let pendingOrderNum=null;
+let tentNumber='';
+
+function finishPaidOrder(){
+  cart=[];
+  updateCartBar();
+  paymentInProgress=false;
+  if(dineMode==='Eat In' && selectedPaymentMethod==='card'){
+    goTo('scr-eatin-collection');
+  }else{
+    goTo('scr-ty');
+  }
+}
+function showEatInCollection(){
+  goTo('scr-eatin-collection');
+}
+function openTentNumber(){
+  tentNumber='';
+  updateTentDisplay();
+  goTo('scr-tent-number');
+}
+function updateTentDisplay(){
+  const display=$('tent-display');
+  display.textContent=tentNumber||'—';
+  $('btn-tent-confirm').disabled=!tentNumber;
+}
+function completeEatInCollection(){
+  goTo('scr-ty');
+}
+
+/* ── PAYMENT ── */
+let paymentTimers=[];
+let paymentInProgress=false;
+let selectedPaymentMethod='';
+
+function clearPaymentTimers(){
+  paymentTimers.forEach(t=>clearTimeout(t));
+  paymentTimers=[];
+}
+
+function resetPaymentScreenState(){
+  clearPaymentTimers();
+  paymentInProgress=false;
+  selectedPaymentMethod='';
+  $('counter-msg').textContent='Please proceed to the Front Counter to complete your payment';
+  $('receipt-chit').innerHTML='<div class="chit-top">Your Order No. is</div><div class="chit-label">No</div><div class="chit-num" id="chit-num">#42</div>';
+}
+
+function processPayment(method){
+  if(paymentInProgress)return;
+  selectedPaymentMethod=method;
+  paymentInProgress=true;
+
+  const num=Math.floor(Math.random()*90)+10;
+  $('ty-num').textContent='#'+num;
+
+  if(method==='cash'){
+    // Rebuild the receipt every time instead of assuming #chit-num still
+    // exists from the previous order.
+    $('counter-msg').textContent='Please proceed to the Front Counter to complete your payment';
+    $('receipt-chit').innerHTML='<div class="chit-top">Your Order No. is</div><div class="chit-label">No</div><div class="chit-num" id="chit-num">#'+num+'</div>';
+    goTo('scr-counter');
+
+    paymentTimers.push(setTimeout(()=>{
+      $('counter-msg').textContent='Please take your receipt to the Front Counter to complete payment';
+      $('receipt-chit').innerHTML='<div style="font-size:3.5rem">🏪</div><div style="font-weight:700;font-size:.85rem;color:var(--ink2)">Front Counter</div>';
+      paymentTimers.push(setTimeout(()=>{
+        finishPaidOrder();
+      },3000));
+    },3000));
+  } else {
+    paymentTimers.push(setTimeout(()=>{
+      finishPaidOrder();
+    },800));
+  }
+}
+
+function resetKiosk(){
+  cart=[];
+  currentItem=null;
+  buildState={mealLabel:'',mealExtra:0,qty:1,sideIdx:null,drinkIdx:null,valueIdx:null,drinkCustom:{},activeTab:'sides'};
+  updateCartBar();
+  resetPaymentScreenState();
+  goTo('scr-attract');
+}
+
+/* ── CLOCK ── */
+(function tick(){const t=$('hdr-time');if(t)t.textContent=new Date().toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});setTimeout(tick,15000);})();
+
+
+
+/* ── Reference-accurate review / customisation flow ── */
+let customiseBackup=[];
+function mealPartImage(cat,it){
+  if(!it)return null;
+  const key=getBuildImgKey(cat,it);
+  return key?resolveImgSrc(key):null;
+}
+function makeReviewPart(label,it,cat,sub,changeTarget,showCustomise){
+  const d=document.createElement('div');d.className='mr-part';
+  const src=cat==='main'?(currentItem.imgKey?resolveImgSrc(currentItem.imgKey):null):mealPartImage(cat,it);
+  if(src){const im=document.createElement('img');im.className='mr-part-img';im.src=src;im.alt=label;d.appendChild(im);}
+  else {const ph=document.createElement('div');ph.style.cssText='height:82px;display:flex;align-items:center;justify-content:center;font-size:2.2rem';ph.textContent=(it&&it.emoji)||currentItem.emoji||'🍔';d.appendChild(ph);}
+  const n=document.createElement('div');n.className='mr-part-label';n.textContent=label;d.appendChild(n);
+  if(sub){const s=document.createElement('div');s.className='mr-part-sub';s.textContent=sub;d.appendChild(s);}
+  if(showCustomise && ITEM_INGR[currentItem.id]){
+    const b=document.createElement('button');b.className='mr-small-btn';b.textContent='Customise';b.addEventListener('click',openCustomise);d.appendChild(b);
+  }
+  if(changeTarget){const b=document.createElement('button');b.className='mr-small-btn';b.textContent='Change option';b.addEventListener('click',()=>{buildState.activeTab=changeTarget;renderBuildSidebar();renderBuildContent(changeTarget);goTo('scr-build');});d.appendChild(b);}
+  return d;
+}
+function openMealReview(){
+  if(!currentItem)return;
+  const side=buildState.sideIdx!==null?BUILD_TABS.sides.items[buildState.sideIdx]:null;
+  const drink=buildState.drinkIdx!==null?BUILD_TABS.drink.items[buildState.drinkIdx]:null;
+  const value=buildState.valueIdx!==null?BUILD_TABS.value.items[buildState.valueIdx]:null;
+  const base=currentItem.price+(buildState.mealExtra||0);
+  const extras=(side&&side.extra||0)+(drink&&drink.extra||0)+(value&&value.extra||0)+customisationExtra(customIngr);
+  $('mr-title').textContent=currentItem.name+(buildState.mealLabel==='Ala Carte'?'':' '+buildState.mealLabel);
+  $('mr-price').textContent='$'+((base+extras)*buildState.qty).toFixed(2);
+  $('mr-qty-num').textContent=buildState.qty;
+  const mainSrc=currentItem.imgKey?resolveImgSrc(currentItem.imgKey):null;
+  const mi=$('mr-main-img');
+  if(mainSrc){mi.src=mainSrc;mi.style.display='block';}else{mi.style.display='none';}
+  const g=$('mr-selected-grid');g.innerHTML='';
+  g.appendChild(makeReviewPart(currentItem.name,currentItem,'main','Main item',null,true));
+  if(buildState.mealLabel!=='Ala Carte'){
+    g.appendChild(makeReviewPart(side?side.name:'Choose a side',side,'sides','Side','sides',false));
+    g.appendChild(makeReviewPart(drink?drink.name:'Choose a drink',drink,'drink','Drink','drink',false));
+    if(value) g.appendChild(makeReviewPart(value.name,value,'value','Value Buy','value',false));
+    else g.appendChild(makeReviewPart('Choose a value buy',value,'value','Value Buy','value',false));
+  }
+  goTo('scr-meal-review');
+}
+function updateReviewQty(delta){
+  buildState.qty=Math.max(1,Math.min(20,(buildState.qty||1)+delta));
+  openMealReview();
+}
+function resetCustomIngredients(){
+  const key=ITEM_INGR[currentItem.id];const preset=key?INGR[key]:[];
+  customIngr=preset.map(x=>({...x}));renderCustomiseRows();
+}
+function renderCustomiseRows(){
+  const comes=$('cus-comes-with');comes.innerHTML='';
+  customIngr.forEach((ing,idx)=>{
+    const row=document.createElement('div');row.className='cus-row';
+    const nm=document.createElement('div');nm.className='cus-ing-name';
+    nm.textContent=ing.n;
+    const ctrl=document.createElement('div');ctrl.className='cus-ctrl';
+    const minus=document.createElement('button');minus.textContent='−';
+    minus.addEventListener('click',()=>{if(ing.q>ing.mn){ing.q--;renderCustomiseRows();}});
+    const qty=document.createElement('span');qty.textContent=ing.q;
+    const plus=document.createElement('button');plus.textContent='+';
+    plus.addEventListener('click',()=>{if(ing.q<ing.mx){ing.q++;renderCustomiseRows();}});
+    ctrl.append(minus,qty,plus);row.append(nm,ctrl);comes.appendChild(row);
+  });
+}
+function openCustomise(){
+  const key=ITEM_INGR[currentItem.id];if(!key){toast('No ingredient customisation is available for this item.');return;}
+  if(!customIngr.length) customIngr=INGR[key].map(x=>({...x}));
+  customiseBackup=customIngr.map(x=>({...x}));
+  $('cus-item-name').textContent=currentItem.name;
+  const src=currentItem.imgKey?resolveImgSrc(currentItem.imgKey):null;$('cus-main-img').src=src||'';$('cus-main-img').style.display=src?'block':'none';
+  renderCustomiseRows();goTo('scr-customise');
+}
+function cancelCustomise(){customIngr=customiseBackup.map(x=>({...x}));openMealReview();}
+function saveCustomise(){openMealReview();toast('Customisation saved');}
+
+$('mr-minus').addEventListener('click',()=>updateReviewQty(-1));
+$('mr-plus').addEventListener('click',()=>updateReviewQty(1));
+$('mr-cancel').addEventListener('click',()=>goTo('scr-menu'));
+$('mr-add').addEventListener('click',commitOrderItem);
+$('cus-reset').addEventListener('click',resetCustomIngredients);
+$('cus-cancel').addEventListener('click',cancelCustomise);
+$('cus-save').addEventListener('click',saveCustomise);
+
+
+/* ── INIT ── */
+$('attract-feature-img').src=resolveImgSrc('mcspicy');
+renderMenu('new');
+updateCartBar();
+
+</script>
+</body>
+</html>
