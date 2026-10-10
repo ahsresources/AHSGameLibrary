@@ -708,11 +708,30 @@ button,.item-card,.cat-btn,.build-item,.upsell-item,.dining-btn,.mc-opt,.ms-opt,
 #scr-added .added-tick{position:absolute;}
 </style>
 
+<style id="v130-loading-screen">
+#scr-loading{background:#DA291C;align-items:center;justify-content:center;flex-direction:column;gap:22px;text-align:center;padding:34px;z-index:1000;}
+#scr-loading .ld-arch{width:110px;height:110px;border-radius:50%;background:#FFC72C;display:flex;align-items:center;justify-content:center;font-size:3.9rem;font-weight:900;color:#DA291C;animation:ldpulse 1.2s ease-in-out infinite;}
+@keyframes ldpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+#scr-loading .ld-title{font-weight:900;font-size:clamp(1.6rem,4vw,2.4rem);color:#fff;line-height:1.15;}
+#scr-loading .ld-sub{font-size:1rem;color:rgba(255,255,255,.8);}
+#scr-loading .ld-bar{width:min(420px,70vw);height:12px;background:rgba(0,0,0,.25);border-radius:9999px;overflow:hidden;}
+#scr-loading .ld-fill{height:100%;width:0%;background:#FFC72C;border-radius:9999px;transition:width .15s ease-out;}
+#scr-loading .ld-pct{font-weight:800;font-size:1.1rem;color:#FFC72C;}
+</style>
 </head>
 <body>
 
+<!-- LOADING -->
+<div class="screen active" id="scr-loading">
+  <div class="ld-arch">M</div>
+  <div class="ld-title">Getting things ready…</div>
+  <div class="ld-bar"><div class="ld-fill" id="ld-fill"></div></div>
+  <div class="ld-pct" id="ld-pct">0%</div>
+  <div class="ld-sub">Loading menu images</div>
+</div>
+
 <!-- ATTRACT -->
-<div class="screen active" id="scr-attract">
+<div class="screen" id="scr-attract">
   <div class="attract-ad">
     <img id="attract-feature-img" alt="Featured" onerror="this.parentElement.style.background='#DA291C'">
     <div class="attract-overlay"></div>
@@ -2119,6 +2138,52 @@ $('cus-save').addEventListener('click',saveCustomise);
 $('attract-feature-img').src=resolveImgSrc('mcspicy');
 renderMenu('new');
 updateCartBar();
+
+/* ── PRELOAD ALL IMAGES, THEN SHOW THE KIOSK ── */
+const __imgCache=[]; // keep references so decoded images stay in memory
+function preloadAllImages(){
+  const urls=new Set(Object.values(EMBEDDED_IMAGES));
+  document.querySelectorAll('img[src]').forEach(im=>{const s=im.getAttribute('src');if(s)urls.add(s);});
+  const list=[...urls];
+  const total=list.length;
+  let done=0,next=0,finished=false;
+  const fill=$('ld-fill'),pct=$('ld-pct');
+  const startedAt=Date.now();
+
+  function finish(){
+    if(finished)return;finished=true;
+    fill.style.width='100%';pct.textContent='100%';
+    const wait=Math.max(0,400-(Date.now()-startedAt));
+    setTimeout(()=>goTo('scr-attract'),wait);
+  }
+  function tick(){
+    done++;
+    const p=Math.round(done/total*100);
+    fill.style.width=p+'%';pct.textContent=p+'%';
+    if(done>=total)finish();
+    else loadNext();
+  }
+  function loadOne(url){
+    const im=new Image();
+    __imgCache.push(im);
+    im.onload=()=>{
+      // decode now so scrolling doesn't pay the decode cost later
+      if(im.decode){im.decode().then(tick,tick);}else{tick();}
+    };
+    im.onerror=()=>{console.warn('Image failed to preload:',url);tick();};
+    im.src=url;
+  }
+  function loadNext(){
+    if(next<total)loadOne(list[next++]);
+  }
+  if(!total){finish();return;}
+  // load a few at a time so the progress bar moves smoothly
+  const CONCURRENCY=8;
+  for(let i=0;i<CONCURRENCY&&i<total;i++)loadNext();
+  // failsafe: never get stuck on the loading screen
+  setTimeout(finish,30000);
+}
+preloadAllImages();
 
 </script>
 </body>
