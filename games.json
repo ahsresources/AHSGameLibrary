@@ -1,4 +1,14 @@
-[
+[    
+    {
+    "id": "mcdonalds-kiosk",
+    "title": "Mcdonald's Ordering Kiosk",
+    "description": "A 1-to-1 replica of Singapore's McDonald's Ordering Kiosk! P.S. Best viewed on iPad Portrait and no real food is served upon order. No copyright intended, for educational purposes only.",
+    "creatorName": "Teacher Joan",
+    "category": "General",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["food", "ordering", "money", "community"],
+    "uploadDate": "2026-10-10"
+  },
     {
     "id": "ab-ag-word-family",
     "title": "Word Families ab/ag",
