@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Where is Teddy?</title>
+
+<!-- Fredoka font (rounded, friendly, very readable for young learners) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* =====================================================================
+   WHERE IS TEDDY?  -  styles
+   Sections: 1 Basics  2 Buttons  3 Start screen  4 Game screen
+             5 Stage + Teddy  6 Effects  7 End screen  8 Animations
+   ===================================================================== */
+
+/* ---------- 1. BASICS ---------- */
+:root{
+  --ink:#5a3319;            /* main text colour (dark brown, high contrast) */
+  --orange:#ff7b3d;
+  --orange-dark:#d9561a;
+  --yellow:#ffd166;
+  --yellow-dark:#e0a526;
+  --green:#4cc38a;
+  --sky1:#bfe9ff;
+  --sky2:#fff3d1;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+body{
+  font-family:'Fredoka',system-ui,'Segoe UI',Arial,sans-serif;
+  color:var(--ink);
+  background:linear-gradient(180deg,var(--sky1),var(--sky2));
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  touch-action:manipulation;
+}
+/* #app fills the whole screen; every "screen" is stacked inside it */
+#app{position:relative;width:100%;height:100vh;height:100dvh;overflow:hidden}
+svg.bear{display:block;width:100%;height:100%;overflow:visible}
+
+/* soft drifting clouds in the background */
+.cloud{position:absolute;width:110px;height:34px;background:#fff;border-radius:40px;opacity:.75;animation:drift 70s linear infinite;pointer-events:none}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud::before{width:46px;height:46px;left:16px;top:-24px}
+.cloud::after{width:60px;height:60px;left:46px;top:-34px}
+.cloud.c1{top:9%;left:-150px}
+.cloud.c2{top:30%;left:-150px;animation-duration:95s;animation-delay:-40s;transform:scale(.7)}
+.cloud.c3{top:62%;left:-150px;animation-duration:80s;animation-delay:-15s;transform:scale(.85)}
+
+/* every screen sits on top of the others; only .active is visible */
+.screen{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  padding:max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left));
+  opacity:0;visibility:hidden;transform:scale(.97);
+  transition:opacity .45s ease,transform .45s ease,visibility 0s linear .45s;
+}
+.screen.active{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+/* hidden screens must never catch clicks (a child with visibility:visible, like the
+   "Play again" button, could otherwise sit invisibly on top of the Start button) */
+.screen{pointer-events:none}
+.screen.active{pointer-events:auto}
+
+/* ---------- 2. BUTTONS ---------- */
+.btn{
+  font-family:inherit;font-weight:700;font-size:clamp(1.3rem,4.5vw,1.8rem);
+  min-height:56px;min-width:min(260px,80vw);padding:.6rem 2rem;border:0;border-radius:999px;
+  color:#fff;background:linear-gradient(180deg,#ff9a5c,var(--orange));
+  box-shadow:0 6px 0 var(--orange-dark),0 12px 20px rgba(0,0,0,.18);
+  cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;touch-action:manipulation;
+}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--orange-dark),0 4px 8px rgba(0,0,0,.18)}
+.btn.pulse{animation:pulse 1.8s ease-in-out infinite}
+
+.icon-btn,.pill-btn{
+  font-family:inherit;color:var(--ink);background:#fff;border:0;cursor:pointer;
+  box-shadow:0 4px 0 rgba(90,51,25,.2);touch-action:manipulation;
+  display:inline-flex;align-items:center;justify-content:center;gap:.4rem;
+  transition:transform .15s ease,opacity .2s ease;
+}
+.icon-btn{width:48px;height:48px;min-width:44px;border-radius:50%;font-size:1.35rem;padding:0}
+.pill-btn{height:48px;min-width:44px;border-radius:999px;padding:0 1.1rem;font-size:1.1rem;font-weight:600}
+.icon-btn:hover,.pill-btn:hover{transform:translateY(-2px)}
+.icon-btn:active,.pill-btn:active{transform:translateY(2px)}
+.pill-btn:disabled{opacity:.4;cursor:default;transform:none}
+
+/* clear keyboard focus ring everywhere */
+.btn:focus-visible,.icon-btn:focus-visible,.pill-btn:focus-visible,
+.tile:focus-visible,.pick-btn:focus-visible{outline:4px solid #3a86ff;outline-offset:3px}
+
+/* ---------- 3. START SCREEN ---------- */
+#screen-start{justify-content:space-between;text-align:center;gap:.8rem}
+.corner{position:absolute;top:max(.8rem,env(safe-area-inset-top));right:max(.8rem,env(safe-area-inset-right));z-index:5}
+.title{
+  margin:0;padding:0 3.6rem;font-weight:700;font-size:clamp(2.3rem,9vw,4.8rem);line-height:1.05;
+  color:#ff6f3c;
+  text-shadow:3px 3px 0 #fff,-3px -3px 0 #fff,3px -3px 0 #fff,-3px 3px 0 #fff,0 7px 0 rgba(120,60,20,.25);
+  animation:titleBob 3s ease-in-out infinite;
+}
+.start-mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(.4rem,1.8vh,1.1rem)}
+.start-teddy{height:clamp(80px,24vh,200px);aspect-ratio:100/111;animation:bob 2.4s ease-in-out infinite}
+.lets{margin:0;font-size:clamp(1.8rem,6.5vw,3.2rem);font-weight:600}
+.howto{margin:0;font-size:clamp(1rem,3.2vw,1.25rem);font-weight:500;max-width:30rem;opacity:.85}
+.picker{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.6rem}
+.picker-label{font-weight:500;font-size:clamp(1rem,3.4vw,1.2rem)}
+.pick-btn{
+  font-family:inherit;font-weight:600;font-size:1.2rem;color:var(--ink);background:#fff;
+  min-width:64px;min-height:48px;padding:.3rem 1rem;border-radius:999px;border:3px solid #fff;cursor:pointer;
+  box-shadow:0 4px 0 rgba(90,51,25,.2);transition:all .2s ease;touch-action:manipulation;
+}
+.pick-btn[aria-pressed="true"]{background:var(--orange);color:#fff;box-shadow:0 4px 0 var(--orange-dark);transform:translateY(-2px)}
+.start-bottom{min-height:72px;display:flex;align-items:center}
+
+/* ---------- 4. GAME SCREEN ---------- */
+#screen-game{justify-content:flex-start;align-items:stretch;gap:.5rem;padding-top:max(.6rem,env(safe-area-inset-top));padding-bottom:max(.6rem,env(safe-area-inset-bottom))}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:.5rem;width:100%;max-width:900px;margin:0 auto;min-height:48px}
+.topbar-right{display:flex;gap:.5rem}
+.progress{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.4rem;flex:1;min-width:0}
+.dot{width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid rgba(90,51,25,.35);transition:all .3s ease}
+.dot.current{background:var(--yellow);transform:scale(1.35);border-color:var(--yellow-dark)}
+.dot.done{background:var(--green);border-color:#2e9c68}
+
+.stage-wrap{flex:1;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;padding:8px}
+
+/* the bottom sentence panel */
+.panel{
+  width:100%;max-width:900px;margin:0 auto;background:rgba(255,255,255,.88);border-radius:28px;
+  padding:.6rem 1rem .8rem;box-shadow:0 8px 24px rgba(90,51,25,.15);
+  display:flex;flex-direction:column;align-items:center;gap:.4rem;
+}
+.sentence-row{display:flex;align-items:center;justify-content:center;gap:.6rem;min-height:3.4rem;width:100%}
+.sentence{margin:0;font-weight:600;font-size:clamp(1.3rem,4.8vw,2.3rem);line-height:1.3;text-align:center}
+.prep{background:var(--yellow);color:var(--ink);padding:0 .45em;border-radius:.6em}
+.slot{
+  display:inline-block;min-width:4.6em;height:1.5em;line-height:1.35em;vertical-align:middle;margin:0 .1em;
+  border:3px dashed #c9a37a;border-radius:.6em;background:#fff;text-align:center;transition:all .2s ease;
+}
+.slot.hover{background:#fff3c4;border-color:var(--orange);transform:scale(1.08)}
+.slot.filled{border-style:solid;border-color:var(--green);background:#e6fff3;color:#1f7a4f}
+
+.tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:.6rem;width:100%;min-height:52px}
+.tiles.hidden{visibility:hidden}
+.tile{
+  position:relative;min-height:48px;min-width:44px;padding:.35rem 1.2rem;border:0;border-radius:999px;
+  font-family:inherit;font-weight:600;font-size:clamp(1.1rem,4vw,1.5rem);color:var(--ink);
+  background:linear-gradient(180deg,#ffe08a,var(--yellow));
+  box-shadow:0 5px 0 var(--yellow-dark),0 8px 14px rgba(0,0,0,.12);
+  cursor:grab;touch-action:none;z-index:1;
+}
+.tile.dragging{cursor:grabbing;z-index:50;box-shadow:0 12px 20px rgba(0,0,0,.25)}
+.tile.used{visibility:hidden}
+.tile.shake{animation:shake .45s}
+.tile.glow{animation:tileGlow 1s ease-in-out infinite}
+.feedback{margin:0;min-height:1.4rem;font-size:1.05rem;font-weight:500;color:#b34a2a;text-align:center}
+
+/* ---------- 5. STAGE + TEDDY ---------- */
+/* The stage is always 4:3. JS sets its pixel size so the game never scrolls.
+   Everything inside is placed with % so it scales on any device. */
+.stage{
+  position:relative;flex:none;width:300px;height:225px;overflow:hidden;border-radius:24px;
+  box-shadow:0 0 0 5px #fff,0 12px 28px rgba(90,51,25,.25);touch-action:none;
+}
+.layer{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.layer-bg{z-index:1}
+.layer-fg{z-index:4}   /* sits IN FRONT of Teddy (used for "behind") */
+
+.teddy,.ghost{position:absolute;width:18%;height:26.6667%;transform:translate(-50%,-50%)}
+.teddy{
+  z-index:3;cursor:grab;touch-action:none;border-radius:30%;
+  filter:drop-shadow(0 4px 3px rgba(0,0,0,.25));
+}
+.teddy.lift{z-index:6}
+.teddy.dragging{z-index:6;cursor:grabbing;transform:translate(-50%,-50%) scale(1.1);filter:drop-shadow(0 12px 8px rgba(0,0,0,.3))}
+/* "behind" scene: Teddy always stays one layer BEHIND the table (fg layer is z-index 4) */
+.teddy.behind-scene,.teddy.behind-scene.lift,.teddy.behind-scene.dragging{z-index:3}
+.teddy.anim{transition:left .6s cubic-bezier(.34,1.4,.64,1),top .6s cubic-bezier(.34,1.4,.64,1)}
+.teddy:focus-visible{outline:4px solid #3a86ff;outline-offset:2px}
+.teddy-body,.teddy-float{position:relative;width:100%;height:100%}
+.teddy-body.pop{animation:popIn .5s ease}
+.teddy-body.happy{animation:hop .7s ease}
+.teddy.floaty .teddy-float{animation:floatBob 2.2s ease-in-out infinite}
+
+/* balloon only appears for "above" */
+.balloon{position:absolute;left:64%;bottom:40%;width:38%;height:auto;aspect-ratio:1/2;opacity:0;transition:opacity .3s;transform-origin:50% 100%}
+.teddy.floaty .balloon{opacity:1;animation:sway 2.4s ease-in-out infinite}
+
+/* faded teddy hint */
+.ghost{z-index:2;opacity:0;pointer-events:none;filter:grayscale(.3) drop-shadow(0 0 6px rgba(255,255,255,.9));transition:opacity .4s ease}
+.ghost.show{opacity:.4;animation:ghostPulse 1.2s ease-in-out infinite}
+.ghost.over{z-index:5}   /* hint drawn on top of the table so it can be seen */
+
+/* ---------- 6. EFFECTS ---------- */
+.fx{position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden}
+.mini{
+  position:absolute;width:var(--s,28px);aspect-ratio:100/111;opacity:0;
+  transform:translate(-50%,-50%);animation:floatUp 1.7s ease-out forwards;animation-delay:var(--d,0s);
+}
+
+/* ---------- 7. END SCREEN ---------- */
+#screen-end{justify-content:space-between;text-align:center;gap:.8rem;overflow:hidden}
+.end-title{margin:0;padding:0 3.6rem;font-weight:700;font-size:clamp(2.2rem,8.5vw,4.4rem);line-height:1.05;color:#ff6f3c;
+  text-shadow:3px 3px 0 #fff,-3px -3px 0 #fff,3px -3px 0 #fff,-3px 3px 0 #fff,0 7px 0 rgba(120,60,20,.25)}
+.end-mid{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(.4rem,2vh,1.2rem);position:relative;z-index:2}
+.dancer{height:clamp(130px,36vh,320px);aspect-ratio:100/111;animation:twirl 4.4s ease-in-out infinite}
+.dancer svg.bear{transform-origin:50% 100%;animation:dance 1.1s ease-in-out infinite}
+.dancer .arm{transform-box:fill-box;transform-origin:50% 12%}
+.dancer .arm-l{animation:armL .55s ease-in-out infinite alternate}
+.dancer .arm-r{animation:armR .55s ease-in-out infinite alternate;animation-delay:-.27s}
+.end-msg{margin:0;font-size:clamp(1.4rem,5vw,2.4rem);font-weight:600}
+.end-bottom{min-height:72px;display:flex;align-items:center;position:relative;z-index:2}
+.again{opacity:0;visibility:hidden;transform:translateY(20px);transition:opacity .6s ease,transform .6s ease,visibility 0s linear .6s}
+.again.show{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.confetti-box{position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.confetti{position:absolute;top:-6vh;width:10px;height:16px;border-radius:3px;animation:fall linear infinite}
+
+/* ---------- 8. ANIMATIONS ---------- */
+@keyframes drift{from{translate:0 0}to{translate:calc(100vw + 400px) 0}}
+@keyframes titleBob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@keyframes popIn{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1)}30%{transform:translateY(-18%) scale(1.08)}60%{transform:translateY(0) scale(.95,1.05)}}
+@keyframes floatBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5%)}}
+@keyframes sway{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+@keyframes ghostPulse{0%,100%{opacity:.25}50%{opacity:.55}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes tileGlow{0%,100%{box-shadow:0 5px 0 var(--yellow-dark),0 0 0 0 rgba(255,123,61,.7)}50%{box-shadow:0 5px 0 var(--yellow-dark),0 0 0 12px rgba(255,123,61,0)}}
+@keyframes floatUp{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}
+  15%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+  100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot)) scale(.9)}
+}
+@keyframes dance{
+  0%{transform:translateY(0) rotate(-8deg)}
+  25%{transform:translateY(-9%) rotate(0deg)}
+  50%{transform:translateY(0) rotate(8deg)}
+  75%{transform:translateY(-9%) rotate(0deg)}
+  100%{transform:translateY(0) rotate(-8deg)}
+}
+@keyframes twirl{0%,60%{transform:rotateY(0)}80%{transform:rotateY(360deg) translateY(-6%)}100%{transform:rotateY(360deg)}}
+@keyframes armL{from{transform:rotate(0deg)}to{transform:rotate(140deg)}}
+@keyframes armR{from{transform:rotate(0deg)}to{transform:rotate(-140deg)}}
+@keyframes fall{from{transform:translate3d(0,0,0) rotate(0)}to{transform:translate3d(var(--sway,0px),112vh,0) rotate(720deg)}}
+
+@media (prefers-reduced-motion:reduce){
+  .cloud,.title,.start-teddy,.btn.pulse,.confetti{animation:none}
+}
+
+/* ---------- Responsive tweaks ---------- */
+@media (max-width:520px){
+  /* narrow phones: word tiles sit in a tidy 2 x 2 grid */
+  .tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:340px;min-height:112px}
+  .tile{width:100%;padding:.35rem .6rem}
+}
+@media (max-width:420px){
+  .pill-btn .label{display:none}   /* hint button becomes just the bulb */
+  .pill-btn{padding:0;width:48px}
+}
+@media (max-height:520px){
+  /* short screens, e.g. phones held sideways */
+  .howto{display:none}
+  .panel{padding:.3rem .8rem .5rem;border-radius:20px}
+  .sentence-row{min-height:2.4rem}
+  .sentence{font-size:clamp(1.1rem,3.4vw,1.6rem)}
+  .tiles{min-height:44px}
+  .tile{min-height:44px;padding:.2rem .9rem}
+  .feedback{min-height:1rem;font-size:.9rem}
+  .btn{min-height:48px;padding:.4rem 1.6rem}
+  .start-bottom,.end-bottom{min-height:56px}
+}
+</style>
+</head>
+
+<body>
+<div id="app">
+
+  <!-- decorative clouds -->
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+
+  <!-- ===================== START SCREEN ===================== -->
+  <section id="screen-start" class="screen active" aria-label="Start screen">
+    <button class="icon-btn sound-toggle corner" type="button" aria-label="Sound on" aria-pressed="true">🔊</button>
+
+    <h1 class="title">Where is Teddy?</h1>
+
+    <div class="start-mid">
+      <div class="start-teddy" id="start-teddy"></div>
+      <p class="lets">Let's find Teddy!</p>
+      <p class="howto">Drag Teddy to the right place, then drag the word that fits.</p>
+      <div class="picker" role="group" aria-label="How many words?">
+        <span class="picker-label">How many words?</span>
+        <button type="button" class="pick-btn" data-count="4" aria-pressed="true">4</button>
+        <button type="button" class="pick-btn" data-count="6" aria-pressed="false">6</button>
+        <button type="button" class="pick-btn" data-count="8" aria-pressed="false">8</button>
+      </div>
+    </div>
+
+    <div class="start-bottom">
+      <button id="btn-start" class="btn pulse" type="button">Start ▶</button>
+    </div>
+  </section>
+
+  <!-- ===================== GAME SCREEN ===================== -->
+  <section id="screen-game" class="screen" aria-label="Game screen">
+    <div class="topbar">
+      <button id="btn-home" class="icon-btn" type="button" aria-label="Back to start">🏠</button>
+      <div class="progress" id="progress" role="img" aria-label="Progress"></div>
+      <div class="topbar-right">
+        <button id="btn-hint" class="pill-btn" type="button" aria-label="Show a hint"><span aria-hidden="true">💡</span><span class="label">Hint</span></button>
+        <button class="icon-btn sound-toggle" type="button" aria-label="Sound on" aria-pressed="true">🔊</button>
+      </div>
+    </div>
+
+    <div class="stage-wrap" id="stage-wrap">
+      <div class="stage" id="stage">
+        <svg class="layer layer-bg" id="layer-bg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+        <div class="ghost" id="ghost" aria-hidden="true"></div>
+        <div class="teddy" id="teddy" tabindex="0" role="button"
+             aria-label="Teddy. Drag me, or use the arrow keys to move me and press Enter to drop me.">
+          <div class="teddy-body" id="teddy-body">
+            <div class="teddy-float" id="teddy-float"></div>
+          </div>
+        </div>
+        <svg class="layer layer-fg" id="layer-fg" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="sentence-row">
+        <button id="btn-speak" class="icon-btn" type="button" aria-label="Read the sentence aloud">🔈</button>
+        <p class="sentence" id="sentence" aria-live="polite"></p>
+      </div>
+      <div class="tiles hidden" id="tiles"></div>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===================== END SCREEN ===================== -->
+  <section id="screen-end" class="screen" aria-label="End screen">
+    <div class="confetti-box" id="confetti"></div>
+    <button class="icon-btn sound-toggle corner" type="button" aria-label="Sound on" aria-pressed="true">🔊</button>
+    <h2 class="end-title">Hooray!</h2>
+    <div class="end-mid">
+      <div class="dancer" id="dancer"></div>
+      <p class="end-msg" id="end-msg">You found Teddy!</p>
+    </div>
+    <div class="end-bottom">
+      <button id="btn-again" class="btn again" type="button">Play again ↻</button>
+    </div>
+  </section>
+
+  <!-- floating teddies are added here -->
+  <div class="fx" id="fx" aria-hidden="true"></div>
+</div>
+
+<script>
+/* =====================================================================
+   WHERE IS TEDDY?  -  game code
+   Sections: 1 Helpers  2 Sound  3 Drawings  4 Scenes  5 Game flow
+             6 Dragging  7 Effects  8 Screens + start up
+   ===================================================================== */
+(function () {
+  'use strict';
+
+  /* ---------- 1. HELPERS ---------- */
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+  // Return a shuffled copy of an array
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // Timers that are cancelled when the screen changes (keeps the game tidy)
+  const timers = [];
+  function later(fn, ms) {
+    const id = setTimeout(() => {
+      const i = timers.indexOf(id);
+      if (i > -1) timers.splice(i, 1);
+      fn();
+    }, ms);
+    timers.push(id);
+    return id;
+  }
+  function cancelTimers() { timers.splice(0).forEach(clearTimeout); }
+
+  // The stage is a 400 x 300 "unit" world. All positions below use these units.
+  const STAGE_W = 400, STAGE_H = 300;
+  const START_POS = [48, 62];           // where Teddy starts each question
+
+  // Words, grouped by difficulty (the player picks 4, 6 or 8)
+  const LEVELS = {
+    4: ['in', 'on', 'under', 'behind'],
+    6: ['in', 'on', 'under', 'behind', 'beside', 'between'],
+    8: ['in', 'on', 'under', 'behind', 'beside', 'between', 'above', 'below']
+  };
+
+  // Game state
+  const state = {
+    count: 4, questions: [], idx: 0, prep: '',
+    phase: 'idle',        // idle | teddy | returning | snapping | word | done
+    wrong: 0, wordWrong: 0, mistakes: 0,
+    pos: START_POS.slice(), soundOn: true, keyboard: false
+  };
+
+  // Page elements we use a lot
+  const screens   = $$('.screen');
+  const stage     = $('#stage');
+  const stageWrap = $('#stage-wrap');
+  const bgLayer   = $('#layer-bg');
+  const fgLayer   = $('#layer-fg');
+  const teddy     = $('#teddy');
+  const teddyBody = $('#teddy-body');
+  const ghost     = $('#ghost');
+  const sentenceEl = $('#sentence');
+  const tilesEl   = $('#tiles');
+  const feedbackEl = $('#feedback');
+  const progressEl = $('#progress');
+  const btnHint   = $('#btn-hint');
+  const btnSpeak  = $('#btn-speak');
+  const btnAgain  = $('#btn-again');
+  const fxEl      = $('#fx');
+
+  /* ---------- 2. SOUND ---------- */
+  let audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) { try { audioCtx = new AC(); } catch (e) { audioCtx = null; } }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  // Play one soft note
+  function tone(freq, start, dur, type, vol) {
+    if (!state.soundOn) return;
+    const ctx = getAudio();
+    if (!ctx) return;
+    const t = ctx.currentTime + start;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(vol || 0.25, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + dur + 0.05);
+  }
+  const ding  = () => { tone(988, 0, .5); tone(1318.5, .09, .7); tone(1976, .09, .4, 'sine', .08); };
+  const boop  = () => { tone(220, 0, .25, 'triangle', .25); tone(165, .12, .3, 'triangle', .25); };
+  const cheer = () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * .12, .45, 'triangle', .22));
+
+  // Browsers only allow sound after a tap/click, so wake the audio up on the first one
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => { getAudio(); }, { passive: true }));
+
+  // Read text aloud (the speaker button)
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.85; u.pitch = 1.1; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    } catch (e) { /* speech is a bonus, ignore errors */ }
+  }
+  if (!('speechSynthesis' in window)) btnSpeak.style.display = 'none';
+
+  function updateSoundButtons() {
+    $$('.sound-toggle').forEach(b => {
+      b.textContent = state.soundOn ? '🔊' : '🔇';
+      b.setAttribute('aria-pressed', String(state.soundOn));
+      b.setAttribute('aria-label', state.soundOn ? 'Sound on' : 'Sound off');
+    });
+  }
+  $$('.sound-toggle').forEach(b => b.addEventListener('click', () => {
+    state.soundOn = !state.soundOn;
+    updateSoundButtons();
+    if (!state.soundOn && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+  }));
+
+  /* ---------- 3. DRAWINGS (SVG strings) ---------- */
+  // Teddy bear. viewBox is 100 x 111.
+  function bearSVG() {
+    return '<svg class="bear" viewBox="0 0 100 111" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">' +
+      '<circle cx="25" cy="18" r="13" fill="#b9772f"/><circle cx="25" cy="18" r="7" fill="#f0c28f"/>' +
+      '<circle cx="75" cy="18" r="13" fill="#b9772f"/><circle cx="75" cy="18" r="7" fill="#f0c28f"/>' +
+      '<ellipse cx="31" cy="102" rx="15" ry="9" fill="#b9772f"/><ellipse cx="69" cy="102" rx="15" ry="9" fill="#b9772f"/>' +
+      '<ellipse cx="31" cy="103" rx="8" ry="5" fill="#f0c28f"/><ellipse cx="69" cy="103" rx="8" ry="5" fill="#f0c28f"/>' +
+      '<ellipse cx="50" cy="80" rx="29" ry="29" fill="#c98a3d"/>' +
+      '<ellipse cx="50" cy="84" rx="17" ry="19" fill="#f4d3a3"/>' +
+      '<g class="arm arm-l"><ellipse cx="19" cy="76" rx="9" ry="16" transform="rotate(22 19 76)" fill="#b9772f"/></g>' +
+      '<g class="arm arm-r"><ellipse cx="81" cy="76" rx="9" ry="16" transform="rotate(-22 81 76)" fill="#b9772f"/></g>' +
+      '<circle cx="50" cy="40" r="28" fill="#c98a3d"/>' +
+      '<ellipse cx="50" cy="50" rx="14" ry="11" fill="#f4d3a3"/>' +
+      '<ellipse cx="50" cy="45" rx="5.5" ry="3.8" fill="#4a2a14"/>' +
+      '<path d="M50 49v4M50 53q-4 4-8 1M50 53q4 4 8 1" stroke="#4a2a14" stroke-width="2" fill="none" stroke-linecap="round"/>' +
+      '<circle cx="38" cy="35" r="4" fill="#2d1a0c"/><circle cx="62" cy="35" r="4" fill="#2d1a0c"/>' +
+      '<circle cx="39.3" cy="33.7" r="1.3" fill="#fff"/><circle cx="63.3" cy="33.7" r="1.3" fill="#fff"/>' +
+      '<ellipse cx="30" cy="47" rx="5" ry="3.2" fill="#ff8f8f" opacity=".55"/><ellipse cx="70" cy="47" rx="5" ry="3.2" fill="#ff8f8f" opacity=".55"/>' +
+      '<path d="M50 68l-12-7v14z M50 68l12-7v14z" fill="#e4472e"/><circle cx="50" cy="68" r="3.6" fill="#b92d17"/>' +
+      '</svg>';
+  }
+
+  // Balloon that appears when Teddy is "above"
+  const BALLOON_SVG =
+    '<svg class="balloon" viewBox="0 0 40 80" aria-hidden="true">' +
+    '<path d="M20 80C18 70 24 64 20 52" stroke="#8b5a2b" stroke-width="1.6" fill="none"/>' +
+    '<ellipse cx="20" cy="26" rx="16" ry="21" fill="#ff5d73"/>' +
+    '<ellipse cx="14" cy="18" rx="4" ry="6" fill="rgba(255,255,255,.5)"/>' +
+    '<path d="M20 47l-4 6h8z" fill="#e0344f"/></svg>';
+
+  // Wall + floor that every scene shares (floor line is at y = 245)
+  const BASE =
+    '<defs>' +
+    '<linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7de"/><stop offset="1" stop-color="#ffe7b3"/></linearGradient>' +
+    '<pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="7" cy="7" r="2.6" fill="#ffd9a0" opacity=".55"/><circle cx="21" cy="21" r="2.6" fill="#ffd9a0" opacity=".55"/></pattern>' +
+    '</defs>' +
+    '<rect width="400" height="245" fill="url(#wall)"/><rect width="400" height="245" fill="url(#dots)"/>' +
+    '<rect y="236" width="400" height="10" fill="#f6cf8f"/>' +
+    '<rect y="245" width="400" height="55" fill="#e5b273"/>' +
+    '<path d="M0 266H400M0 285H400M80 245V266M240 245V266M150 266V285M320 266V285M30 285V300M200 285V300M360 285V300" stroke="#d29c5d" stroke-width="2.5"/>';
+
+  const OUTLINE = '#8b5a2b', WOOD_TOP = '#e8b374', WOOD_SIDE = '#cf8f50', WOOD_LIGHT = '#e0a468';
+
+  // A table with legs. x = left edge, w = width. Tabletop is at y = 130.
+  function legTable(x, w) {
+    const topY = 130, legW = 16, inset = 12;
+    const leg = lx => '<rect x="' + lx + '" y="' + (topY + 10) + '" width="' + legW + '" height="' + (245 - topY - 10) +
+      '" rx="5" fill="' + WOOD_SIDE + '" stroke="' + OUTLINE + '" stroke-width="3"/>';
+    return '<ellipse cx="' + (x + w / 2) + '" cy="248" rx="' + (w / 2 + 4) + '" ry="6" fill="rgba(90,51,25,.15)"/>' +
+      leg(x + inset) + leg(x + w - inset - legW) +
+      '<rect x="' + x + '" y="' + topY + '" width="' + w + '" height="18" rx="9" fill="' + WOOD_TOP + '" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      '<rect x="' + (x + 8) + '" y="' + (topY + 4) + '" width="' + (w - 16) + '" height="4" rx="2" fill="rgba(255,255,255,.35)"/>';
+  }
+
+  // A solid cabinet-style table (used for "behind", drawn in FRONT of Teddy)
+  function cabinetTable() {
+    const knob = (cx, cy) => '<circle cx="' + cx + '" cy="' + cy + '" r="4.5" fill="#fff3c4" stroke="' + OUTLINE + '" stroke-width="2"/>';
+    const drawer = (x, y, w, h) => '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="8" fill="' + WOOD_LIGHT + '" stroke="' + OUTLINE + '" stroke-width="2.5"/>';
+    return '<ellipse cx="200" cy="248" rx="106" ry="6" fill="rgba(90,51,25,.15)"/>' +
+      '<rect x="108" y="140" width="184" height="105" rx="8" fill="' + WOOD_SIDE + '" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      drawer(120, 158, 76, 36) + drawer(204, 158, 76, 36) + drawer(120, 202, 160, 30) +
+      knob(158, 176) + knob(242, 176) + knob(200, 217) +
+      '<rect x="100" y="130" width="200" height="18" rx="9" fill="' + WOOD_TOP + '" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      '<rect x="108" y="134" width="184" height="4" rx="2" fill="rgba(255,255,255,.35)"/>';
+  }
+
+  // A table with a big open cubby (used for "in")
+  function cubbyTable() {
+    return '<ellipse cx="200" cy="248" rx="106" ry="6" fill="rgba(90,51,25,.15)"/>' +
+      '<rect x="118" y="122" width="164" height="123" rx="8" fill="' + WOOD_SIDE + '" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      '<rect x="132" y="136" width="136" height="100" rx="10" fill="#5b3a1e" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      '<rect x="138" y="142" width="124" height="88" rx="7" fill="#7c5230"/>' +
+      '<rect x="108" y="108" width="184" height="20" rx="10" fill="' + WOOD_TOP + '" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      '<rect x="116" y="112" width="168" height="4" rx="2" fill="rgba(255,255,255,.35)"/>';
+  }
+
+  // A table hanging from the ceiling (used for "below")
+  function hangingTable() {
+    return '<rect x="0" y="0" width="400" height="8" fill="#d9b382"/>' +
+      '<ellipse cx="200" cy="256" rx="96" ry="7" fill="rgba(90,51,25,.10)"/>' +
+      '<line x1="122" y1="8" x2="122" y2="62" stroke="#a5784a" stroke-width="4" stroke-linecap="round"/>' +
+      '<line x1="278" y1="8" x2="278" y2="62" stroke="#a5784a" stroke-width="4" stroke-linecap="round"/>' +
+      '<rect x="100" y="60" width="200" height="18" rx="9" fill="' + WOOD_TOP + '" stroke="' + OUTLINE + '" stroke-width="3"/>' +
+      '<rect x="108" y="64" width="184" height="4" rx="2" fill="rgba(255,255,255,.35)"/>';
+  }
+
+  /* ---------- 4. SCENES ----------
+     Each word has:
+       np     - the noun phrase for the sentence
+       draw   - returns { bg, fg } drawings (fg is drawn IN FRONT of Teddy)
+       zones  - correct drop areas: [xMin, xMax, yMin, yMax] for Teddy's centre
+       snap   - where Teddy settles after a correct drop
+       hint   - where the faded teddy is shown
+     To change a noun (e.g. "the box"), edit the np value.                  */
+  const SCENES = {
+    on: {
+      np: 'the table', draw: () => ({ bg: legTable(100, 200) }),
+      zones: [[110, 290, 70, 112]], snap: x => [clamp(x, 128, 272), 90], hint: [200, 90]
+    },
+    above: {
+      np: 'the table', draw: () => ({ bg: legTable(100, 200) }), floaty: true,
+      zones: [[105, 295, 26, 78]], snap: x => [clamp(x, 125, 275), 48], hint: [200, 48]
+    },
+    under: {
+      np: 'the table', draw: () => ({ bg: legTable(100, 200) }),
+      zones: [[132, 268, 172, 228]], snap: x => [clamp(x, 166, 234), 205], hint: [200, 205]
+    },
+    in: {
+      np: 'the table', draw: () => ({ bg: cubbyTable() }),
+      zones: [[140, 260, 150, 228]], snap: x => [clamp(x, 170, 230), 196], hint: [200, 196]
+    },
+    behind: {
+      np: 'the table', draw: () => ({ fg: cabinetTable() }), behind: true,
+      zones: [[130, 270, 150, 215]], snap: x => [clamp(x, 146, 254), 190], hint: [200, 190]
+    },
+    beside: {
+      np: 'the table', draw: () => ({ bg: legTable(100, 200) }),
+      zones: [[318, 364, 168, 228], [36, 82, 168, 228]],
+      snap: x => (x > 200 ? [clamp(x, 326, 364), 205] : [clamp(x, 38, 74), 205]), hint: [350, 205]
+    },
+    between: {
+      np: 'the tables', draw: () => ({ bg: legTable(20, 100) + legTable(280, 100) }),
+      zones: [[155, 245, 100, 228]], snap: x => [clamp(x, 160, 240), 205], hint: [200, 205]
+    },
+    below: {
+      np: 'the table', draw: () => ({ bg: hangingTable() }),
+      zones: [[90, 310, 125, 228]], snap: x => [clamp(x, 100, 300), 205], hint: [200, 205]
+    }
+  };
+
+  /* ---------- 5. GAME FLOW ---------- */
+  function startGame() {
+    state.questions = shuffle(LEVELS[state.count]);
+    state.idx = 0;
+    state.mistakes = 0;
+    showScreen('game');
+    fitStage();
+    loadQuestion();
+  }
+
+  function renderProgress() {
+    progressEl.innerHTML = state.questions.map((_, i) =>
+      '<span class="dot ' + (i < state.idx ? 'done' : i === state.idx ? 'current' : '') + '"></span>').join('');
+    progressEl.setAttribute('aria-label', 'Question ' + (state.idx + 1) + ' of ' + state.questions.length);
+  }
+
+  // Put Teddy at a position (in stage units)
+  function placeTeddy(x, y) {
+    state.pos = [x, y];
+    teddy.style.left = (x / STAGE_W * 100) + '%';
+    teddy.style.top = (y / STAGE_H * 100) + '%';
+  }
+  // Same, but keeps Teddy inside the stage
+  function moveTeddy(x, y) {
+    placeTeddy(clamp(x, 36, STAGE_W - 36), clamp(y, 40, STAGE_H - 40));
+  }
+
+  function restartAnim(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth;          // forces the browser to restart the animation
+    el.classList.add(cls);
+  }
+
+  function loadQuestion() {
+    state.prep = state.questions[state.idx];
+    const scene = SCENES[state.prep];
+    const art = scene.draw();
+    bgLayer.innerHTML = BASE + (art.bg || '');
+    fgLayer.innerHTML = art.fg || '';
+
+    teddy.className = 'teddy' + (scene.behind ? ' behind-scene' : '');
+    ghost.classList.toggle('over', !!scene.behind);
+    hideGhost();
+    placeTeddy(START_POS[0], START_POS[1]);
+    restartAnim(teddyBody, 'pop');
+    state.wrong = 0;
+    state.wordWrong = 0;
+    state.phase = 'teddy';
+
+    // Ghost (hint) lives at the correct spot
+    ghost.style.left = (scene.hint[0] / STAGE_W * 100) + '%';
+    ghost.style.top = (scene.hint[1] / STAGE_H * 100) + '%';
+
+    sentenceEl.innerHTML = 'Put Teddy <mark class="prep">' + state.prep + '</mark> ' + scene.np + '.';
+    tilesEl.innerHTML = '';
+    tilesEl.classList.add('hidden');
+    feedbackEl.textContent = 'Drag Teddy to the right spot!';
+    btnHint.disabled = false;
+    renderProgress();
+    if (state.keyboard) teddy.focus({ preventScroll: true });
+  }
+
+  // --- Step 1: did Teddy land in the right place? ---
+  function evaluateDrop() {
+    const scene = SCENES[state.prep];
+    const x = state.pos[0], y = state.pos[1];
+    const ok = scene.zones.some(z => x >= z[0] && x <= z[1] && y >= z[2] && y <= z[3]);
+    if (ok) teddyCorrect(); else teddyWrong();
+  }
+
+  function teddyCorrect() {
+    state.phase = 'snapping';
+    const scene = SCENES[state.prep];
+    const target = scene.snap(state.pos[0], state.pos[1]);
+    if (scene.behind) teddy.classList.remove('lift');   // slip behind the table
+    teddy.classList.add('anim');
+    placeTeddy(target[0], target[1]);
+    hideGhost();
+    ding();
+    btnHint.disabled = true;
+    feedbackEl.textContent = 'Yes! That is the right spot!';
+    later(() => {
+      teddy.classList.remove('anim', 'lift');
+      if (scene.floaty) teddy.classList.add('floaty');
+      burst(teddy, 9);
+      restartAnim(teddyBody, 'happy');
+    }, 620);
+    later(showWordPhase, 1500);
+  }
+
+  function teddyWrong() {
+    state.phase = 'returning';
+    state.wrong++; state.mistakes++;
+    boop();
+    feedbackEl.textContent = state.wrong >= 2 ? 'Look at the faded Teddy for a hint!' : 'Not quite. Try another spot!';
+    teddy.classList.add('anim');
+    placeTeddy(START_POS[0], START_POS[1]);
+    later(() => {
+      teddy.classList.remove('anim', 'lift');
+      state.phase = 'teddy';
+      if (state.wrong >= 2) showHint();      // automatic hint after two misses
+    }, 650);
+  }
+
+  // --- Hint: a faded teddy shows the right place ---
+  function showHint() {
+    if (state.phase !== 'teddy') return;
+    ghost.classList.add('show');
+    later(hideGhost, 4000);
+  }
+  function hideGhost() { ghost.classList.remove('show'); }
+
+  // --- Step 2: choose the word that completes the sentence ---
+  function showWordPhase() {
+    state.phase = 'word';
+    const scene = SCENES[state.prep];
+    sentenceEl.innerHTML = 'Teddy is <span class="slot" id="slot" aria-label="blank"></span> ' + scene.np + '.';
+
+    // the right word + up to 3 other words from this round
+    const others = shuffle(state.questions.filter(w => w !== state.prep)).slice(0, 3);
+    const words = shuffle([state.prep].concat(others));
+    tilesEl.innerHTML = '';
+    words.forEach(w => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tile';
+      b.textContent = w;
+      b.dataset.word = w;
+      b.setAttribute('aria-label', w);
+      tilesEl.appendChild(b);
+      enableTileDrag(b);
+    });
+    tilesEl.classList.remove('hidden');
+    feedbackEl.textContent = 'Now drag the word that fits!';
+    btnHint.disabled = true;
+    if (state.keyboard && tilesEl.firstChild) tilesEl.firstChild.focus({ preventScroll: true });
+  }
+
+  function attemptWord(tile) {
+    if (state.phase !== 'word') return;
+    if (tile.dataset.word === state.prep) wordCorrect(tile); else wordWrong(tile);
+  }
+
+  function wordCorrect(tile) {
+    state.phase = 'done';
+    const slot = $('#slot');
+    slot.textContent = state.prep;
+    slot.classList.remove('hover');
+    slot.classList.add('filled');
+    tile.style.transform = '';
+    tile.classList.add('used');
+    ding();
+    burst(slot, 9);                 // teddies float around the word...
+    burst(teddy, 6);                // ...and around Teddy
+    restartAnim(teddyBody, 'happy');
+    feedbackEl.textContent = 'Yes! Teddy is ' + state.prep + ' ' + SCENES[state.prep].np + '!';
+    const dot = progressEl.children[state.idx];
+    if (dot) dot.className = 'dot done';
+
+    const last = state.idx >= state.questions.length - 1;
+    later(() => {
+      if (last) { finishGame(); }
+      else { state.idx++; loadQuestion(); }
+    }, 2200);
+  }
+
+  function wordWrong(tile) {
+    state.mistakes++; state.wordWrong++;
+    boop();
+    feedbackEl.textContent = 'Not quite. Look at where Teddy is!';
+    returnTile(tile);
+    later(() => { restartAnim(tile, 'shake'); later(() => tile.classList.remove('shake'), 500); }, 350);
+    if (state.wordWrong >= 3) {      // extra help: the right word glows
+      const right = $$('.tile', tilesEl).find(t => t.dataset.word === state.prep);
+      if (right) right.classList.add('glow');
+    }
+  }
+
+  function returnTile(tile) {
+    tile.style.transition = 'transform .35s cubic-bezier(.34,1.56,.64,1)';
+    tile.style.transform = '';
+  }
+
+  /* ---------- 6. DRAGGING (mouse, touch and pen all use "pointer events") ---------- */
+  // Convert a pointer position into stage units
+  function stagePoint(e) {
+    const r = stage.getBoundingClientRect();
+    return [(e.clientX - r.left) / r.width * STAGE_W, (e.clientY - r.top) / r.height * STAGE_H];
+  }
+
+  // ---- Teddy ----
+  let drag = null;
+  teddy.addEventListener('pointerdown', e => {
+    if (state.phase !== 'teddy') return;
+    e.preventDefault();
+    state.keyboard = false;
+    teddy.setPointerCapture(e.pointerId);
+    const p = stagePoint(e);
+    drag = { id: e.pointerId, ox: p[0] - state.pos[0], oy: p[1] - state.pos[1] };
+    teddy.classList.remove('anim');
+    teddy.classList.add('dragging');
+    hideGhost();
+  });
+  teddy.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const p = stagePoint(e);
+    moveTeddy(p[0] - drag.ox, p[1] - drag.oy);
+  });
+  function endTeddyDrag(e) {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag = null;
+    teddy.classList.remove('dragging');
+    teddy.classList.add('lift');
+    evaluateDrop();
+  }
+  teddy.addEventListener('pointerup', endTeddyDrag);
+  teddy.addEventListener('pointercancel', endTeddyDrag);
+
+  // Keyboard: arrow keys move Teddy (hold Shift for big steps), Enter or Space drops him
+  teddy.addEventListener('keydown', e => {
+    if (state.phase !== 'teddy') return;
+    state.keyboard = true;
+    const step = e.shiftKey ? 30 : 10;
+    let dx = 0, dy = 0;
+    if (e.key === 'ArrowLeft') dx = -step;
+    else if (e.key === 'ArrowRight') dx = step;
+    else if (e.key === 'ArrowUp') dy = -step;
+    else if (e.key === 'ArrowDown') dy = step;
+    else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      teddy.classList.add('lift');
+      evaluateDrop();
+      return;
+    } else return;
+    e.preventDefault();
+    hideGhost();
+    teddy.classList.remove('anim');
+    teddy.classList.add('lift');
+    moveTeddy(state.pos[0] + dx, state.pos[1] + dy);
+  });
+
+  // ---- Word tiles ----
+  function pointerOverSlot(e) {
+    const slot = $('#slot');
+    if (!slot) return false;
+    const b = slot.getBoundingClientRect();
+    const pad = 36;      // generous target for little fingers
+    return e.clientX > b.left - pad && e.clientX < b.right + pad &&
+           e.clientY > b.top - pad && e.clientY < b.bottom + pad;
+  }
+
+  function enableTileDrag(tile) {
+    let startX = 0, startY = 0, active = false, moved = false;
+
+    tile.addEventListener('pointerdown', e => {
+      if (state.phase !== 'word') return;
+      e.preventDefault();
+      state.keyboard = false;
+      tile.setPointerCapture(e.pointerId);
+      startX = e.clientX; startY = e.clientY;
+      active = true; moved = false;
+      tile.classList.remove('glow', 'shake');
+      tile.classList.add('dragging');
+      tile.style.transition = 'none';
+    });
+
+    tile.addEventListener('pointermove', e => {
+      if (!active) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (Math.abs(dx) + Math.abs(dy) > 4) moved = true;
+      tile.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.08)';
+      const slot = $('#slot');
+      if (slot) slot.classList.toggle('hover', pointerOverSlot(e));
+    });
+
+    function end(e, cancelled) {
+      if (!active) return;
+      active = false;
+      tile.classList.remove('dragging');
+      const slot = $('#slot');
+      if (slot) slot.classList.remove('hover');
+      if (!cancelled && moved && pointerOverSlot(e)) attemptWord(tile);
+      else returnTile(tile);
+    }
+    tile.addEventListener('pointerup', e => end(e, false));
+    tile.addEventListener('pointercancel', e => end(e, true));
+
+    // Keyboard: Enter or Space places the word in the blank
+    tile.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        state.keyboard = true;
+        attemptWord(tile);
+      }
+    });
+  }
+
+  /* ---------- 7. EFFECTS ---------- */
+  // Small teddies pop up around an element and float away
+  function burst(el, count) {
+    const r = el.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const radius = Math.max(r.width, r.height) / 2 + 18;
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.6;
+      const dist = radius + Math.random() * 36;
+      const mini = document.createElement('div');
+      mini.className = 'mini';
+      mini.innerHTML = bearSVG();
+      mini.style.left = (cx + Math.cos(angle) * dist) + 'px';
+      mini.style.top = (cy + Math.sin(angle) * dist) + 'px';
+      mini.style.setProperty('--s', (22 + Math.random() * 16) + 'px');
+      mini.style.setProperty('--dx', (Math.random() * 50 - 25) + 'px');
+      mini.style.setProperty('--dy', -(70 + Math.random() * 70) + 'px');
+      mini.style.setProperty('--rot', (Math.random() * 60 - 30) + 'deg');
+      mini.style.setProperty('--d', (i * 0.06) + 's');
+      mini.addEventListener('animationend', () => mini.remove());
+      fxEl.appendChild(mini);
+    }
+  }
+
+  function makeConfetti() {
+    const box = $('#confetti');
+    box.innerHTML = '';
+    const colors = ['#ff6b6b', '#ffd166', '#4cc38a', '#4dabf7', '#b983ff', '#ff9a5c'];
+    for (let i = 0; i < 46; i++) {
+      const p = document.createElement('i');
+      p.className = 'confetti';
+      p.style.left = (Math.random() * 100) + '%';
+      p.style.background = colors[i % colors.length];
+      p.style.animationDuration = (3 + Math.random() * 3) + 's';
+      p.style.animationDelay = (-Math.random() * 5) + 's';
+      p.style.setProperty('--sway', (Math.random() * 80 - 40) + 'px');
+      box.appendChild(p);
+    }
+  }
+
+  /* ---------- 8. SCREENS + START UP ---------- */
+  function showScreen(name) {
+    cancelTimers();
+    screens.forEach(s => {
+      const on = s.id === 'screen-' + name;
+      s.classList.toggle('active', on);
+      s.setAttribute('aria-hidden', on ? 'false' : 'true');
+    });
+    if (name !== 'game') { state.phase = 'idle'; }
+    if (name !== 'end') { $('#confetti').innerHTML = ''; btnAgain.classList.remove('show'); }
+  }
+
+  function finishGame() {
+    showScreen('end');
+    $('#end-msg').textContent = 'You found Teddy ' + state.questions.length + ' times!';
+    makeConfetti();
+    cheer();
+    btnAgain.classList.remove('show');
+    // The Play again button appears after Teddy has danced for a bit
+    later(() => {
+      btnAgain.classList.add('show');
+      cheer();
+      if (state.keyboard) btnAgain.focus({ preventScroll: true });
+    }, 3800);
+  }
+
+  // Make the 4:3 stage as big as possible without any scrolling
+  function fitStage() {
+    const pad = 16;     // matches the 8px padding on each side of .stage-wrap
+    const w = stageWrap.clientWidth - pad;
+    const h = stageWrap.clientHeight - pad;
+    if (w <= 0 || h <= 0) return;
+    const sw = Math.max(160, Math.min(w, h * 4 / 3));
+    stage.style.width = sw + 'px';
+    stage.style.height = (sw * 3 / 4) + 'px';
+  }
+  window.addEventListener('resize', fitStage);
+  window.addEventListener('orientationchange', () => setTimeout(fitStage, 250));
+  if (window.ResizeObserver) new ResizeObserver(fitStage).observe(stageWrap);
+
+  // Buttons
+  $$('.pick-btn').forEach(b => b.addEventListener('click', () => {
+    state.count = parseInt(b.dataset.count, 10);
+    $$('.pick-btn').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+  }));
+  $('#btn-start').addEventListener('click', () => { getAudio(); startGame(); });
+  $('#btn-home').addEventListener('click', () => showScreen('start'));
+  btnAgain.addEventListener('click', () => { showScreen('start'); });   // Play again -> back to the start screen
+  btnHint.addEventListener('click', () => showHint());
+  btnSpeak.addEventListener('click', () => {
+    let text = sentenceEl.textContent;
+    if (state.phase === 'word') text = 'Teddy is blank ' + SCENES[state.prep].np + '.';
+    speak(text);
+  });
+
+  // Keyboard shortcut: H shows the hint
+  document.addEventListener('keydown', e => {
+    if ((e.key === 'h' || e.key === 'H') && state.phase === 'teddy') { state.keyboard = true; showHint(); }
+  });
+
+  // Stop the long-press menu from popping up while dragging on touch screens
+  document.addEventListener('contextmenu', e => {
+    if (e.target.closest && e.target.closest('.tile, .teddy')) e.preventDefault();
+  });
+
+  // Fill in the drawings that never change
+  $('#start-teddy').innerHTML = bearSVG();
+  $('#teddy-float').innerHTML = bearSVG() + BALLOON_SVG;
+  $('#ghost').innerHTML = bearSVG();
+  $('#dancer').innerHTML = bearSVG();
+  updateSoundButtons();
+  fitStage();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitStage);
+})();
+</script>
+</body>
+</html>
