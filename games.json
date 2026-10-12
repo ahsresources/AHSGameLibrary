@@ -1,5 +1,15 @@
 [    
     {
+    "id": "feelings-detective",
+    "title": "Feelings Detective",
+    "description": "Teach perspective-taking and practice answering how and why questions in relation to feelings.",
+    "creatorName": "Teacher Eileen and Teacher Carmina",
+    "category": "SEL",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["feelings", "emotions", "LC.RD.2.8", "SE.SF.3.1", "SE.SO.1.3"],
+    "uploadDate": "2026-10-12"
+  },
+    {
     "id": "mcdonalds-kiosk",
     "title": "Mcdonald's Ordering Kiosk",
     "description": "A 1-to-1 replica of Singapore's McDonald's Ordering Kiosk! P.S. Best viewed on iPad Portrait and no real food is served upon order. No copyright intended, for educational purposes only.",
