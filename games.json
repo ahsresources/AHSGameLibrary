@@ -1,4 +1,14 @@
-[    
+[   
+    {
+    "id": "where-is-teddy",
+    "title": "Where is Teddy?",
+    "description": "Practice prepositions by placing Teddy at just the right spot.",
+    "creatorName": "Teacher Syakirah",
+    "category": "SEL",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["prepositions", "grammar", "comprehension", "reading", "LC.WT.04.02.00"],
+    "uploadDate": "2026-10-12"
+  },
     {
     "id": "feelings-detective",
     "title": "Feelings Detective",
