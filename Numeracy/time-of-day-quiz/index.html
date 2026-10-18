@@ -339,6 +339,10 @@ function html(s){const t=document.createElement("template");t.innerHTML=s.trim()
 function progress(i,n){return `<div class="progress"><div class="track"><div class="fill" style="width:${i/n*100}%"></div></div><div class="count">${Math.min(i+1,n)} of ${n}</div></div>`}
 const GOOD=["Great job!","You got it!","Well done!","Yes, that's right!"];
 const pick=a=>a[Math.random()*a.length|0];
+// Every game screen belongs to a "run". Leaving to the menu (or starting a game) ends the run,
+// and any delayed step from the old run (next question, end screen) is dropped.
+let run=0;
+const later=(fn,ms)=>{const r=run;return setTimeout(()=>{if(r===run)fn()},ms)};
 
 // Picture with tidy placeholder if the file hasn't been added yet
 window.imgFail=(el)=>{const d=document.createElement("div");d.className=el.className+" missing";d.innerHTML=SVG.image+`<span>${el.getAttribute("src")}</span>`;el.replaceWith(d)};
@@ -357,6 +361,7 @@ const stopSpeech=()=>{try{speechSynthesis.cancel()}catch(e){}};
    MENU + NAV
    ===================================================== */
 function menu(){
+  run++;
   document.body.classList.remove("fit");
   stopSpeech();sky("neutral");setScore(0);
   homeBtn.classList.add("hidden");scoreEl.classList.add("hidden");
@@ -364,7 +369,7 @@ function menu(){
     <h1 class="title">What time is it?</h1>
     <p class="sub">Pick a game to play.</p>
     <div class="menu">
-      <button class="tile t-daynight" data-g="daynight"><div class="art"><span style="width:88px">${SVG.sun}</span><span style="width:88px;margin-left:auto">${SVG.moon}</span></div><div class="txt"><h2>Day or night</h2><p>Bright or dark?</p></div></button>
+      <button class="tile t-daynight" data-g="daynight"><div class="art"><span style="width:88px">${SVG.sun}</span><span style="width:88px;margin-left:auto">${SVG.moon}</span></div><div class="txt"><h2>Day or night</h2><p>Sun or moon?</p></div></button>
       <button class="tile t-story" data-g="story"><div class="art">${SVG.book}</div><div class="txt"><h2>The story</h2><p>Read a day, page by page.</p></div></button>
       <button class="tile t-identify" data-g="identify"><div class="art">${SVG.look}</div><div class="txt"><h2>What time of day?</h2><p>Look and choose.</p></div></button>
       <button class="tile t-sort" data-g="sort"><div class="art">${SVG.puzzle}</div><div class="txt"><h2>Sort the day</h2><p>Drag each picture.</p></div></button>
@@ -372,6 +377,7 @@ function menu(){
   $$("[data-g]").forEach(b=>b.onclick=()=>start(b.dataset.g));
 }
 function start(g){
+  run++;
   stopSpeech();sky("neutral");setScore(0);
   homeBtn.classList.remove("hidden");
   document.body.classList.toggle("fit",g!=="sort");
@@ -387,7 +393,7 @@ function endScreen(total,again){
     <div class="big-stars">${[0,1,2].map(i=>`<span class="${i<n?"":""}">${SVG.star.replace("<svg",`<svg class="${i<n?"on":""}" style="animation-delay:${i*.18}s"`)}</span>`).join("")}</div>
     <h2>All done!</h2><p>You got ${score} out of ${total}.</p>
     <div class="btns"><button class="btn" id="again">Play again</button><button class="btn alt" id="menuBtn">Back to menu</button></div></div>`;
-  $("#again").onclick=again;$("#menuBtn").onclick=menu;
+  $("#again").onclick=()=>{run++;again()};$("#menuBtn").onclick=menu;
   sky("neutral");Sound.play("win");
 }
 
@@ -401,7 +407,7 @@ function askRound({i,n,question,image,options,correct,render,next}){
     const say=$(".say");
     if(b.dataset.a===correct){
       locked=true;setScore(score+1);b.classList.add("right");say.className="say good";say.textContent=pick(GOOD);
-      Sound.play("good");setTimeout(next,1300);
+      Sound.play("good");later(next,1300);
     }else{
       // wrong answer: gentle visual hint only, no sound
       b.classList.remove("nope");void b.offsetWidth;b.classList.add("nope");say.className="say bad";say.textContent="Not quite. Try another.";
@@ -515,7 +521,7 @@ function gSort(){
         if(z&&z.dataset.t===d.dataset.t){
           ph.remove();d.classList.add("placed");$(".slot",z).appendChild(d);Sound.play("good");
           setScore(score+1);placed++;say.className="say good";say.textContent=pick(GOOD);
-          if(placed===items.length){$("#traytitle").textContent="All sorted!";setTimeout(()=>endScreen(items.length,gSort),1100)}
+          if(placed===items.length){$("#traytitle").textContent="All sorted!";later(()=>endScreen(items.length,gSort),1100)}
         }else{
           ph.replaceWith(d);
           if(z){d.classList.add("back");setTimeout(()=>d.classList.remove("back"),400);say.className="say bad";say.textContent="Not quite. Try another box."}
