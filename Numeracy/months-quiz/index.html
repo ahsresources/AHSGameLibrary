@@ -234,7 +234,7 @@ function renderCal(){
   cells+=`<button class="${c}" ${q.res||isW(d)?"disabled":""} onclick="pickDay(${d})" aria-label="${d} ${MONTHS[q.view]}">${d}</button>`;
  }
  shell(`${head("Find the date",q.i,q.total)}<div class="panel"><div class="split">
- <div class="info"><p class="lbl">Find this day on the calendar</p><div><h3 class="ev">${esc(e.n)}</h3><span class="when">(${e.d} ${MONTHS[e.m]})</span></div>
+ <div class="info"><p class="lbl">Find this day on the calendar</p><div><h3 class="ev">${esc(e.n)}</h3><span class="when">${e.d} ${MONTHS[e.m]}</span></div>
  <span class="fb ${q.res||(q.wrong.length?"bad":"")}">${q.res==="good"?"Correct!":q.wrong.length?"Not quite. Try again.":"Use the arrows to change month."}</span>
  ${q.res?`<div><button class="btn" onclick="nextCal()">${q.i+1>=q.total?"See score":"Next"}</button></div>`:""}</div>
  <div class="cal"><div class="calhd"><button onclick="navCal(-1)" aria-label="Previous month">\u2039</button><span>${MONTHS[q.view]} ${YEAR}</span><button onclick="navCal(1)" aria-label="Next month">\u203A</button></div>
