@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Months Quiz</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<style>
+:root{--bg:#eef0ff;--b1:#ffd6e5;--b2:#c6f1ff;--b3:#fff0bd;--panel:#fff;--ink:#241f55;--mute:#6b6a94;--line:#d9dcf5;--acc:#6a4cf0;--accsoft:#efeaff;--good:#0f7a4f;--goodbg:#d3f5e4;--bad:#c9302c;--badbg:#ffe0de;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17143c;--b1:#4a1d52;--b2:#12405a;--b3:#4a3a14;--panel:#231f55;--ink:#f3f1ff;--mute:#b0aee0;--line:#3d3977;--acc:#a28cff;--accsoft:#342f78;--good:#6ee0ac;--goodbg:#15412f;--bad:#ff958e;--badbg:#4a2024;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17143c;--b1:#4a1d52;--b2:#12405a;--b3:#4a3a14;--panel:#231f55;--ink:#f3f1ff;--mute:#b0aee0;--line:#3d3977;--acc:#a28cff;--accsoft:#342f78;--good:#6ee0ac;--goodbg:#15412f;--bad:#ff958e;--badbg:#4a2024;color-scheme:dark}
+*{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;height:100%;color:var(--ink);font-family:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.45;background:radial-gradient(circle at 6% 8%,var(--b1) 0,transparent 30%),radial-gradient(circle at 94% 6%,var(--b2) 0,transparent 32%),radial-gradient(circle at 88% 94%,var(--b3) 0,transparent 32%),radial-gradient(circle at 8% 96%,var(--b2) 0,transparent 26%),var(--bg)}
+main{max-width:960px;height:100%;margin:0 auto;padding:14px 24px 20px;display:flex;flex-direction:column;overflow-y:auto}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #ffb21e;outline-offset:2px}
+.bar{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 8px 18px;margin-bottom:clamp(12px,2.4vh,20px);border-radius:20px;background:linear-gradient(100deg,#6a4cf0,#b44bf0 60%,#ff5d8f);box-shadow:0 5px 0 rgba(60,30,140,.28);color:#fff}
+.brand{background:none;border:0;padding:4px 0;font-weight:700;font-size:23px;color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.18)}
+nav{display:flex;gap:6px}
+.nl{background:rgba(255,255,255,.2);border:0;padding:8px 16px;border-radius:999px;font-weight:600;font-size:15px;color:#fff}
+.nl:hover{background:rgba(255,255,255,.34)}
+.view{flex:1;min-height:0;display:flex;flex-direction:column}
+h1{font-size:clamp(30px,5.6vh,46px);line-height:1.1;margin:0 0 4px;font-weight:700}
+h2{font-size:clamp(22px,3.8vh,30px);margin:0;font-weight:700}
+.sub{color:var(--mute);margin:0 0 clamp(14px,3vh,24px);font-size:18px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:18px;flex:1;min-height:0;max-height:430px}
+.tile{display:flex;gap:16px;align-items:center;text-align:left;border:0;border-radius:24px;padding:clamp(14px,3vh,26px) 22px;font-weight:700;font-size:clamp(20px,3.2vh,25px);color:#fff;text-shadow:0 2px 0 rgba(0,0,0,.18);box-shadow:0 7px 0 rgba(0,0,0,.2);transition:transform .12s}
+.tile:hover{transform:translateY(-3px)}
+.tile:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.2)}
+.tile small{display:block;font-weight:500;font-size:16px;margin-top:2px;opacity:.95}
+.t1{background:linear-gradient(135deg,#ff8a3d,#ff4d6d)}.t2{background:linear-gradient(135deg,#2fb0d9,#4a63f0)}.t3{background:linear-gradient(135deg,#36c79a,#12998f)}.t4{background:linear-gradient(135deg,#f7b21c,#ee6a1b)}
+.ic{flex:none;width:68px;height:68px;border-radius:20px;background:rgba(255,255,255,.26);display:grid;place-items:center;font-size:36px;text-shadow:none}
+.qh{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.cnt{background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:3px 14px;color:var(--acc);font-weight:700;font-size:15px}
+.prog{height:14px;background:var(--panel);border:2px solid var(--line);border-radius:999px;overflow:hidden;margin:10px 0 clamp(12px,2.4vh,18px)}
+.prog i{display:block;height:100%;background:linear-gradient(90deg,#ffb21e,#ff5d8f,#a24bf0);border-radius:999px}
+.panel{flex:1;min-height:0;background:var(--panel);border:2px solid var(--line);border-radius:28px;padding:clamp(16px,3vh,28px);display:flex;flex-direction:column;box-shadow:0 8px 0 rgba(106,76,240,.14)}
+.center{align-items:center;justify-content:center;text-align:center}
+.lbl{color:var(--mute);font-weight:500;font-size:18px;margin:0}
+.big{display:inline-flex;align-items:center;gap:14px;font-size:clamp(38px,min(9vw,9vh),64px);font-weight:700;line-height:1.1;margin:10px 0 clamp(16px,4vh,30px);padding:10px 36px 12px;border-radius:26px;color:#fff;text-shadow:0 3px 0 rgba(0,0,0,.2);background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 62%,#000));box-shadow:0 7px 0 rgba(0,0,0,.2)}
+.em{font-size:.85em;text-shadow:none}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:580px}
+.opt{display:flex;align-items:center;justify-content:center;gap:10px;background:color-mix(in srgb,var(--c) 11%,var(--panel));border:2px solid color-mix(in srgb,var(--c) 45%,var(--line));border-bottom-width:6px;border-radius:18px;padding:clamp(10px,2.4vh,16px) 8px;font-weight:600;font-size:clamp(18px,3vh,22px);transition:transform .1s}
+.opt:hover:not(:disabled){transform:translateY(-2px);border-color:var(--c)}
+.good{background:var(--goodbg)!important;border-color:var(--good)!important;color:var(--good)}
+.bad{background:var(--badbg)!important;border-color:var(--bad)!important;color:var(--bad)}
+.opt:disabled{cursor:default}
+.fb{min-height:26px;font-weight:600;font-size:18px;color:var(--mute)}
+.fb.good,.fb.bad{background:none!important;border:0!important}
+.acts{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin-top:auto;padding-top:14px}
+.acts .fb{margin-right:auto}
+.btn{background:linear-gradient(135deg,#6a4cf0,#a24bf0);color:#fff;border:0;border-bottom:5px solid rgba(0,0,0,.28);border-radius:16px;padding:10px 26px 8px;font-weight:700;font-size:19px;text-shadow:0 2px 0 rgba(0,0,0,.2)}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(3px);border-bottom-width:2px}
+.btn:disabled{opacity:.4;cursor:not-allowed;filter:none;transform:none}
+.btn.alt{background:var(--panel);color:var(--ink);border:2px solid var(--line);border-bottom-width:5px;text-shadow:none}
+.slots{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:clamp(12px,2.4vh,18px)}
+.slot{display:flex;align-items:center;gap:8px;min-height:clamp(40px,6.6vh,52px);padding:6px 10px;background:var(--accsoft);border:2px dashed var(--line);border-radius:14px;font-weight:600;font-size:16px;text-align:left}
+.slot b{display:grid;place-items:center;flex:none;width:24px;height:24px;border-radius:50%;background:var(--panel);color:var(--acc);font-size:13px}
+.slot.on{background:var(--panel);border-style:solid;border-color:var(--acc);border-bottom-width:4px}
+.slot.on:hover:not(:disabled){background:var(--accsoft)}
+.pool{display:flex;flex-wrap:wrap;gap:10px}
+.chip{background:color-mix(in srgb,var(--c) 16%,var(--panel));border:2px solid var(--c);border-bottom-width:5px;border-radius:999px;padding:6px 16px 4px;font-weight:600;font-size:17px}
+.chip:hover{background:var(--c);color:#fff}
+.split{flex:1;min-height:0;display:grid;grid-template-columns:minmax(220px,.85fr) 1.5fr;gap:clamp(16px,3vw,28px)}
+.info{display:flex;flex-direction:column;justify-content:center;gap:10px;background:var(--accsoft);border-radius:22px;padding:22px;text-align:center;align-items:center}
+.evi{font-size:clamp(40px,7vh,60px);line-height:1}
+.ev{font-size:clamp(26px,5vh,38px);font-weight:700;line-height:1.15;margin:6px 0 0}
+.when{display:inline-block;margin-top:10px;background:linear-gradient(135deg,#ff5d8f,#ff8a3d);color:#fff;font-weight:700;border-radius:999px;padding:4px 18px 6px;font-size:clamp(18px,3vh,24px);text-shadow:0 2px 0 rgba(0,0,0,.15);box-shadow:0 4px 0 rgba(0,0,0,.18)}
+.cal{display:flex;flex-direction:column;min-height:0;max-height:100%}
+.calhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:6px 8px;border-radius:18px;color:#fff;font-weight:700;font-size:22px;text-shadow:0 2px 0 rgba(0,0,0,.2);background:linear-gradient(135deg,var(--c),color-mix(in srgb,var(--c) 62%,#000));box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.calhd button{background:rgba(255,255,255,.28);border:0;border-radius:12px;width:42px;height:42px;font-size:24px;font-weight:700;color:#fff}
+.calhd button:hover{background:rgba(255,255,255,.45)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto repeat(6,minmax(0,1fr));gap:5px;flex:1;min-height:0;text-align:center}
+.dow{font-size:14px;color:var(--acc);font-weight:700;padding:4px 0}
+.day{min-height:0;background:var(--accsoft);border:2px solid transparent;border-bottom-width:4px;border-bottom-color:var(--line);border-radius:12px;font-weight:600;font-size:17px;transition:transform .1s}
+.day:hover:not(:disabled){transform:scale(1.08);border-color:var(--acc)}
+.day:disabled{cursor:default}
+.empty{visibility:hidden}
+.trophy{font-size:clamp(64px,12vh,96px);line-height:1}
+.score{font-size:clamp(56px,10vh,84px);font-weight:700;line-height:1.1;background:linear-gradient(90deg,#ff8a3d,#ff5d8f,#a24bf0);-webkit-background-clip:text;background-clip:text;color:transparent}
+.scroll{flex:1;min-height:0;overflow-y:auto;padding-right:4px}
+.set{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:12px;margin-bottom:10px;display:grid;grid-template-columns:2fr 1.4fr 80px auto;gap:10px;align-items:center}
+.set input,.set select,.add input,.add select{font:inherit;background:var(--accsoft);color:var(--ink);border:2px solid var(--line);border-radius:12px;padding:8px 10px;min-width:0;width:100%}
+.del{background:none;border:2px solid var(--line);border-radius:12px;padding:8px 14px;color:var(--bad);font-weight:600;font-size:15px}
+.add{border:2px dashed var(--acc);border-radius:18px;padding:14px;display:grid;gap:10px;margin:16px 0;background:var(--panel)}
+.add .r{display:grid;grid-template-columns:1fr 100px;gap:10px}
+@media (max-width:720px){.split{grid-template-columns:1fr;grid-template-rows:auto 1fr}.tiles{grid-template-columns:1fr;max-height:none}.slots{grid-template-columns:repeat(3,1fr)}.set{grid-template-columns:1fr 1fr}main{padding:12px 14px 16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+:root{--acc:#4b55d6;--accsoft:#eceefc;--bg:#f1f3fb;--c:#4b55d6;--line:#d8dcee}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--acc:#7480ff;--accsoft:#292f66;--bg:#141838;--c:#7480ff;--panel:#1e2350;--line:#363c76}}
+:root[data-theme="dark"]{--acc:#7480ff;--accsoft:#292f66;--bg:#141838;--c:#7480ff;--panel:#1e2350;--line:#363c76}
+body{background:var(--bg)}
+.bar{background:var(--acc);box-shadow:0 4px 0 rgba(0,0,0,.22)}
+.brand{text-shadow:none}
+.nl{width:42px;height:42px;padding:0;display:grid;place-items:center}
+.nl svg{width:21px;height:21px}
+.t1,.t2,.t3,.t4{background:var(--panel);color:var(--ink);text-shadow:none;border:2px solid var(--line);box-shadow:0 5px 0 var(--line)}
+.tile:hover{border-color:var(--acc)}
+.tile small{color:var(--mute);opacity:1}
+.ic{background:var(--accsoft);color:var(--acc);font-weight:700;font-size:22px}
+.prog i{background:var(--acc)}
+.panel{box-shadow:0 6px 0 var(--line)}
+.big{background:var(--acc);box-shadow:0 5px 0 rgba(0,0,0,.2);text-shadow:none}
+.btn{background:var(--acc);text-shadow:none}
+.when,.calhd{background:var(--acc);box-shadow:0 3px 0 rgba(0,0,0,.2);text-shadow:none}
+.score{background:none;-webkit-text-fill-color:currentColor;color:var(--acc)}
+.opt{background:var(--panel);border-color:var(--line)}
+.chip{background:var(--accsoft);border-color:var(--acc)}
+#rot{display:none;position:fixed;inset:0;z-index:99;background:var(--bg);color:var(--ink);flex-direction:column;align-items:center;justify-content:center;gap:16px;text-align:center;padding:24px;font-size:22px;font-weight:600}
+#rot svg{width:96px;height:96px;color:var(--acc)}
+@media (orientation:portrait){#rot{display:flex}}
+@media (prefers-reduced-motion:no-preference){#rot svg{animation:tilt 2.4s ease-in-out infinite}}
+@keyframes tilt{0%,25%{transform:rotate(0)}65%,100%{transform:rotate(-90deg)}}
+
+.eq{display:flex;align-items:center;justify-content:center;gap:clamp(12px,2.4vw,28px);margin:6px 0 clamp(16px,4vh,30px)}
+.eq .big,.eq .ans{margin:0;font-size:clamp(24px,min(4.6vw,6.8vh),50px);min-width:5.8em;justify-content:center;padding:10px 20px 12px;border-radius:24px;line-height:1.15}
+.ans{display:inline-flex;align-items:center;font-weight:700;border:3px dashed var(--line);background:var(--accsoft)}
+.ans.good{border-style:solid}
+.arr{font-size:clamp(28px,min(5vw,7.4vh),54px);font-weight:700;color:var(--acc);line-height:1}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(10,14,40,.55);display:grid;place-items:center;padding:16px}
+.mbox{background:var(--panel);border:2px solid var(--line);border-radius:24px;padding:clamp(16px,3vh,26px);width:min(720px,100%);max-height:100%;overflow:auto;box-shadow:0 8px 0 rgba(0,0,0,.2)}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.mx{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);background:var(--bg);display:grid;place-items:center;padding:0}
+.mx:hover{border-color:var(--acc)}
+.mx svg{width:20px;height:20px}
+.ml{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;counter-reset:m}
+.ml li{counter-increment:m;display:flex;align-items:center;gap:10px;background:var(--accsoft);border-radius:12px;padding:10px 12px;font-weight:600}
+.ml li::before{content:counter(m);display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-size:13px}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div id="rot" role="alert"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="6" width="28" height="52" rx="5"/><path d="M29 51h6"/></svg><div>Please turn your device sideways</div><div style="font-size:16px;font-weight:400;color:var(--mute)">This quiz works in landscape mode.</div></div>
+<script>
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DIM=[31,28,31,30,31,30,31,31,30,31,30,31];
+const YEAR=new Date().getFullYear();
+const DEFAULTS=[{n:"National Day",m:7,d:9},{n:"Children\u2019s Day",m:9,d:2},{n:"Teacher\u2019s Day",m:8,d:1},{n:"New Year\u2019s Day",m:0,d:1}];
+let dates=load();
+function load(){try{const s=localStorage.getItem("monthsQuizDates");if(s){const a=JSON.parse(s);if(Array.isArray(a))return a}}catch(e){}return DEFAULTS.map(x=>({...x}))}
+function save(){try{localStorage.setItem("monthsQuizDates",JSON.stringify(dates))}catch(e){}}
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const $=id=>document.getElementById(id);
+const app=$("app");
+let soundOn=true,ac=null,q=null;
+const IC={hint:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>',
+x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+on:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>',
+off:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m16 9 5 6M21 9l-5 6"/></svg>',
+gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'};
+function ctx(){ac=ac||new (window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();return ac}
+function tone(f,o,d,type,v){const c=ctx(),t=c.currentTime+o,s=c.createOscillator(),g=c.createGain();s.type=type||"sine";s.frequency.value=f;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(v||0.2,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+d);s.connect(g);g.connect(c.destination);s.start(t);s.stop(t+d+0.05)}
+function blip(){if(!soundOn)return;try{tone(540,0,0.07,"triangle",0.14)}catch(e){}}
+function ding(){if(!soundOn)return;try{tone(659.25,0,0.35);tone(880,0.12,0.35);tone(1318.5,0.24,0.4)}catch(e){}}
+function fanfare(){if(!soundOn)return;try{[[523.25,0],[659.25,.15],[783.99,.3],[1046.5,.45]].forEach(([f,o])=>tone(f,o,.32,"triangle",.22));[523.25,659.25,783.99,1046.5].forEach(f=>tone(f,.68,.9,"sine",.12))}catch(e){}}
+document.addEventListener("click",e=>{const b=e.target.closest("button");if(b&&!b.disabled&&!b.matches(".opt,.day"))blip()});
+function openHint(){if($("hint"))return;const d=document.createElement("div");d.id="hint";d.className="modal";
+ d.innerHTML=`<div class="mbox" role="dialog" aria-modal="true" aria-label="Months of the year"><div class="mh"><h2>Months of the year</h2><button class="mx" onclick="closeHint()" aria-label="Close">${IC.x}</button></div><ol class="ml">${MONTHS.map(m=>`<li>${m}</li>`).join("")}</ol></div>`;
+ d.addEventListener("click",e=>{if(e.target===d)closeHint()});document.body.appendChild(d);d.querySelector("button").focus()}
+function closeHint(){const d=$("hint");if(d)d.remove()}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeHint()});
+function toggleSound(){soundOn=!soundOn;const b=$("snd");if(b){b.innerHTML=IC[soundOn?"on":"off"];b.title=b.ariaLabel=soundOn?"Sound on":"Sound off"}}
+function shell(v){app.innerHTML=`<header class="bar"><button class="brand" onclick="home()">Months Quiz</button><nav><button class="nl" title="Hint: months in order" aria-label="Hint: months in order" onclick="openHint()">${IC.hint}</button><button class="nl" id="snd" title="${soundOn?"Sound on":"Sound off"}" aria-label="${soundOn?"Sound on":"Sound off"}" onclick="toggleSound()">${IC[soundOn?"on":"off"]}</button><button class="nl" title="Settings" aria-label="Settings" onclick="settings()">${IC.gear}</button></nav></header><section class="view">${v}</section>`}
+const nlTitle=k=>k==="next"?"Next month \u2192":"\u2190 Last month";
+function head(title,i,total){return `<div class="qh"><h2>${title}</h2>${total?`<span class="cnt">${Math.min(i+1,total)} of ${total}</span>`:""}</div><div class="prog"><i style="width:${total?(i/total)*100:0}%"></i></div>`}
+function home(){
+ q=null;
+ shell(`<h1>Learn the months</h1><p class="sub">Choose a quiz to practise.</p>
+ <div class="tiles">
+ <button class="tile t1" onclick="startOrder()"><span class="ic">1\u201312</span><span>Put the months in order<small>Arrange January to December</small></span></button>
+ <button class="tile t2" onclick="startNL('next')"><span class="ic">\u2192</span><span>Next month<small>Pick the month that comes after</small></span></button>
+ <button class="tile t3" onclick="startNL('last')"><span class="ic">\u2190</span><span>Last month<small>Pick the month that came before</small></span></button>
+ <button class="tile t4" onclick="startCal()"><span class="ic">31</span><span>Find the date<small>Spot important days on a calendar</small></span></button>
+ </div>`);
+}
+function done(title,score,total,again){fanfare();
+ const msg=score===total?"Perfect score!":score>=total*0.6?"Well done!":"Keep practising!";
+ shell(`${head(title,total,total)}<div class="panel center"><div class="score">${score}/${total}</div><p class="lbl" style="font-size:20px;margin:10px 0 24px">${msg}</p><div style="display:flex;gap:10px"><button class="btn" onclick="${again}">Play again</button><button class="btn alt" onclick="home()">Home</button></div></div>`);
+}
+/* Order */
+function startOrder(){q={t:"order",pool:shuffle([...Array(12).keys()]),placed:[],checked:false};renderOrder()}
+function renderOrder(){
+ const slots=[...Array(12)].map((_,i)=>{const v=q.placed[i];
+  const cls=v==null?"slot":`slot on${q.checked?(v===i?" good":" bad"):""}`;
+  return `<button class="${cls}" ${v==null||q.checked?"disabled":""} onclick="unplace(${i})"><b>${i+1}</b>${v==null?"":MONTHS[v]}</button>`}).join("");
+ const pool=q.pool.map(m=>`<button class="chip" onclick="place(${m})">${MONTHS[m]}</button>`).join("");
+ const full=q.placed.length===12,allGood=q.checked&&q.placed.every((v,i)=>v===i);
+ shell(`${head("Put the months in order")}<div class="panel"><p class="lbl" style="margin-bottom:12px">Start with January. Tap a placed month to take it back.</p>
+ <div class="slots">${slots}</div><div class="pool">${pool}</div>
+ <div class="acts"><span class="fb ${q.checked?(allGood?"good":"bad"):""}">${q.checked?(allGood?"All 12 are in the right order.":"Some months are in the wrong place."):""}</span>
+ ${!q.checked?`<button class="btn alt" onclick="startOrder()">Shuffle</button><button class="btn" ${full?"":"disabled"} onclick="checkOrder()">Check</button>`
+ :allGood?`<button class="btn alt" onclick="home()">Home</button><button class="btn" onclick="startOrder()">Play again</button>`:`<button class="btn" onclick="fixOrder()">Fix the wrong ones</button>`}</div></div>`);
+}
+function place(m){q.pool=q.pool.filter(x=>x!==m);q.placed.push(m);renderOrder()}
+function unplace(i){const back=q.placed.splice(i);q.pool.push(...back);renderOrder()}
+function checkOrder(){q.checked=true;if(q.placed.every((v,i)=>v===i))ding();renderOrder()}
+function fixOrder(){const keep=[];for(let i=0;i<12;i++){if(q.placed[i]===i)keep.push(i);else break}
+ q.pool.push(...q.placed.slice(keep.length));q.placed=keep;q.checked=false;renderOrder()}
+/* Next / last */
+function startNL(kind){const total=8;q={t:"nl",kind,qs:shuffle([...Array(12).keys()]).slice(0,total),i:0,score:0,total,wrong:[],solved:false};renderNL()}
+function renderNL(){
+ if(q.i>=q.total)return done(nlTitle(q.kind),q.score,q.total,`startNL('${q.kind}')`);
+ const m=q.qs[q.i],ok=(m+(q.kind==="next"?1:11))%12;
+ const ans=`<div class="ans${q.solved?" good":""}">${q.solved?MONTHS[ok]:"&nbsp;"}</div>`;if(!q.opts){q.opts=shuffle([ok,...shuffle([...Array(12).keys()].filter(x=>x!==ok&&x!==m)).slice(0,3)])}
+ shell(`${head(nlTitle(q.kind),q.i,q.total)}<div class="panel center"><p class="lbl">${q.kind==="next"?"Which month comes after":"Which month comes before"}</p><div class="eq">${q.kind==="next"?`<div class="big">${MONTHS[m]}</div><span class="arr">\u2192</span>${ans}`:`${ans}<span class="arr">\u2190</span><div class="big">${MONTHS[m]}</div>`}</div>
+ <div class="opts">${q.opts.map(o=>{let c="opt";if(q.solved&&o===ok)c+=" good";else if(q.wrong.includes(o))c+=" bad";
+ return `<button class="${c}" ${q.solved||q.wrong.includes(o)?"disabled":""} onclick="answerNL(${o})">${MONTHS[o]}</button>`}).join("")}</div>
+ <div class="acts" style="width:100%;max-width:560px;margin-top:clamp(10px,2.4vh,20px);padding-top:0"><span class="fb ${q.solved?"good":q.wrong.length?"bad":""}">${q.solved?"Correct!":q.wrong.length?"Not quite. Try again.":""}</span>${q.solved?`<button class="btn" onclick="nextNL()">${q.i+1>=q.total?"See score":"Next"}</button>`:""}</div></div>`);
+}
+function answerNL(o){const m=q.qs[q.i],ok=(m+(q.kind==="next"?1:11))%12;
+ if(o===ok){q.solved=true;if(!q.wrong.length)q.score++;ding()}else q.wrong.push(o);renderNL()}
+function nextNL(){q.i++;q.wrong=[];q.solved=false;q.opts=null;renderNL()}
+/* Calendar */
+function startCal(){
+ const valid=dates.filter(x=>x.n&&x.m>=0&&x.m<12&&x.d>=1&&x.d<=DIM[x.m]);
+ if(!valid.length){shell(`${head("Find the date")}<div class="panel center"><p class="lbl" style="margin-bottom:16px">There are no important dates yet. Add some in Settings.</p><button class="btn" onclick="settings()">Open settings</button></div>`);return}
+ const qs=shuffle(valid).slice(0,8);
+ q={t:"cal",qs,i:0,score:0,total:qs.length,view:0,res:null,wrong:[]};newCalQ();renderCal();
+}
+function newCalQ(){const e=q.qs[q.i];let v;do{v=Math.floor(Math.random()*12)}while(v===e.m&&q.total>0);q.view=v;q.res=null;q.wrong=[]}
+function renderCal(){
+ if(q.i>=q.total)return done("Find the date",q.score,q.total,"startCal()");
+ const e=q.qs[q.i],first=new Date(YEAR,q.view,1).getDay(),isW=d=>q.wrong.some(w=>w.m===q.view&&w.d===d);
+ let cells="";
+ for(let i=0;i<first;i++)cells+=`<span class="day empty"></span>`;
+ for(let d=1;d<=DIM[q.view];d++){
+  let c="day"+(isW(d)?" bad":"");
+  if(q.res&&q.view===e.m&&d===e.d)c+=" good";
+  cells+=`<button class="${c}" ${q.res||isW(d)?"disabled":""} onclick="pickDay(${d})" aria-label="${d} ${MONTHS[q.view]}">${d}</button>`;
+ }
+ shell(`${head("Find the date",q.i,q.total)}<div class="panel"><div class="split">
+ <div class="info"><p class="lbl">Find this day on the calendar</p><div><h3 class="ev">${esc(e.n)}</h3><span class="when">(${e.d} ${MONTHS[e.m]})</span></div>
+ <span class="fb ${q.res||(q.wrong.length?"bad":"")}">${q.res==="good"?"Correct!":q.wrong.length?"Not quite. Try again.":"Use the arrows to change month."}</span>
+ ${q.res?`<div><button class="btn" onclick="nextCal()">${q.i+1>=q.total?"See score":"Next"}</button></div>`:""}</div>
+ <div class="cal"><div class="calhd"><button onclick="navCal(-1)" aria-label="Previous month">\u2039</button><span>${MONTHS[q.view]} ${YEAR}</span><button onclick="navCal(1)" aria-label="Next month">\u203A</button></div>
+ <div class="grid">${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(x=>`<span class="dow">${x}</span>`).join("")}${cells}</div></div></div></div>`);
+}
+function navCal(n){q.view=(q.view+n+12)%12;renderCal()}
+function pickDay(d){const e=q.qs[q.i];
+ if(q.view===e.m&&d===e.d){q.res="good";if(!q.wrong.length)q.score++;ding()}else q.wrong.push({m:q.view,d});renderCal()}
+function nextCal(){q.i++;if(q.i<q.total)newCalQ();renderCal()}
+/* Settings */
+function settings(){
+ const opts=s=>MONTHS.map((m,i)=>`<option value="${i}" ${i===s?"selected":""}>${m}</option>`).join("");
+ shell(`<div class="qh"><h2>Important dates</h2></div><p class="sub" style="margin:6px 0 14px">These appear in the calendar quiz. Changes save automatically.</p>
+ <div class="scroll">${dates.map((x,i)=>`<div class="set">
+  <input value="${esc(x.n)}" aria-label="Name" onchange="editD(${i},'n',this.value)">
+  <select aria-label="Month" onchange="editD(${i},'m',+this.value)">${opts(x.m)}</select>
+  <input type="number" min="1" max="${DIM[x.m]}" value="${x.d}" aria-label="Day" onchange="editD(${i},'d',+this.value)">
+  <button class="del" onclick="delD(${i})">Delete</button></div>`).join("")||`<p class="lbl">No dates yet. Add one below.</p>`}
+ <div class="add"><strong>Add a date</strong>
+  <input id="an" placeholder="Name, for example Mother\u2019s Day" aria-label="New date name">
+  <div class="r"><select id="am" aria-label="Month">${opts(0)}</select><input id="ad" type="number" min="1" max="31" placeholder="Day" aria-label="Day"></div>
+  <div id="ae" class="fb bad" style="min-height:0"></div>
+  <div><button class="btn" onclick="addD()">Add date</button></div></div>
+ <button class="btn alt" onclick="resetD()">Restore original dates</button></div>`);
+}
+function editD(i,k,v){const x=dates[i];
+ if(k==="n"){v=String(v).trim();if(!v)return settings();x.n=v}
+ if(k==="m"){x.m=v;if(x.d>DIM[v])x.d=DIM[v]}
+ if(k==="d"){x.d=Math.min(Math.max(v||1,1),DIM[x.m])}
+ save();settings()}
+function delD(i){dates.splice(i,1);save();settings()}
+function addD(){const n=$("an").value.trim(),m=+$("am").value,d=parseInt($("ad").value,10);
+ const err=!n?"Enter a name.":!(d>=1&&d<=DIM[m])?`Enter a day from 1 to ${DIM[m]} for ${MONTHS[m]}.`:"";
+ if(err){$("ae").textContent=err;return}
+ dates.push({n,m,d});save();settings()}
+function resetD(){dates=DEFAULTS.map(x=>({...x}));save();settings()}
+home();
+</script>
+</body>
+</html>
