@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hide and Seek (Preposition)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: 'Jua', 'Comic Sans MS', 'Bubblegum Sans', Arial, sans-serif;
+            user-select: none;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            background: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            width: 1200px;
+            height: 750px;
+            background: #ffffff;
+            border: 8px solid #333;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex: none;
+            transform-origin: center center;
+        }
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fff;
+            padding: 25px;
+        }
+        .screen.active {
+            display: flex;
+        }
+        h1 {
+            font-size: 48px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* Large Animated Rainbow Title for Home Screen */
+        .main-title-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+        .title-word {
+            display: inline-flex;
+            font-size: 90px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 3px 5px 0px rgba(0,0,0,0.15), 0 0 18px rgba(255,255,255,0.8);
+        }
+        .title-word.sub-title {
+            font-size: 76px;
+        }
+        .title-letter {
+            display: inline-block;
+            animation: bounceLetter 2.2s infinite ease-in-out;
+            transform-origin: bottom center;
+        }
+        @keyframes bounceLetter {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-12px) scale(1.05); }
+        }
+
+        /* Distinct Vibrant Colors for Each Letter */
+        .c-red { color: #ff3f34; }
+        .c-orange { color: #ff9f1a; }
+        .c-yellow { color: #f5cd79; }
+        .c-green { color: #05c46b; }
+        .c-cyan { color: #00d8d6; }
+        .c-blue { color: #3c40c6; }
+        .c-purple { color: #5758bb; }
+        .c-pink { color: #ef5777; }
+        .c-teal { color: #00b894; }
+
+        p {
+            font-size: 24px;
+            color: #34495e;
+            text-align: center;
+            line-height: 1.5;
+        }
+        .btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 16px 45px;
+            font-size: 26px;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #2980b9;
+            transition: all 0.1s ease;
+            margin: 10px;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 1px 0 #2980b9;
+        }
+        .btn-secondary {
+            background: #95a5a6;
+            box-shadow: 0 6px 0 #7f8c8d;
+        }
+        .btn-secondary:active {
+            box-shadow: 0 1px 0 #7f8c8d;
+        }
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-top: auto;
+            padding: 10px 0;
+        }
+        
+        /* Selection Grid Style */
+        .grid-options {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .option-card {
+            width: 140px;
+            height: 140px;
+            border: 4px solid #bdc3c7;
+            border-radius: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: #ecf0f1;
+            font-size: 30px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .option-card.selected {
+            border-color: #2ecc71;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6);
+            background: #e8f8f5;
+        }
+        
+        /* Extra Large Preposition Grid Layout */
+        .prep-grid-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 1120px;
+            margin: 0 auto;
+        }
+        .prep-row {
+            display: flex;
+            justify-content: center;
+            gap: 22px;
+            width: 100%;
+        }
+        .prep-card {
+            width: 260px;
+            height: 195px;
+            border: 4px solid #bdc3c7;
+            border-radius: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            background: #fff;
+            padding: 12px;
+            transition: all 0.2s;
+        }
+        .prep-card img {
+            width: 230px;
+            height: 165px;
+            object-fit: contain;
+            border-radius: 12px;
+        }
+        .prep-card.selected {
+            border-color: #2ecc71;
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.7);
+            background: #e8f8f5;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 18px;
+            text-align: center;
+            width: 480px;
+            border: 4px solid #e74c3c;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Game Screen Layout */
+        #game-screen {
+            padding: 10px 20px;
+            justify-content: flex-start;
+        }
+        .game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #dfe6e9;
+            padding: 8px 20px;
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .header-prep-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-prep-display img {
+            width: 45px;
+            height: 45px;
+            object-fit: contain;
+            background: #fff;
+            border-radius: 6px;
+            padding: 2px;
+            border: 2px solid #b2bec3;
+        }
+        
+        /* Top Banner */
+        .top-panel {
+            width: 100%;
+            background: #ffeaa7;
+            padding: 12px 20px;
+            text-align: center;
+            font-size: 34px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: 3px dashed #fdcb6e;
+            margin-bottom: 10px;
+            color: #d35400;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 16px;
+            min-height: 110px;
+        }
+        .banner-text {
+            font-size: 34px;
+            font-weight: bold;
+            color: #d35400;
+            line-height: 1;
+        }
+        .sentence-group {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            line-height: 1;
+        }
+        .sentence-group img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            background: #fff;
+            padding: 3px;
+            border-radius: 8px;
+            border: 2px solid #e1b12c;
+            margin-bottom: 6px;
+        }
+        .sentence-group .label-text {
+            font-size: 34px;
+            font-weight: bold;
+            color: #d35400;
+            line-height: 1;
+        }
+
+        .game-main {
+            display: flex;
+            width: 100%;
+            height: 520px;
+            gap: 15px;
+        }
+        
+        /* Items Panel */
+        .left-panel {
+            width: 28%;
+            background: #f1f2f6;
+            border: 3px solid #ced6e0;
+            border-radius: 12px;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: center;
+            overflow: hidden;
+        }
+        .left-panel h3 { margin: 2px 0; font-size: 18px; color: #57606f; }
+        
+        .draggable-item {
+            width: 100%;
+            height: 84px;
+            background: transparent;
+            border: 2px solid #747d8c;
+            border-radius: 10px;
+            padding: 4px 12px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            cursor: grab;
+            font-size: 22px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.12);
+            text-align: left;
+        }
+        .draggable-item:active { cursor: grabbing; }
+        .draggable-item img {
+            width: 65px;
+            height: 65px;
+            object-fit: contain;
+            pointer-events: none;
+        }
+
+        .draggable-item { touch-action: none; }
+        .drag-clone {
+            position: absolute;
+            z-index: 40;
+            pointer-events: none;
+            object-fit: contain;
+            opacity: 1;
+            filter: drop-shadow(0 6px 8px rgba(0,0,0,0.35));
+            transition: opacity 0.12s ease;
+        }
+
+        /* Room Section */
+        .centre-panel {
+            width: 72%;
+            background: #fff;
+            border: 3px solid #ffa502;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+        .room-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        /* Green Guiding Box */
+        .drop-target {
+            position: absolute;
+            border: 4px dashed #2ecc71;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(46, 204, 113, 0.35);
+            z-index: 15;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.7);
+        }
+
+        #intro-overlay, #feedback-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.96);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 50;
+        }
+        .intro-prep-img {
+            width: 400px;
+            height: 300px;
+            object-fit: contain;
+            margin-top: 15px;
+            border: 4px solid #2980b9;
+            border-radius: 18px;
+            background: #ffffff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+
+    <!-- SCREEN 1: HOME -->
+    <div id="screen-home" class="screen active">
+        <div class="main-title-container">
+            <span class="title-word">
+                <span class="title-letter c-red" style="animation-delay: 0.0s;">H</span>
+                <span class="title-letter c-orange" style="animation-delay: 0.1s;">i</span>
+                <span class="title-letter c-yellow" style="animation-delay: 0.2s;">d</span>
+                <span class="title-letter c-green" style="animation-delay: 0.3s;">e</span>
+            </span>
+            <span class="title-word">
+                <span class="title-letter c-pink" style="animation-delay: 0.4s;">a</span>
+                <span class="title-letter c-cyan" style="animation-delay: 0.5s;">n</span>
+                <span class="title-letter c-purple" style="animation-delay: 0.6s;">d</span>
+            </span>
+            <span class="title-word">
+                <span class="title-letter c-teal" style="animation-delay: 0.7s;">S</span>
+                <span class="title-letter c-orange" style="animation-delay: 0.8s;">e</span>
+                <span class="title-letter c-yellow" style="animation-delay: 0.9s;">e</span>
+                <span class="title-letter c-red" style="animation-delay: 1.0s;">k</span>
+            </span>
+            <span class="title-word sub-title">
+                <span class="title-letter c-blue" style="animation-delay: 1.1s;">(</span>
+                <span class="title-letter c-purple" style="animation-delay: 1.2s;">P</span>
+                <span class="title-letter c-pink" style="animation-delay: 1.3s;">r</span>
+                <span class="title-letter c-green" style="animation-delay: 1.4s;">e</span>
+                <span class="title-letter c-cyan" style="animation-delay: 1.5s;">p</span>
+                <span class="title-letter c-orange" style="animation-delay: 1.6s;">o</span>
+                <span class="title-letter c-yellow" style="animation-delay: 1.7s;">s</span>
+                <span class="title-letter c-teal" style="animation-delay: 1.8s;">i</span>
+                <span class="title-letter c-red" style="animation-delay: 1.9s;">t</span>
+                <span class="title-letter c-purple" style="animation-delay: 2.0s;">i</span>
+                <span class="title-letter c-pink" style="animation-delay: 2.1s;">o</span>
+                <span class="title-letter c-green" style="animation-delay: 2.2s;">n</span>
+                <span class="title-letter c-blue" style="animation-delay: 2.3s;">)</span>
+            </span>
+        </div>
+        <p style="font-size: 28px; font-weight: bold; color: #4a69bd; margin-bottom: 30px;">Learn prepositions by placing items in the correct spots!</p>
+        <button class="btn" onclick="playButtonClickSound(); goToScreen('screen-how')">START</button>
+    </div>
+
+    <!-- SCREEN 2: HOW TO PLAY -->
+    <div id="screen-how" class="screen">
+        <h1>HOW TO PLAY</h1>
+        <p style="max-width: 950px; text-align: left; font-size: 30px; line-height: 1.6;">
+            1. Select the number of rounds you want to play.<br>
+            2. Choose your target preposition visual cards.<br>
+            3. Read the visual sentence at the top.<br>
+            4. Click and drag the correct item onto the correct position of the furniture in the room!
+        </p>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="playButtonClickSound(); returnToHome()">Home</button>
+            <button class="btn" onclick="playButtonClickSound(); goToScreen('screen-rounds')">Next</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: SELECT ROUNDS -->
+    <div id="screen-rounds" class="screen">
+        <h1>Select the number of rounds</h1>
+        <div class="grid-options">
+            <div class="option-card" onclick="playButtonClickSound(); selectRounds(5, this)">5</div>
+            <div class="option-card" onclick="playButtonClickSound(); selectRounds(10, this)">10</div>
+            <div class="option-card" onclick="playButtonClickSound(); selectRounds(15, this)">15</div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="playButtonClickSound(); goToScreen('screen-how')">Back</button>
+            <button class="btn" onclick="playButtonClickSound(); validateRoundsNext()">Next</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: SELECT PREPOSITION WORDS -->
+    <div id="screen-preps" class="screen" style="justify-content: flex-start; padding-top: 35px;">
+        <div style="position: relative; width: 100%; max-width: 1120px; display: flex; justify-content: center; align-items: center; margin-bottom: 25px;">
+            <div style="text-align: center;">
+                <h1 style="margin: 0 0 5px 0; font-size: 38px;">Select your preposition word(s)</h1>
+                <p style="margin: 0; font-size: 18px; color: #7f8c8d;">Select at least 1 word</p>
+            </div>
+            <button class="btn btn-secondary" id="select-all-btn" onclick="playButtonClickSound(); toggleSelectAllPreps()" style="position: absolute; right: 0; padding: 10px 20px; font-size: 18px; margin: 0;">Select All</button>
+        </div>
+        <div class="prep-grid-container">
+            <div class="prep-row" id="prep-row-1"></div>
+            <div class="prep-row" id="prep-row-2"></div>
+        </div>
+        <div class="nav-buttons">
+            <button class="btn btn-secondary" onclick="playButtonClickSound(); goToScreen('screen-rounds')">Back</button>
+            <button class="btn" onclick="playButtonClickSound(); startGame()">Start Game</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 6-8: GAMEPLAY SCREEN -->
+    <div id="game-screen" class="screen">
+        <div class="game-header">
+            <span id="header-round">Round 1 / 5</span>
+            <div class="header-prep-display">
+                <span id="header-prep-text">Preposition: In</span>
+                <img id="header-prep-img" src="" alt="Preposition">
+            </div>
+            <button class="btn btn-secondary" style="padding: 6px 16px; font-size: 16px; margin: 0;" onclick="playButtonClickSound(); returnToHome()">Home</button>
+        </div>
+        <div class="top-panel" id="top-sentence-banner"></div>
+        <div class="game-main">
+            <div class="left-panel">
+                <h3>Items</h3>
+                <div id="item-list-container" style="display:flex; flex-direction:column; gap:5px; width:100%; align-items:center;"></div>
+            </div>
+            <div class="centre-panel" id="room-canvas"></div>
+        </div>
+    </div>
+
+    <!-- ROUND INTRO OVERLAY -->
+    <div id="intro-overlay">
+        <h1 id="intro-title" style="font-size: 56px; color: #2980b9; margin-bottom: 10px;">Round 1</h1>
+        <img id="intro-prep-img" class="intro-prep-img" src="" alt="Preposition Image">
+    </div>
+
+    <!-- FEEDBACK CORRECT OVERLAY -->
+    <div id="feedback-overlay">
+        <h1 style="font-size: 48px; color: #27ae60;">Well Done!<br>You got it correct!</h1>
+    </div>
+
+    <!-- COMPLETION OVERLAY -->
+    <div id="completion-overlay" class="screen" style="z-index: 60; background: white;">
+        <h1 style="font-size: 48px; color: #27ae60;">Well Done!<br>You have completed <span id="completed-count">X</span> rounds!</h1>
+        <button class="btn" onclick="playButtonClickSound(); returnToHome()">Back to home</button>
+    </div>
+
+    <!-- VALIDATION WARNING MODAL -->
+    <div class="modal-overlay" id="warning-modal">
+        <div class="modal-box">
+            <p id="warning-text" style="font-size: 22px;">The number of words selected is more than the number of rounds. Please select within the number of rounds.</p>
+            <button class="btn" onclick="playButtonClickSound(); closeWarningModal()">OK</button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+
+    // Scale the fixed-size game so it always fits inside the window
+    function fitGameToViewport() {
+        const c = document.getElementById('game-container');
+        const scale = Math.min(window.innerWidth / 1200, window.innerHeight / 750, 1);
+        c.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', fitGameToViewport);
+    fitGameToViewport();
+
+    // Audio Context Helper with Autoplay Fix
+    let audioCtx = null;
+
+    function getAudioContext() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+        return audioCtx;
+    }
+
+    window.addEventListener('click', () => { getAudioContext(); }, { once: false });
+    window.addEventListener('touchstart', () => { getAudioContext(); }, { once: false });
+
+    const prepositionsList = [
+        { name: "Above", selectionImg: "Assets/above.jpg", gameImg: "Assets/above (without text).jpg", introImg: "Assets/above.jpg" },
+        // "Behind" temporarily disabled - uncomment to bring it back
+        // { name: "Behind", selectionImg: "Assets/behind.jpg", gameImg: "Assets/behind (without text).jpg", introImg: "Assets/behind.jpg" },
+        { name: "Beside", selectionImg: "Assets/beside.jpg", gameImg: "Assets/beside (without text).jpg", introImg: "Assets/beside.jpg" },
+        { name: "Between", selectionImg: "Assets/between.jpg", gameImg: "Assets/between (without text).jpg", introImg: "Assets/between.jpg" },
+        { name: "In", selectionImg: "Assets/in.jpg", gameImg: "Assets/in (without text).jpg", introImg: "Assets/in.jpg" },
+        { name: "On", selectionImg: "Assets/on.jpg", gameImg: "Assets/on (without text).jpg", introImg: "Assets/on.jpg" },
+        { name: "Under", selectionImg: "Assets/under.jpg", gameImg: "Assets/under (without text).jpg", introImg: "Assets/under.jpg" }
+    ];
+
+    const prepMap = {};
+    prepositionsList.forEach(p => prepMap[p.name] = p);
+
+    const itemsList = [
+        { name: "Bear", img: "Assets/bear.png" },
+        { name: "Bottle", img: "Assets/bottle.png" },
+        { name: "Bag", img: "Assets/bag.png" },
+        { name: "Cat", img: "Assets/cat.png" },
+        { name: "Painting", img: "Assets/painting.png" },
+        { name: "Rabbit", img: "Assets/rabbit.png" }
+    ];
+
+    const roomsData = [
+        {
+            roomName: "Bedroom",
+            bgImage: "Assets/bedroom.jpg",
+            furnitures: [
+                {
+                    name: "Bed", displayNameForBetween: "Pillows", img: "Assets/bedroom-bed.jpg", betweenImg: "Assets/bedroom-pillow.jpg", left: 160, top: 210, width: 310, height: 260,
+                    targetBoxes: {
+                        "On": { t: 65, l: 100, w: 130, h: 50 },
+                        "Under": { t: 180, l: 60, w: 200, h: 50 },
+                        "Beside": { t: 110, l: 25, w: 60, h: 90 },
+                        "Behind": { t: -15, l: -15, w: 45, h: 100 },
+                        "Between": { t: 20, l: 100, w: 55, h: 90 }
+                    },
+                    validPreps: ["On", "Under", "Beside", "Behind", "Between"]
+                },
+                {
+                    name: "Wooden Shelf", displayNameForBetween: "Books", img: "Assets/bedroom-woodenrack.jpg", betweenImg: "Assets/bedroom-books.jpg", left: 140, top: 35, width: 200, height: 80,
+                    targetBoxes: {
+                        "On": { t: 50, l: 40, w: 160, h: 45 },
+                        "Under": { t: 100, l: 50, w: 160, h: 40 },
+                        "Between": { t: 5, l: 130, w: 50, h: 90 },
+                        "Above": { t: -30, l: 30, w: 160, h: 35 },
+                        "Beside": { t: 30, l: 0, w: 55, h: 80 }
+                    },
+                    validPreps: ["On", "Under", "Between", "Above", "Beside"]
+                },
+                {
+                    name: "Bedside Table", img: "Assets/bedroom-bedsidetable.jpg", left: 30, top: 370, width: 130, height: 120,
+                    targetBoxes: {
+                        "On": { t: -120, l: 55, w: 60, h: 80 },
+                        "Under": { t: 45, l: 20, w: 120, h: 40 },
+                        "Beside": { t: -30, l: 0, w: 60, h: 105 },
+                        "Above": { t: -200, l: 25, w: 105, h: 40 }
+                    },
+                    validPreps: ["On", "Under", "Beside", "Above"]
+                },
+                {
+                    name: "Box", img: "Assets/bedroom-smallcabinet.jpg", left: 350, top: 400, width: 140, height: 100,
+                    targetBoxes: {
+                        "On": { t: -65, l: 95, w: 110, h: 40 },
+                        "In": { t: -15, l: 95, w: 110, h: 55 },
+                        "Beside": { t: 0, l: 55, w: 60, h: 80 }
+                    },
+                    validPreps: ["On", "In", "Beside"]
+                },
+                 {
+                     name: "Wardrobe", img: "Assets/bedroom-wardrobe.jpg", left: 490, top: 60, width: 210, height: 350,
+                     targetBoxes: {
+                         "Under": { t: 290, l: 100, w: 130, h: 45 },
+                         "Beside": { t: 160, l: 260, w: 45, h: 150 },
+                         "In": { t: 70, l: 90, w: 140, h: 200 },
+                         "Above": { t: -55, l: 70, w: 180, h: 40 }
+                     },
+                     validPreps: ["Under", "Beside", "In", "Above"]
+                 }
+            ]
+        },
+        {
+            roomName: "Study Room",
+            bgImage: "Assets/studyroom.jpg",
+            furnitures: [
+                {
+                    name: "Desk", img: "Assets/studyroom-desk.jpg", left: 280, top: 350, width: 230, height: 160,
+                    targetBoxes: {
+                        "On": { t: -45, l: 120, w: 170, h: 50 },
+                        "Under": { t: 70, l: 95, w: 230, h: 65 },
+                        "Beside": { t: 20, l: 300, w: 70, h: 110 }
+                    },
+                    validPreps: ["On", "Under", "Beside"]
+                },
+                {
+                    name: "Chair", img: "Assets/studyroom-chair.jpg", left: 100, top: 220, width: 180, height: 260,
+                    targetBoxes: {
+                        "Under": { t: 210, l: 85, w: 150, h: 65 },
+                        "Beside": { t: 120, l: 10, w: 75, h: 140 },
+                        "Behind": { t: -20, l: -10, w: 75, h: 100 },
+                        "On": { t: 50, l: 105, w: 110, h: 100 },
+                        "Above": { t: -100, l: 40, w: 110, h: 50 }
+                    },
+                    validPreps: ["Under", "Beside", "Behind", "On", "Above"]
+                },
+                {
+                    name: "Screen", img: "Assets/studyroom-monitor.jpg", left: 335, top: 200, width: 120, height: 130,
+                    targetBoxes: {
+                        "Behind": { t: -25, l: 185, w: 60, h: 100 },
+                        "Beside": { t: 40, l: 200, w: 60, h: 100 },
+                        "Above": { t: -70, l: 90, w: 120, h: 50 }
+                    },
+                    validPreps: ["Behind", "Beside", "Above"]
+                },
+                {
+                    name: "Shelf", img: "Assets/studyroom-sideboard.jpg", left: 480, top: 200, width: 180, height: 215,
+                    targetBoxes: {
+                        "On": { t: -50, l: 130, w: 140, h: 55 },
+                        "Beside": { t: 20, l: 280, w: 40, h: 150 },
+                        "Above": { t: -90, l: 130, w: 150, h: 70 }
+                    },
+                    validPreps: ["On", "Beside", "Above"]
+                },
+                {
+                    name: "Photo Frame", displayNameForBetween: "Photo Frames", img: "Assets/studyroom-photoframe.jpg", betweenImg: "Assets/studyroom-photoframe.jpg", left: 330, top: 90, width: 130, height: 130,
+                    targetBoxes: {
+                        "Between": { t: -30, l: 45, w: 115, h: 90 }
+                    },
+                    validPreps: ["Between"]
+                }
+            ]
+        },
+        {
+            roomName: "Living Room",
+            bgImage: "Assets/livingroom.jpg",
+            furnitures: [
+                {
+                    name: "Sofa",
+                    displayNameForBetween: "Sofa Chairs",
+                    img: "Assets/livingroom-sofas.jpg",
+                    left: 30, top: 240, width: 140, height: 210,
+                    targetBoxes: {
+                        "On": { t: 70, l: 100, w: 180, h: 80 },
+                        "Under": { t: 150, l: 100, w: 190, h: 80  },
+                        "Beside": { t: 80, l: 15, w: 100, h: 160 },
+                        "Behind": { t: 15, l: -10, w: 60, h: 160 },
+                        "Above": { t: -110, l: 20, w: 210, h: 80 }
+                    },
+                    validPreps: ["On", "Under", "Beside", "Behind", "Above"]
+                },
+                {
+                    name: "Sofa",
+                    displayNameForBetween: "Sofa Chairs",
+                    img: "Assets/livingroom-sofas.jpg",
+                    left: 200, top: 240, width: 140, height: 210,
+                    targetBoxes: {
+                        "On": { t: 50, l: 415, w: 70, h: 100 },
+                        "Under": { t: 170, l: 400, w: 150, h: 70 },
+                        "Beside": { t: 80, l: 500, w: 70, h: 140 },
+                        "Behind": { t: 0, l: 520, w: 70, h: 110 },
+                        "Between": { t: 50, l: 180, w: 180, h: 90 },
+                        "Above": { t: -60, l: 435, w: 150, h: 60 }
+                    },
+                    validPreps: ["On", "Under", "Beside", "Behind", "Between", "Above"]
+                },
+                {
+                    name: "Table", img: "Assets/livingroom-table.jpg", left: 260, top: 380, width: 235, height: 125,
+                    targetBoxes: {
+                        "On": { t: -30, l: 100, w: 165, h: 40 },
+                        "Under": { t: 65, l: 100, w: 165, h: 55 },
+                        "Beside": { t: 20, l: 280, w: 65, h: 90 }
+                    },
+                    validPreps: ["On", "Under", "Beside"]
+                },
+                {
+                    name: "Shelf", displayNameForBetween: "Books", img: "Assets/livingroom-bigshelf.jpg", betweenImg: "Assets/bedroom-books.jpg", left: 330, top: 25, width: 310, height: 410,
+                    targetBoxes: {
+                        "On": { t: 30, l: 85, w: 310, h: 170 },
+                        "Beside": { t: 150, l: 0, w: 70, h: 180 },
+                        "Between": { t: 170, l: 130, w: 110, h: 70 },
+                        "Above": { t: -10, l: 100, w: 280, h: 30 }
+                    },
+                    validPreps: ["On", "Beside", "Between", "Above"]
+                }
+            ]
+        },
+        {
+            roomName: "Kitchen",
+            bgImage: "Assets/kitchen.jpg",
+            furnitures: [
+                {
+                    name: "Fridge", img: "Assets/kitchen-fridge.jpg", left: 55, top: 75, width: 175, height: 405,
+                    targetBoxes: {
+                        "Beside": { t: 100, l: -40, w: 60, h: 220 },
+                        "Behind": { t: -20, l: 160, w: 80, h: 150 },
+                        "In": { t: 40, l: 40, w: 135, h: 250 },
+                        "Above": { t: -40, l: 50, w: 135, h: 50 }
+                    },
+                    validPreps: ["Beside", "Behind", "In", "Above"]
+                },
+                {
+                    name: "Table", displayNameForBetween: "Chairs", img: "Assets/kitchen-diningtable.jpg", betweenImg: "Assets/kitchen-chairs.jpg", left: 205, top: 350, width: 235, height: 155,
+                    targetBoxes: {
+                        "On": { t: -50, l: 90, w: 190, h: 55 },
+                        "Under": { t: 90, l: 100, w: 175, h: 55 },
+                        "Between": { t: -50, l: 45, w: 280, h: 190 }
+                    },
+                    validPreps: ["On", "Under", "Between"]
+                },
+                {
+                    name: "Kitchen Top", displayNameForBetween: "Sauces", img: "Assets/kitchen-kitchentop.jpg", betweenImg: "Assets/kitchen-sauces.jpg", left: 210, top: 240, width: 345, height: 185,
+                    targetBoxes: {
+                        "On": { t: -60, l: 70, w: 450, h: 85 },
+                        "Beside": { t: 20, l: 540, w: 50, h: 140 },
+                        "Between": { t: -180, l: 395, w: 70, h: 80 },
+                        "Above": { t: -120, l: 70, w: 260, h: 50 }
+                    },
+                    validPreps: ["On", "Beside", "Between", "Above"]
+                },
+                {
+                    name: "Wooden Shelf", img: "Assets/kitchen-woodenrack.jpg", left: 470, top: 130, width: 175, height: 85,
+                    targetBoxes: {
+                        "On": { t: -70, l: 130, w: 75, h: 80 },
+                        "Under": { t: 30, l: 120, w: 100, h: 50 },
+                        "Above": { t: -120, l: 90, w: 155, h: 50 }
+                    },
+                    validPreps: ["On", "Under", "Above"]
+                }
+            ]
+        }
+    ];
+
+
+    let selectedRoundsCount = null;
+    let selectedPreps = [];
+    let gameQueue = [];
+    let currentRoundIndex = 0;
+    let currentRoundData = null;
+
+    const row1Container = document.getElementById("prep-row-1");
+    const row2Container = document.getElementById("prep-row-2");
+    const prepCardsMap = new Map();
+
+    prepositionsList.forEach((p, index) => {
+        let card = document.createElement("div");
+        card.className = "prep-card";
+        card.innerHTML = `<img src="${p.selectionImg}" alt="${p.name}">`;
+        
+        card.onclick = () => {
+            playButtonClickSound();
+            const isAlreadySelected = selectedPreps.some(item => item.name === p.name);
+            if (isAlreadySelected) {
+                card.classList.remove("selected");
+                selectedPreps = selectedPreps.filter(item => item.name !== p.name);
+            } else {
+                if (selectedPreps.length >= selectedRoundsCount) {
+                    document.getElementById('warning-text').innerText = "The number of words selected is more than the number of rounds. Please select within the number of rounds.";
+                    document.getElementById('warning-modal').style.display = 'flex';
+                    return;
+                }
+                card.classList.add("selected");
+                selectedPreps.push(p);
+            }
+            updateSelectAllButtonText();
+        };
+
+        if (index < 4) {
+            row1Container.appendChild(card);
+        } else {
+            row2Container.appendChild(card);
+        }
+
+        prepCardsMap.set(p.name, { card, data: p });
+    });
+
+    function toggleSelectAllPreps() {
+        const selectAllBtn = document.getElementById('select-all-btn');
+        if (selectedPreps.length === prepositionsList.length) {
+            selectedPreps = [];
+            prepCardsMap.forEach(({ card }) => card.classList.remove("selected"));
+            selectAllBtn.innerText = "Select All";
+        } else {
+            selectedPreps = [];
+            prepCardsMap.forEach(({ card, data }) => {
+                if (selectedPreps.length < selectedRoundsCount) {
+                    card.classList.add("selected");
+                    selectedPreps.push(data);
+                } else {
+                    card.classList.remove("selected");
+                }
+            });
+            updateSelectAllButtonText();
+        }
+    }
+
+    function updateSelectAllButtonText() {
+        const selectAllBtn = document.getElementById('select-all-btn');
+        if (selectedPreps.length === prepositionsList.length) {
+            selectAllBtn.innerText = "Deselect All";
+        } else {
+            selectAllBtn.innerText = "Select All";
+        }
+    }
+
+    function goToScreen(screenId) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('completion-overlay').classList.remove('active');
+        document.getElementById(screenId).classList.add('active');
+    }
+
+    function returnToHome() {
+        selectedRoundsCount = null;
+        selectedPreps = [];
+        document.querySelectorAll('#screen-rounds .option-card').forEach(c => c.classList.remove('selected'));
+        prepCardsMap.forEach(({ card }) => card.classList.remove("selected"));
+        document.getElementById('select-all-btn').innerText = "Select All";
+        goToScreen('screen-home');
+    }
+
+    function selectRounds(num, element) {
+        document.querySelectorAll('#screen-rounds .option-card').forEach(c => c.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedRoundsCount = num;
+        selectedPreps = [];
+        prepCardsMap.forEach(({ card }) => card.classList.remove("selected"));
+        document.getElementById('select-all-btn').innerText = "Select All";
+    }
+
+    function validateRoundsNext() {
+        if (!selectedRoundsCount) {
+            document.getElementById('warning-text').innerText = "Please select the number of rounds first.";
+            document.getElementById('warning-modal').style.display = 'flex';
+            return;
+        }
+        goToScreen('screen-preps');
+    }
+
+    function startGame() {
+        if (selectedPreps.length === 0) {
+            document.getElementById('warning-text').innerText = "Please select at least 1 preposition word.";
+            document.getElementById('warning-modal').style.display = 'flex';
+            return;
+        }
+        buildGameQueue();
+        currentRoundIndex = 0;
+        goToScreen('game-screen');
+        startNewRound();
+    }
+
+    function closeWarningModal() {
+        document.getElementById('warning-modal').style.display = 'none';
+    }
+
+    function buildGameQueue() {
+        gameQueue = [];
+        let selectedPrepNames = selectedPreps.map(p => p.name);
+
+        // A furniture piece is usable if it supports at least one selected preposition
+        const furnitureMatches = (furn) => {
+            let matchesPrep = furn.validPreps.some(vp => selectedPrepNames.includes(vp));
+            if (!matchesPrep) return false;
+            if (selectedPrepNames.includes("Between") && selectedPrepNames.length === 1) {
+                return furn.displayNameForBetween !== undefined;
+            }
+            return true;
+        };
+
+        // Only rooms with at least one usable furniture piece are played
+        let validRooms = roomsData.filter(room => room.furnitures.some(furnitureMatches));
+        if (validRooms.length === 0) validRooms = roomsData;
+
+        for (let i = 0; i < selectedRoundsCount; i++) {
+            let roomObj = validRooms[i % validRooms.length];
+            
+            let availableFurnitures = roomObj.furnitures.filter(furnitureMatches);
+
+            if (availableFurnitures.length === 0) {
+                availableFurnitures = roomObj.furnitures;
+            }
+
+            let targetFurniture = availableFurnitures[Math.floor(Math.random() * availableFurnitures.length)];
+            let validPrepsForFurn = targetFurniture.validPreps.filter(vp => selectedPrepNames.includes(vp));
+            
+            if (validPrepsForFurn.length === 0) {
+                let matchingFurnitures = roomObj.furnitures.filter(furn =>
+                    furn.validPreps.some(vp => selectedPrepNames.includes(vp))
+                );
+                if (matchingFurnitures.length > 0) {
+                    targetFurniture = matchingFurnitures[Math.floor(Math.random() * matchingFurnitures.length)];
+                    validPrepsForFurn = targetFurniture.validPreps.filter(vp => selectedPrepNames.includes(vp));
+                } else {
+                    validPrepsForFurn = selectedPrepNames;
+                }
+            }
+
+            let chosenPrepName = validPrepsForFurn[Math.floor(Math.random() * validPrepsForFurn.length)];
+            
+            let prepObj = prepMap[chosenPrepName];
+            let item = itemsList[Math.floor(Math.random() * itemsList.length)];
+
+            let distractors = itemsList.filter(it => it.name !== item.name);
+            distractors.sort(() => Math.random() - 0.5);
+            let roundItems = [item, ...distractors.slice(0, 4)];
+            roundItems.sort(() => Math.random() - 0.5);
+
+            gameQueue.push({
+                roundNum: i + 1,
+                prepObj: prepObj,
+                targetItem: item,
+                roomName: roomObj.roomName,
+                bgImage: roomObj.bgImage,
+                furnitures: roomObj.furnitures,
+                targetFurniture: targetFurniture,
+                items: roundItems
+            });
+        }
+    }
+
+    function startNewRound() {
+        if (currentRoundIndex >= gameQueue.length) {
+            document.getElementById('completed-count').innerText = selectedRoundsCount;
+            document.getElementById('completion-overlay').classList.add('active');
+            return;
+        }
+
+        currentRoundData = gameQueue[currentRoundIndex];
+
+        let introOverlay = document.getElementById('intro-overlay');
+        document.getElementById('intro-title').innerText = `Round ${currentRoundData.roundNum}`;
+        document.getElementById('intro-prep-img').src = currentRoundData.prepObj.introImg;
+        introOverlay.style.display = 'flex';
+
+        setTimeout(() => {
+            introOverlay.style.display = 'none';
+            renderRoundUI();
+        }, 2000);
+    }
+
+    function renderRoundUI() {
+        document.getElementById('header-round').innerText = `Round ${currentRoundData.roundNum} / ${selectedRoundsCount}`;
+        document.getElementById('header-prep-text').innerText = `Preposition: ${currentRoundData.prepObj.name}`;
+        document.getElementById('header-prep-img').src = currentRoundData.prepObj.gameImg;
+
+        let furnitureDisplayName = currentRoundData.targetFurniture.name;
+        let furnitureImgSrc = currentRoundData.targetFurniture.img;
+
+        if (currentRoundData.prepObj.name === "Between") {
+            if (currentRoundData.targetFurniture.displayNameForBetween) {
+                furnitureDisplayName = currentRoundData.targetFurniture.displayNameForBetween;
+            }
+            if (currentRoundData.targetFurniture.betweenImg) {
+                furnitureImgSrc = currentRoundData.targetFurniture.betweenImg;
+            }
+        }
+
+        let furnitureImgHtml = furnitureImgSrc ? `<img src="${furnitureImgSrc}" alt="furniture">` : '';
+
+        let banner = document.getElementById('top-sentence-banner');
+        banner.innerHTML = `
+            <span class="banner-text">Put the</span>
+            <span class="sentence-group"><img src="${currentRoundData.targetItem.img}" alt="item"><span class="label-text">${currentRoundData.targetItem.name}</span></span>
+            <span class="sentence-group"><img src="${currentRoundData.prepObj.gameImg}" alt="prep"><span class="label-text">${currentRoundData.prepObj.name}</span></span>
+            <span class="banner-text">the</span>
+            <span class="sentence-group">${furnitureImgHtml}<span class="label-text">${furnitureDisplayName}</span></span>
+        `;
+
+        let itemListContainer = document.getElementById('item-list-container');
+        itemListContainer.innerHTML = '';
+        roundLocked = false;
+        document.querySelectorAll('.drag-clone').forEach(el => el.remove());
+        
+        currentRoundData.items.forEach(it => {
+            let div = document.createElement('div');
+            div.className = 'draggable-item';
+            div.draggable = false;
+            div.innerHTML = `<img src="${it.img}" alt="${it.name}" class="drag-img"><span>${it.name}</span>`;
+            
+            attachPointerDrag(div, it);
+
+            itemListContainer.appendChild(div);
+        });
+
+        let roomCanvas = document.getElementById('room-canvas');
+        roomCanvas.innerHTML = `
+            <div class="room-bg" style="background-image: url('${currentRoundData.bgImage}');"></div>
+        `;
+        let bgDiv = roomCanvas.querySelector('.room-bg');
+
+        let tf = currentRoundData.targetFurniture;
+        let boxCoords = tf.targetBoxes[currentRoundData.prepObj.name] || { t: -40, l: 20, w: 100, h: 40 };
+
+        let tDiv = document.createElement('div');
+        tDiv.className = 'drop-target';
+        tDiv.style.left = `${tf.left + boxCoords.l}px`;
+        tDiv.style.top = `${tf.top + boxCoords.t}px`;
+        tDiv.style.width = `${boxCoords.w}px`;
+        tDiv.style.height = `${boxCoords.h}px`;
+        tDiv.dataset.correct = "true";
+
+
+        bgDiv.appendChild(tDiv);
+    }
+
+    function handleDrop(itemName, isSuccess) {
+        let isCorrectItem = (itemName === currentRoundData.targetItem.name);
+        if (isCorrectItem && isSuccess) {
+            playCelebrationSound();
+            document.getElementById('feedback-overlay').style.display = 'flex';
+            setTimeout(() => {
+                document.getElementById('feedback-overlay').style.display = 'none';
+                currentRoundIndex++;
+                startNewRound();
+            }, 2000);
+        }
+    }
+
+
+    // ---------- Pointer-based dragging (solid item that follows the cursor) ----------
+    let activeDrag = null;
+    let roundLocked = false;
+
+    function attachPointerDrag(div, it) {
+        div.style.touchAction = 'none';
+
+        div.addEventListener('pointerdown', (e) => {
+            if (activeDrag || roundLocked) return;
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            e.preventDefault();
+
+            const container = document.getElementById('game-container');
+            const SIZE = 110;
+            const clone = document.createElement('img');
+            clone.src = it.img;
+            clone.className = 'drag-clone';
+            clone.style.width = SIZE + 'px';
+            clone.style.height = SIZE + 'px';
+            container.appendChild(clone);
+
+            div.style.opacity = '0.35';
+            activeDrag = { div, it, clone, SIZE, container };
+            try { div.setPointerCapture(e.pointerId); } catch (err) {}
+            moveDrag(e);
+        });
+
+        div.addEventListener('pointermove', (e) => {
+            if (activeDrag && activeDrag.div === div) moveDrag(e);
+        });
+        div.addEventListener('pointerup', (e) => {
+            if (activeDrag && activeDrag.div === div) endDrag(e, false);
+        });
+        div.addEventListener('pointercancel', (e) => {
+            if (activeDrag && activeDrag.div === div) endDrag(e, true);
+        });
+    }
+
+    function placeClone(centerClientX, centerClientY) {
+        const { clone, SIZE, container } = activeDrag;
+        const rect = container.getBoundingClientRect();
+        const scale = rect.width / container.offsetWidth || 1;
+        const x = (centerClientX - rect.left) / scale - container.clientLeft;
+        const y = (centerClientY - rect.top) / scale - container.clientTop;
+        clone.style.left = (x - SIZE / 2) + 'px';
+        clone.style.top = (y - SIZE / 2) + 'px';
+
+        // "In": the item vanishes while it is over the target box, as if it went inside
+        if (currentRoundData && currentRoundData.prepObj.name === 'In') {
+            const tgt = document.querySelector('#room-canvas .drop-target');
+            if (tgt) {
+                const tr = tgt.getBoundingClientRect();
+                const inside = centerClientX >= tr.left && centerClientX <= tr.right &&
+                               centerClientY >= tr.top && centerClientY <= tr.bottom;
+                clone.style.opacity = inside ? '0' : '1';
+            }
+        }
+    }
+
+    function moveDrag(e) {
+        placeClone(e.clientX, e.clientY);
+    }
+
+    function endDrag(e, cancelled) {
+        const d = activeDrag;
+        activeDrag = null;
+        try { d.div.releasePointerCapture(e.pointerId); } catch (err) {}
+        d.div.style.opacity = '';
+
+        let hit = false;
+        if (!cancelled) {
+            const target = document.querySelector('#room-canvas .drop-target');
+            if (target) {
+                const tr = target.getBoundingClientRect();
+                const pad = 20; // forgiving drop area
+                hit = e.clientX >= tr.left - pad && e.clientX <= tr.right + pad &&
+                      e.clientY >= tr.top - pad && e.clientY <= tr.bottom + pad;
+                if (hit && d.it.name === currentRoundData.targetItem.name) {
+                    // snap the item into the green box, then celebrate
+                    activeDrag = d;
+                    placeClone(tr.left + tr.width / 2, tr.top + tr.height / 2);
+                    activeDrag = null;
+                    roundLocked = true;
+                    handleDrop(d.it.name, true);
+                    setTimeout(() => d.clone.remove(), 2000);
+                    return;
+                }
+            }
+        }
+        d.clone.remove();
+    }
+
+    function playButtonClickSound() {
+        try {
+            const ctx = getAudioContext();
+            let osc = ctx.createOscillator();
+            let gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(600, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.08);
+        } catch (e) {
+            console.log("Audio playback error:", e);
+        }
+    }
+
+    function playCelebrationSound() {
+        try {
+            const ctx = getAudioContext();
+            
+            const fanfareSequence = [
+                { freq: 523.25, time: 0.00, duration: 0.22, type: 'triangle' }, // C5
+                { freq: 659.25, time: 0.18, duration: 0.22, type: 'triangle' }, // E5
+                { freq: 783.99, time: 0.36, duration: 0.22, type: 'triangle' }, // G5
+                { freq: 1046.50, time: 0.54, duration: 0.40, type: 'triangle' },// C6
+                
+                { freq: 783.99, time: 0.90, duration: 0.18, type: 'triangle' }, // G5
+                { freq: 1046.50, time: 1.08, duration: 0.22, type: 'triangle' },// C6
+                { freq: 1318.51, time: 1.30, duration: 0.65, type: 'sine' }     // E6
+            ];
+
+            fanfareSequence.forEach(note => {
+                let osc = ctx.createOscillator();
+                let gain = ctx.createGain();
+                
+                osc.type = note.type;
+                osc.frequency.value = note.freq;
+
+                let startTime = ctx.currentTime + note.time;
+                gain.gain.setValueAtTime(0.2, startTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, startTime + note.duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(startTime);
+                osc.stop(startTime + note.duration);
+            });
+        } catch (e) {
+            console.log("Audio playback error:", e);
+        }
+    }
+</script>
+
+</body>
+</html>
