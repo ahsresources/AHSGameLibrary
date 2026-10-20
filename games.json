@@ -1,5 +1,15 @@
 [   
     {
+    "id": "safe-road-crossing",
+    "title": "Safe Road Crossing",
+    "description": "Learn about safe behaviours when crossing the road.",
+    "creatorName": "Teacher Zul",
+    "category": "Daily Living",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["safety", "travel", "community", "road crossing", "MILES", "DL.HL.9.1", "mobility"],
+    "uploadDate": "2026-10-20"
+  },
+    {
     "id": "months-quiz",
     "title": "Months Quiz",
     "description": "Put the months of the year in order, identify next and last months, and find dates on the calendar.",
@@ -686,7 +696,7 @@
     "creatorName": "Teacher Carmina",
     "category": "Daily Living",
     "compatibility": ["desktop", "tablet"],
-    "tags": ["safety", "mobility", "DL.CM.2.2"],
+    "tags": ["safety", "mobility", "DL.CM.2.2", "MILES"],
     "uploadDate": "2026-05-19"
   },
   {
