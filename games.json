@@ -1,4 +1,14 @@
-[   
+[       
+    {
+    "id": "hide-and-seek-prepositions",
+    "title": "Hide and Seek (Prepositions)",
+    "description": "Practice prepositions by arranging common items around the house.",
+    "creatorName": "Teacher Hannah",
+    "category": "Literacy",
+    "compatibility": ["desktop", "tablet", "mobile"],
+    "tags": ["grammar", "vocabulary", "LC.WT.04.02.00"],
+    "uploadDate": "2026-10-24"
+  },
     {
     "id": "safe-road-crossing",
     "title": "Safe Road Crossing",
