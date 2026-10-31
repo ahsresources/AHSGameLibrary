@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pole display</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Share+Tech+Mono&display=swap">
+<style>
+:root{--bg:#f2f2ef;--surface:#fff;--ink:#1d1e20;--muted:#68696d;--line:#d9d9d4;--accent:#2d6a3a;--onaccent:#fff;--danger:#b3261e;--vfd:#72c056;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141515;--surface:#1f2121;--ink:#ecece8;--muted:#9a9b98;--line:#34373a;--accent:#7cc468;--onaccent:#10200c;--danger:#ff8a80;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141515;--surface:#1f2121;--ink:#ecece8;--muted:#9a9b98;--line:#34373a;--accent:#7cc468;--onaccent:#10200c;--danger:#ff8a80;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.bar{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:600;font-size:16px;margin-right:8px}
+.grow{flex:1}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:none;padding:7px 16px;cursor:pointer}
+.seg button[aria-selected="true"]{background:var(--accent);color:var(--onaccent);font-weight:500}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 14px;cursor:pointer}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--accent);color:var(--onaccent);border-color:var(--accent);font-weight:500}
+.btn.dng{color:var(--danger)}
+.in{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 10px}
+.in.sm{width:230px}
+/* display view */
+.stage{position:relative;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:40px;align-items:center;padding:40px 5vw;min-height:calc(100vh - 62px);background:radial-gradient(ellipse at 50% 30%,#fbfbf8,#e2e2dc 80%);color:#1d1e20}
+.stage:fullscreen{min-height:100vh;cursor:none}
+.stage:fullscreen .fs{display:none}
+[hidden]{display:none!important}
+.stage.solo{grid-template-columns:minmax(0,1fr)}.stage.solo .photo{display:none}.stage.solo .unit{max-width:980px}
+.fs{position:absolute;top:14px;right:14px;background:rgba(0,0,0,.04);color:#333;border-color:rgba(0,0,0,.2)}
+.photo{aspect-ratio:1;background:#fff;border-radius:16px;display:grid;place-items:center;overflow:hidden;box-shadow:0 12px 32px rgba(0,0,0,.14);border:1px solid #d4d4ce;width:100%;max-width:520px;justify-self:center;order:2}
+.photo img{width:100%;height:100%;object-fit:contain}
+.ph{color:#9a9a9a;text-align:center;font-size:14px}
+.ph svg{display:block;margin:0 auto 8px}
+.unit{width:100%;max-width:760px;justify-self:center}
+.bezel{background:linear-gradient(#8c8c8c,#757575);padding:4% 5%;border-radius:10px;box-shadow:0 14px 34px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.25)}
+.inner{background:#363636;padding:3.5% 4%;border-radius:4px;box-shadow:inset 0 2px 6px rgba(0,0,0,.6)}
+.screen{position:relative;background:#000;aspect-ratio:2.4;container-type:inline-size;display:flex;flex-direction:column;justify-content:center;gap:1cqw;padding:0 5cqw;overflow:hidden;color:var(--vfd);font-family:"Share Tech Mono",ui-monospace,monospace;text-shadow:0 0 .5cqw var(--vfd),0 0 2cqw color-mix(in srgb,var(--vfd) 55%,transparent)}
+.screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle,transparent 42%,rgba(0,0,0,.7) 62%) 0 0/3px 3px;opacity:.4;box-shadow:inset 0 0 8cqw rgba(0,0,0,.8)}
+.vn{font-size:5.6cqw;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+.vp{display:flex;justify-content:space-between;align-items:baseline;font-size:15cqw;line-height:1.05}
+.vp[hidden]{display:none}
+.vs{font-size:4.2cqw;text-align:center;min-height:1.2em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.screen.idle .vn{font-size:9cqw}
+.screen.flash .vn,.screen.flash .vp,.screen.flash .vs{animation:vfd .4s steps(3)}
+@keyframes vfd{0%{opacity:0}35%{opacity:1}55%{opacity:.35}100%{opacity:1}}
+.neck{width:20%;height:clamp(14px,3vw,28px);margin:0 auto;background:linear-gradient(#3a3a3a,#262626)}
+.pole{width:11%;height:clamp(60px,12vw,130px);margin:0 auto;background:linear-gradient(90deg,#050505,#1c1c1c 50%,#050505)}
+/* products view */
+.wrap{max-width:1040px;margin:0 auto;padding:28px 20px 60px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.tools .in{flex:1;min-width:180px}
+.hint{color:var(--muted);margin:0 0 16px}
+.tbl{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+th{font-weight:500;color:var(--muted);font-size:13px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+td.bc{font-family:"Share Tech Mono",ui-monospace,monospace}
+tbody tr{cursor:pointer}tbody tr:hover{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.th{width:44px;height:44px;border-radius:6px;object-fit:cover;background:var(--bg);display:block}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+/* dialogs */
+.help{max-width:780px}.help h1{font-size:28px;margin:0 0 8px;font-weight:600;letter-spacing:-.01em}.help .lead{font-size:17px;color:var(--muted);margin:0 0 22px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:22px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px}.card h3{margin:0 0 6px;font-size:15px}.card p{margin:0;color:var(--muted);font-size:14px}
+.help h2{font-size:18px;margin:30px 0 10px}
+details{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:10px}
+summary{cursor:pointer;padding:14px 16px;font-weight:500}
+details>div{padding:0 16px 14px}details ol,details ul{margin:6px 0 10px;padding-left:22px}details li{margin:5px 0}details p{margin:8px 0}
+details code{font-family:"Share Tech Mono",ui-monospace,monospace;background:var(--bg);padding:1px 6px;border-radius:4px}
+.cta{display:flex;gap:10px;flex-wrap:wrap}.note{background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:14px}
+#cam{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));width:min(320px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 12px 36px rgba(0,0,0,.35);z-index:40}
+.vw{position:relative}.vw::after{content:"";position:absolute;left:10%;right:10%;top:50%;height:2px;background:rgba(255,60,60,.85);box-shadow:0 0 6px rgba(255,60,60,.85)}
+#cam video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#000}
+.cb{display:flex;gap:8px;align-items:center;padding:8px 10px;font-size:13px}.cb span{flex:1;color:var(--muted)}.cb .btn{padding:4px 10px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.55)}
+.dh{padding:18px 22px 0;font-size:18px;font-weight:600;margin:0}
+.db{padding:16px 22px;display:grid;gap:14px}
+.df{padding:14px 22px 20px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--line)}
+label{display:grid;gap:5px;font-weight:500;font-size:14px}
+label small{font-weight:400;color:var(--muted)}
+.pre{display:flex;gap:14px;align-items:center}
+.pv{width:110px;height:110px;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:12px;text-align:center;flex:none;background:var(--bg)}
+.pv img{width:100%;height:100%;object-fit:contain}
+.pv.drag{border-color:var(--accent)}
+.err{color:var(--danger);min-height:1.2em;margin:0;font-size:14px}
+textarea.in{min-height:160px;font-family:"Share Tech Mono",ui-monospace,monospace;font-size:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+#toast.on{opacity:1}
+@media (max-width:860px){.stage{grid-template-columns:1fr;gap:28px;padding:28px 16px}.photo{max-width:340px}}
+@media (prefers-reduced-motion:reduce){.screen.flash *{animation:none!important}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="brand">Pole display</div>
+  <nav class="seg" aria-label="Views"><button data-v="start">Start</button><button data-v="display">Display</button><button data-v="products">Products</button></nav>
+  <div id="dctl" style="display:contents"><div class="seg" id="modes" aria-label="Display mode"><button data-m="solo">VFD only</button><button data-m="both">VFD and picture</button></div><button class="btn" id="b-reset" title="Show the welcome screen (Delete key)">Reset to welcome</button></div>
+  <div class="grow"></div>
+  <input id="manual" class="in sm" placeholder="Type a barcode, press Enter" aria-label="Enter a barcode by hand" autocomplete="off">
+  <button class="btn" id="b-cam">Scan with camera</button>
+  <button class="btn" id="b-set">Settings</button>
+</header>
+
+<main>
+<section id="v-display" class="stage" aria-label="Customer display">
+  <button class="btn fs" id="b-fs">Full screen</button>
+  <div class="photo" id="photo"></div>
+  <div class="unit">
+    <div class="bezel"><div class="inner">
+      <div class="screen idle" id="screen" aria-live="polite">
+        <div class="vn" id="vn"></div>
+        <div class="vp" id="vp" hidden><span id="vsym"></span><span id="vamt"></span></div>
+        <div class="vs" id="vs"></div>
+      </div>
+    </div></div>
+    <div class="neck"></div><div class="pole"></div>
+  </div>
+</section>
+
+<section id="v-start" class="wrap help" hidden>
+  <h1>Welcome to Pole display</h1>
+  <p class="lead">Scan a barcode and your customer instantly sees the item’s name, price and picture on a glowing display screen, like the ones at a shop counter.</p>
+  <div class="cards">
+    <div class="card"><h3>1. Scan</h3><p>Use a USB barcode scanner, or the camera on your phone, tablet or laptop.</p></div>
+    <div class="card"><h3>2. Show</h3><p>The Display tab shows the name and price. Choose to show just the screen, or the screen with a picture. Use Full screen for the customer’s side.</p></div>
+    <div class="card"><h3>3. Manage</h3><p>The Products tab is your list. Add items, change prices, swap pictures and keep a backup.</p></div>
+  </div>
+  <div class="cta"><button class="btn pri" data-go="products">Add my first products</button><button class="btn" data-go="display">Go to the display</button></div>
+
+  <h2>Frequently asked questions</h2>
+  <details open><summary>How do I connect and use a USB barcode scanner?</summary><div>
+    <ol>
+      <li>Plug the scanner into a USB port. Most scanners work like a keyboard, so there is nothing to install. Bluetooth scanners need to be paired first, the same way as a Bluetooth keyboard.</li>
+      <li>Open this page and select the <b>Display</b> tab.</li>
+      <li>Scan an item. You will hear a beep and see its name and price. You do not need to click anywhere first.</li>
+      <li>The price stays on screen until the next scan. Select <b>Reset to welcome</b> (or press the Delete key) to go back to the welcome message.</li>
+    </ol>
+    <p><b>Nothing happens when I scan?</b></p>
+    <ul>
+      <li>Make sure this page is the window in front. The scanner only types into the window you are using.</li>
+      <li>Test the scanner in another program, such as Notepad. It should type the numbers and then start a new line. If it types the numbers but does not start a new line, the scanner needs its “Enter” setting switched on. Your scanner’s manual has a setup barcode for this.</li>
+      <li>If the item says “not found”, it has not been added to your list yet. See the questions below.</li>
+    </ul>
+    <div class="note">Using a second screen for customers? Open this page in two browser tabs. Scan in the first tab and put the second tab on the customer’s screen. Both tabs show the same item.</div>
+  </div></details>
+
+  <details><summary>How do I create or use barcodes?</summary><div>
+    <p><b>Items that already have a barcode</b> (most things from a shop or supplier): you do not need to create anything. Just scan the printed barcode when you add the item. The app remembers that number.</p>
+    <p><b>Items with no barcode</b> (homemade or loose items):</p>
+    <ol>
+      <li>Choose a short number that no other item uses, for example <code>1001</code>, <code>1002</code>, <code>1003</code>.</li>
+      <li>Add the item with that number as its barcode (see the next question).</li>
+      <li>Make a printable label. Search online for a free “barcode generator”, choose <b>Code 128</b>, type your number and print it. Stick the label on the item.</li>
+      <li>Scan the label to check it works.</li>
+    </ol>
+    <div class="note">Every item needs its own number. Two items with the same barcode cannot be told apart. You can also type any number into the box at the top of the page and press Enter, which is handy for testing.</div>
+  </div></details>
+
+  <details><summary>How do I add items to the list?</summary><div>
+    <ol>
+      <li>Select the <b>Products</b> tab.</li>
+      <li>Select <b>Add product</b>. Or, even quicker, scan the item’s barcode while you are on this tab and the form opens with the barcode filled in.</li>
+      <li>Type the <b>name</b> and the <b>price</b>.</li>
+      <li>Add a <b>picture</b> if you like. Choose a photo from your device, drag one in, or paste one. It is resized for you.</li>
+      <li>Select <b>Save product</b>.</li>
+    </ol>
+    <p>To change an item later, select it in the list. You can edit anything or delete it there.</p>
+    <p><b>Lots of items?</b> Select <b>Backup and import</b> and paste a list with one item per line, in this order: barcode, name, price. For example: <code>9300000000017,French Barbie,10.50</code>. You can add pictures afterwards.</p>
+    <div class="note">Your list is saved in this browser on this device only. Use <b>Backup and import</b> then <b>Export all</b> now and then, and keep the copied text somewhere safe.</div>
+  </div></details>
+</section>
+
+<section id="v-products" class="wrap" hidden>
+  <div class="tools">
+    <input id="q" class="in" placeholder="Search by name or barcode" aria-label="Search products">
+    <button class="btn pri" id="b-add">Add product</button>
+    <button class="btn" id="b-bk">Backup and import</button>
+  </div>
+  <p class="hint">Scan any barcode on this screen to edit that product, or to add it if it is new.</p>
+  <div class="tbl"><table>
+    <thead><tr><th style="width:60px"></th><th>Name</th><th>Barcode</th><th class="num">Price</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table><div class="empty" id="empty" hidden>No products yet. Select Add product, or scan a barcode to create one.</div></div>
+</section>
+</main>
+
+<dialog id="dp">
+  <form id="fp" novalidate>
+    <h2 class="dh" id="dp-t">Add product</h2>
+    <div class="db">
+      <label>Barcode<input class="in" id="f-bc" autocomplete="off" placeholder="Scan or type"></label>
+      <label>Name<input class="in" id="f-name" autocomplete="off" maxlength="60"><small>Shown on the first line of the display.</small></label>
+      <label>Price<input class="in" id="f-price" inputmode="decimal" autocomplete="off" placeholder="0.00"></label>
+      <div>
+        <div class="pre">
+          <div class="pv" id="pv">No picture</div>
+          <div class="row"><button type="button" class="btn" id="b-pic">Choose picture</button><button type="button" class="btn" id="b-nopic">Remove</button></div>
+        </div>
+        <small style="color:var(--muted)">You can also drop or paste an image. Pictures are resized to fit.</small>
+        <input type="file" id="f-file" accept="image/*" hidden>
+      </div>
+      <p class="err" id="f-err" role="alert"></p>
+    </div>
+    <div class="df"><button type="button" class="btn dng" id="b-del" style="margin-right:auto">Delete</button><button type="button" class="btn" id="b-cancel">Cancel</button><button class="btn pri" type="submit">Save product</button></div>
+  </form>
+</dialog>
+
+<dialog id="dk">
+  <h2 class="dh">Backup and import</h2>
+  <div class="db">
+    <p style="margin:0;color:var(--muted)">Export fills the box with all products. Copy it into a text file to keep a backup. To import, paste a backup or a CSV (barcode, name, price) and select Import.</p>
+    <textarea class="in" id="bk" spellcheck="false" aria-label="Backup data"></textarea>
+    <div class="row"><button class="btn" id="b-exp">Export all</button><button class="btn" id="b-copy">Copy</button><button class="btn" id="b-impfile">Import from file</button><input type="file" id="f-imp" accept=".json,.csv,.txt" hidden></div>
+    <p class="err" id="k-msg"></p>
+  </div>
+  <div class="df"><button class="btn" id="k-close">Close</button><button class="btn pri" id="b-imp">Import</button></div>
+</dialog>
+
+<dialog id="ds">
+  <form id="fs" novalidate>
+    <h2 class="dh">Settings</h2>
+    <div class="db">
+      <label>Currency symbol<input class="in" id="s-sym" maxlength="4"></label>
+      <label>Idle message, line 1<input class="in" id="s-i1" maxlength="30"></label>
+      <label>Idle message, line 2<input class="in" id="s-i2" maxlength="40"></label>
+      <label>Unknown item message<input class="in" id="s-nf" maxlength="30"></label>
+      <label>Return to idle after (seconds)<input class="in" id="s-to" inputmode="numeric"><small>Use 0 to keep the last item on screen.</small></label>
+      <label>Display colour<select class="in" id="s-col"><option value="#72c056">Green</option><option value="#5ff2d0">Cyan</option><option value="#ffb347">Amber</option><option value="#e8f1ff">White</option></select></label>
+      <label style="grid-auto-flow:column;justify-content:start;align-items:center;gap:10px"><input type="checkbox" id="s-beep"> Beep on scan</label>
+    </div>
+    <div class="df"><button type="button" class="btn" id="s-cancel">Cancel</button><button class="btn pri" type="submit">Save settings</button></div>
+  </form>
+</dialog>
+<div id="cam" hidden><div class="vw"><video id="cv" playsinline muted></video></div><div class="cb"><span id="ctxt">Starting camera…</span><button class="btn" id="c-sw">Switch</button><button class="btn" id="c-x">Close</button></div></div>
+<div id="toast" role="status"></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const DEF={sym:"$",i1:"Welcome",i2:"Please scan your items",nf:"Item not found",to:0,col:"#72c056",beep:true};
+function cfg(){try{return Object.assign({},DEF,JSON.parse(localStorage.getItem("pd-settings")||"{}"))}catch(e){return{...DEF}}}
+function saveCfg(o){try{localStorage.setItem("pd-settings",JSON.stringify(o))}catch(e){toast("Settings could not be saved in this browser")}}
+
+/* storage */
+let dbp;
+const db=()=>dbp||(dbp=new Promise((res,rej)=>{const r=indexedDB.open("pole-display",1);r.onupgradeneeded=()=>r.result.createObjectStore("p",{keyPath:"barcode"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)}));
+const tx=(m,fn)=>db().then(d=>new Promise((res,rej)=>{const t=d.transaction("p",m),rq=fn(t.objectStore("p"));t.oncomplete=()=>res(rq&&rq.result);t.onerror=()=>rej(t.error)}));
+const get=k=>tx("readonly",s=>s.get(k)),all=()=>tx("readonly",s=>s.getAll()),put=o=>tx("readwrite",s=>s.put(o)),del=k=>tx("readwrite",s=>s.delete(k));
+
+/* ui helpers */
+let tt;function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("on"),2600)}
+let ac;function beep(ok){if(!cfg().beep)return;try{ac=ac||new AudioContext();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=ok?1400:300;g.gain.value=.08;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+(ok?.07:.25))}catch(e){}}
+const PH='<div class="ph"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>No picture</div>';
+
+/* display */
+const state={cur:null};let idleT,view="display";
+function fit(el,max,min){let s=max;el.style.fontSize=s+"cqw";while(el.scrollWidth>el.clientWidth&&s>min){s-=.2;el.style.fontSize=s+"cqw"}}
+function render(flash){
+  const S=cfg(),c=state.cur,scr=$("#screen");
+  document.documentElement.style.setProperty("--vfd",S.col);
+  const solo=(()=>{try{return localStorage.getItem("pd-mode")==="solo"}catch(e){return false}})();
+  $("#v-display").classList.toggle("solo",solo);
+  document.querySelectorAll("#modes button").forEach(b=>b.setAttribute("aria-selected",b.dataset.m===(solo?"solo":"both")));
+  let name=S.i1,sub=S.i2,price=null,img="";
+  if(c&&!c.p){name=S.nf;sub=c.code}else if(c){name=c.p.name;sub="";price=c.p.price;img=c.p.img}
+  scr.classList.toggle("idle",price===null);
+  $("#vn").textContent=name;$("#vs").textContent=sub;
+  $("#vp").hidden=price===null;
+  if(price!==null){$("#vsym").textContent=S.sym;$("#vamt").textContent=price.toFixed(2)}
+  fit($("#vn"),price===null?9:5.6,2.6);
+  const ph=$("#photo");ph.innerHTML=PH;
+  if(img){ph.innerHTML="";const i=new Image();i.alt=name;i.src=img;ph.appendChild(i)}
+  if(flash){scr.classList.remove("flash");void scr.offsetWidth;scr.classList.add("flash")}
+}
+async function scan(code,remote){
+  code=code.trim();if(!code)return;
+  if(!remote&&bc)try{bc.postMessage({code})}catch(e){}
+  let p=null;
+  try{p=await get(code);if(!p){const alts=/^0\d{12}$/.test(code)?[code.slice(1)]:/^\d{12}$/.test(code)?["0"+code]:[];for(const a of alts){p=await get(a);if(p){code=p.barcode;break}}}}catch(e){toast("Storage is unavailable in this browser");return}
+  if(!remote)beep(!!p);
+  state.cur={p,code};
+  const S=cfg();clearTimeout(idleT);
+  if(+S.to>0)idleT=setTimeout(()=>{state.cur=null;if(view==="display")render()},S.to*1000);
+  if(view==="start"&&!remote)setView("display");
+  if(view==="products"&&!remote){p?openEdit(p):openNew(code);return}
+  if(view==="display")render(true);
+}
+function resetDisplay(remote){clearTimeout(idleT);state.cur=null;if(view==="display")render(true);if(!remote&&bc)try{bc.postMessage({reset:1})}catch(e){}}
+let bc=null;try{bc=new BroadcastChannel("pole-display");bc.onmessage=e=>{if(e.data&&e.data.code)scan(e.data.code,true);if(e.data&&e.data.reset)resetDisplay(true);if(e.data&&e.data.refresh){render();list()}}}catch(e){}
+
+/* scanner capture (scanners type fast, then press Enter) */
+let buf="",last=0;
+addEventListener("keydown",e=>{
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const t=e.target;if(t.matches&&t.matches("input,textarea,select"))return;
+  if(document.querySelector("dialog[open]"))return;
+  if(e.key==="Delete"&&view==="display"){e.preventDefault();resetDisplay();return}
+  const n=performance.now();if(n-last>120)buf="";last=n;
+  if(e.key==="Enter"){if(buf.length>=3){e.preventDefault();const c=buf;buf="";scan(c)}buf=""}
+  else if(e.key.length===1)buf+=e.key;
+});
+$("#manual").addEventListener("keydown",e=>{if(e.key==="Enter"){scan(e.target.value);e.target.value=""}});
+
+/* views */
+function setView(v){
+  view=v;$("#dctl").hidden=v!=="display";$("#v-display").hidden=v!=="display";$("#v-products").hidden=v!=="products";$("#v-start").hidden=v!=="start";if(v!=="start")try{localStorage.setItem("pd-seen","1")}catch(e){}
+  document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v));
+  if(location.hash!=="#"+v)history.replaceState(null,"","#"+v);
+  if(v==="display")render();else if(v==="products")list();
+}
+document.querySelectorAll(".seg button").forEach(b=>b.onclick=()=>{setView(b.dataset.v);b.blur()});
+addEventListener("hashchange",()=>{const v=location.hash.slice(1);if(v==="display"||v==="products"||v==="start")setView(v)});
+$("#b-fs").onclick=()=>{const s=$("#v-display");(s.requestFullscreen?s.requestFullscreen():Promise.reject()).catch(()=>toast("Full screen is blocked here. Open the page in its own tab."))};
+document.addEventListener("fullscreenchange",()=>render());
+document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>setView(b.dataset.go));
+$("#b-reset").onclick=()=>{resetDisplay();$("#b-reset").blur()};
+document.querySelectorAll("#modes button").forEach(b=>b.onclick=()=>{try{localStorage.setItem("pd-mode",b.dataset.m)}catch(e){toast("Mode could not be saved")}render();b.blur();if(bc)try{bc.postMessage({refresh:1})}catch(x){}});
+addEventListener("resize",()=>{if(view==="display")render()});
+
+/* product list */
+async function list(){
+  let rows=[];try{rows=await all()}catch(e){toast("Storage is unavailable in this browser")}
+  const q=$("#q").value.trim().toLowerCase();
+  rows=rows.filter(r=>!q||r.name.toLowerCase().includes(q)||r.barcode.includes(q)).sort((a,b)=>a.name.localeCompare(b.name));
+  const S=cfg();
+  $("#rows").innerHTML=rows.map(r=>`<tr data-k="${esc(r.barcode)}"><td>${r.img?`<img class="th" alt="" src="${r.img}">`:'<div class="th"></div>'}</td><td>${esc(r.name)}</td><td class="bc">${esc(r.barcode)}</td><td class="num">${esc(S.sym)}${r.price.toFixed(2)}</td></tr>`).join("");
+  $("#empty").hidden=rows.length>0;$("#empty").textContent=q?"No products match your search.":"No products yet. Select Add product, or scan a barcode to create one.";
+}
+$("#q").oninput=list;
+$("#rows").onclick=async e=>{const tr=e.target.closest("tr");if(tr)openEdit(await get(tr.dataset.k))};
+$("#b-add").onclick=()=>openNew("");
+
+/* product dialog */
+let orig=null,pic="",delArm=false;
+function setPic(d){pic=d||"";$("#pv").innerHTML=pic?`<img alt="Product picture" src="${pic}">`:"No picture"}
+function openDlg(title,p,code){
+  orig=p?p.barcode:null;delArm=false;$("#b-del").textContent="Delete";$("#b-del").hidden=!p;
+  $("#dp-t").textContent=title;$("#f-bc").value=p?p.barcode:code;$("#f-name").value=p?p.name:"";
+  $("#f-price").value=p?p.price.toFixed(2):"";setPic(p?p.img:"");$("#f-err").textContent="";
+  if(!$("#dp").open)$("#dp").showModal();
+  (p||code?$("#f-name"):$("#f-bc")).focus();
+}
+const openNew=c=>openDlg("Add product",null,c||""),openEdit=p=>p&&openDlg("Edit product",p,"");
+$("#f-bc").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#f-name").focus()}});
+$("#b-cancel").onclick=()=>$("#dp").close();
+$("#b-pic").onclick=()=>$("#f-file").click();
+$("#b-nopic").onclick=()=>setPic("");
+function readImg(f){
+  if(!f||!f.type.startsWith("image/"))return;
+  const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{
+    const m=640,s=Math.min(1,m/Math.max(im.width,im.height)),c=document.createElement("canvas");
+    c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);
+    const x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+    setPic(c.toDataURL("image/jpeg",.85))};im.onerror=()=>$("#f-err").textContent="That file could not be read as an image.";im.src=r.result};
+  r.readAsDataURL(f);
+}
+$("#f-file").onchange=e=>{readImg(e.target.files[0]);e.target.value=""};
+const pv=$("#pv");
+pv.ondragover=e=>{e.preventDefault();pv.classList.add("drag")};pv.ondragleave=()=>pv.classList.remove("drag");
+pv.ondrop=e=>{e.preventDefault();pv.classList.remove("drag");readImg(e.dataTransfer.files[0])};
+$("#dp").addEventListener("paste",e=>{const it=[...(e.clipboardData||{}).items||[]].find(i=>i.type.startsWith("image/"));if(it)readImg(it.getAsFile())});
+$("#fp").onsubmit=async e=>{
+  e.preventDefault();
+  const bcv=$("#f-bc").value.trim(),name=$("#f-name").value.trim(),price=parseFloat($("#f-price").value.replace(",","."));
+  const er=m=>$("#f-err").textContent=m;
+  if(!bcv)return er("Enter or scan a barcode.");
+  if(!name)return er("Enter a product name.");
+  if(!isFinite(price)||price<0)return er("Enter a valid price, for example 10.50.");
+  try{
+    if(bcv!==orig&&await get(bcv))return er("Another product already uses this barcode.");
+    await put({barcode:bcv,name,price:Math.round(price*100)/100,img:pic,updated:Date.now()});
+    if(orig&&orig!==bcv)await del(orig);
+  }catch(x){return er("Could not save. Browser storage may be full or blocked.")}
+  $("#dp").close();toast("Product saved");list();if(bc)try{bc.postMessage({refresh:1})}catch(x){}
+};
+$("#b-del").onclick=async()=>{
+  if(!delArm){delArm=true;$("#b-del").textContent="Confirm delete";return}
+  try{await del(orig)}catch(e){return}
+  $("#dp").close();toast("Product deleted");list();
+};
+
+/* backup */
+const kmsg=(m,ok)=>{$("#k-msg").style.color=ok?"var(--accent)":"var(--danger)";$("#k-msg").textContent=m};
+$("#b-bk").onclick=()=>{$("#bk").value="";kmsg("");$("#dk").showModal()};
+$("#k-close").onclick=()=>$("#dk").close();
+$("#b-exp").onclick=async()=>{const r=await all();$("#bk").value=JSON.stringify(r);kmsg(r.length+" products exported. Copy this text and save it somewhere safe.",1)};
+$("#b-copy").onclick=async()=>{const t=$("#bk");t.select();try{await navigator.clipboard.writeText(t.value);kmsg("Copied.",1)}catch(e){document.execCommand&&document.execCommand("copy");kmsg("Selected. Press Ctrl+C or Cmd+C to copy.",1)}};
+$("#b-impfile").onclick=()=>$("#f-imp").click();
+$("#f-imp").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{$("#bk").value=r.result;kmsg("File loaded. Select Import to add its products.",1)};r.readAsText(f);e.target.value=""};
+function csvLine(l,d){const o=[];let c="",q=false;for(let i=0;i<l.length;i++){const h=l[i];if(q){if(h=='"'){if(l[i+1]=='"'){c+='"';i++}else q=false}else c+=h}else if(h=='"')q=true;else if(h==d){o.push(c);c=""}else c+=h}o.push(c);return o}
+$("#b-imp").onclick=async()=>{
+  const t=$("#bk").value.trim();if(!t)return kmsg("Paste a backup or CSV first.");
+  let items=[];
+  try{
+    if(t[0]==="["||t[0]==="{"){const j=JSON.parse(t);items=Array.isArray(j)?j:j.products||[]}
+    else items=t.split(/\r?\n/).filter(Boolean).map(l=>{const d=l.includes("\t")?"\t":l.includes(";")?";":",";const a=csvLine(l,d);return{barcode:(a[0]||"").trim(),name:(a[1]||"").trim(),price:parseFloat((a[2]||"").replace(",","."))}});
+    let n=0,skip=0;
+    for(const it of items){
+      const p=parseFloat(it.price);
+      if(!it.barcode||!it.name||!isFinite(p)||p<0){skip++;continue}
+      await put({barcode:String(it.barcode).trim(),name:String(it.name).slice(0,60),price:Math.round(p*100)/100,img:typeof it.img==="string"&&it.img.startsWith("data:image/")?it.img:"",updated:Date.now()});n++;
+    }
+    kmsg(n+" imported"+(skip?", "+skip+" skipped (missing barcode, name or valid price)":"")+".",1);list();
+  }catch(e){kmsg("That text could not be read. Check that it is a complete backup or CSV.")}
+};
+
+/* settings */
+$("#b-set").onclick=()=>{const S=cfg();$("#s-sym").value=S.sym;$("#s-i1").value=S.i1;$("#s-i2").value=S.i2;$("#s-nf").value=S.nf;$("#s-to").value=S.to;$("#s-col").value=S.col;$("#s-beep").checked=S.beep;$("#ds").showModal()};
+$("#s-cancel").onclick=()=>$("#ds").close();
+$("#fs").onsubmit=e=>{e.preventDefault();saveCfg({sym:$("#s-sym").value,i1:$("#s-i1").value,i2:$("#s-i2").value,nf:$("#s-nf").value,to:Math.max(0,parseInt($("#s-to").value)||0),col:$("#s-col").value,beep:$("#s-beep").checked});$("#ds").close();render();list();if(bc)try{bc.postMessage({refresh:1})}catch(x){}toast("Settings saved")};
+
+/* camera scanning */
+const FMT=["ean_13","ean_8","upc_a","upc_e","code_128","code_39","code_93","itf","codabar","qr_code"];
+let cstream=null,ctimer=0,cdet=null,cface="environment",clast="",clt=0;
+const cstat=m=>$("#ctxt").textContent=m;
+function loadZX(){return window.ZXing?Promise.resolve():new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js";s.onload=res;s.onerror=()=>rej(new Error("zx"));document.head.appendChild(s)})}
+async function makeDet(){
+  if("BarcodeDetector" in window){try{const sup=await BarcodeDetector.getSupportedFormats(),f=FMT.filter(x=>sup.includes(x));if(f.length){const d=new BarcodeDetector({formats:f});return async v=>{const r=await d.detect(v);return r.length?r[0].rawValue:null}}}catch(e){}}
+  await loadZX();
+  const rd=new ZXing.MultiFormatReader(),h=new Map(),B=ZXing.BarcodeFormat;
+  h.set(ZXing.DecodeHintType.POSSIBLE_FORMATS,[B.EAN_13,B.EAN_8,B.UPC_A,B.UPC_E,B.CODE_128,B.CODE_39,B.CODE_93,B.ITF,B.CODABAR,B.QR_CODE]);h.set(ZXing.DecodeHintType.TRY_HARDER,true);rd.setHints(h);
+  const c=document.createElement("canvas"),x=c.getContext("2d",{willReadFrequently:true});
+  return async v=>{c.width=v.videoWidth;c.height=v.videoHeight;x.drawImage(v,0,0);try{return rd.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(c)))).getText()}catch(e){return null}};
+}
+function stopCam(keep){clearTimeout(ctimer);ctimer=0;if(cstream){cstream.getTracks().forEach(t=>t.stop());cstream=null}$("#cv").srcObject=null;if(!keep)$("#cam").hidden=true}
+async function startCam(){
+  $("#cam").hidden=false;cstat("Starting camera…");
+  try{
+    if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)throw new Error("nomedia");
+    cstream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cface},width:{ideal:1280}},audio:false});
+    const v=$("#cv");v.srcObject=cstream;await v.play();
+    cstat("Loading scanner…");cdet=cdet||await makeDet();
+    cstat("Point the camera at a barcode");tick();
+  }catch(e){
+    stopCam(true);
+    cstat(e.name==="NotAllowedError"?"Camera blocked. Allow it in your browser, or open this page in its own tab.":e.name==="NotFoundError"?"No camera found.":e.message==="zx"?"Scanner library could not load. Check your connection.":"The camera could not be started.");
+  }
+}
+async function tick(){
+  if(!cstream)return;
+  const v=$("#cv");
+  if(v.readyState>=2&&!document.querySelector("dialog[open]")){
+    try{const c=await cdet(v);if(c){const n=Date.now();if(c===clast&&n-clt<2500)clt=n;else{clast=c;clt=n;try{navigator.vibrate&&navigator.vibrate(40)}catch(e){}cstat("Scanned "+c);scan(c)}}}catch(e){}
+  }
+  if(cstream)ctimer=setTimeout(tick,130);
+}
+$("#b-cam").onclick=()=>{$("#cam").hidden?startCam():stopCam();$("#b-cam").blur()};
+$("#c-x").onclick=()=>stopCam();
+$("#c-sw").onclick=()=>{cface=cface==="environment"?"user":"environment";stopCam(true);startCam()};
+addEventListener("pagehide",()=>stopCam());
+
+/* start */
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+{const h0=location.hash.slice(1);let seen=false;try{seen=!!localStorage.getItem("pd-seen")}catch(e){}setView(["start","display","products"].includes(h0)?h0:seen?"display":"start")}
+document.fonts&&document.fonts.ready.then(()=>{if(view==="display")render()});
+</script>
+</body>
+</html>
