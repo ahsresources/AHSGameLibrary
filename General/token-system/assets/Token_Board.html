@@ -1,0 +1,1452 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Token Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Layout: a quiet teacher-facing shell. Landing = grid of five system tiles.
+     Each system = a stage showing the learner-facing board (capped to ~60% of screen height),
+     then a progress bar, then the settings panel underneath. */
+  :root {
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+    --bg: #f5f7fa;
+    --surface: #ffffff;
+    --line: #dde3ec;
+    --fg: #16202e;
+    --muted: #5a6678;
+    --accent: #2557d6;
+    --accent-fg: #ffffff;
+    --accent-soft: #e7eeff;
+    --ok: #1a7f46;
+    --ok-soft: #e3f5ea;
+    --shadow: 0 1px 2px rgba(22, 32, 46, .06), 0 4px 16px rgba(22, 32, 46, .05);
+
+    /* Learner-facing boards look like printed cards and read the same in both themes */
+    --card-bg: #fff1cf;
+    --card-ink: #111111;
+    --box-bg: #ffffff;
+    --win: #f5b400;
+    --chart-bg: #e2efd9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141b; --surface: #171e28; --line: #283140; --fg: #e8edf5; --muted: #9aa6b8;
+      --accent: #7aa2ff; --accent-fg: #0b1220; --accent-soft: #1b2a4a;
+      --ok: #5fd08d; --ok-soft: #14301f;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141b; --surface: #171e28; --line: #283140; --fg: #e8edf5; --muted: #9aa6b8;
+    --accent: #7aa2ff; --accent-fg: #0b1220; --accent-soft: #1b2a4a;
+    --ok: #5fd08d; --ok-soft: #14301f;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 4px 16px rgba(0, 0, 0, .25);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-block: 0;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap { max-width: 1200px; margin: 0 auto; padding-block: 20px 56px; }
+
+  /* Header */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 20px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; letter-spacing: -.01em; text-decoration: none; color: var(--fg); }
+  .brand svg { width: 28px; height: 28px; }
+  .back { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); text-decoration: none; font-weight: 500; font-size: 14px; padding: 6px 10px; border-radius: 8px; }
+  .back:hover { background: var(--accent-soft); color: var(--accent); }
+
+  /* Landing */
+  .hero { padding: 16px 0 28px; max-width: 640px; }
+  h1 { font-size: clamp(26px, 4vw, 34px); line-height: 1.15; letter-spacing: -.02em; margin: 0 0 8px; font-weight: 700; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; font-size: 16px; max-width: 56ch; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .tile {
+    display: flex; flex-direction: column; gap: 14px; text-align: left;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; box-shadow: var(--shadow); min-width: 0; text-decoration: none; color: inherit;
+  }
+  a.tile:hover { border-color: var(--accent); }
+  .tile[aria-disabled="true"] { opacity: .72; box-shadow: none; }
+  .preview { background: var(--bg); border-radius: 10px; padding: 12px; color: var(--muted); display: grid; place-items: center; height: 108px; }
+  .preview svg { width: 100%; max-width: 190px; height: 100%; }
+  .tile h2 { font-size: 16px; margin: 0; letter-spacing: -.01em; }
+  .tile p { margin: 2px 0 0; color: var(--muted); font-size: 14px; }
+  .tile-foot { display: flex; align-items: center; justify-content: space-between; margin-top: auto; gap: 8px; }
+  .chip { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+  .chip.soon { background: var(--bg); color: var(--muted); border: 1px solid var(--line); }
+  .open { font-size: 14px; font-weight: 600; color: var(--accent); }
+
+  /* Workspace */
+  .work { display: flex; flex-direction: column; gap: 16px; }
+  .main { min-width: 0; display: flex; flex-direction: column; gap: 16px; }
+  .caption h1 { font-size: 22px; margin: 0; }
+
+  /* The stage holds a board no taller than --h; the board's width follows its own proportions */
+  .stage { --h: 60dvh; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: clamp(12px, 2.4vw, 24px); box-shadow: var(--shadow); }
+  .fit { container-type: inline-size; width: min(100%, calc(var(--h) * var(--ratio, 1.7))); margin-inline: auto; }
+  body.present .stage { --h: 68dvh; }
+
+  /* Shared reward contents (picture, pictogram, words) */
+  .reward img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .reward img.pict { object-fit: contain; padding: 5%; }
+  .reward .words { font-weight: 600; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
+  .reward .empty { color: #555; text-align: center; font-weight: 500; }
+
+  /* "I am working for" card (measured from the reference image: 890 x 515) */
+  .card {
+    background: var(--card-bg);
+    color: var(--card-ink);
+    border: max(2px, .35cqw) solid var(--card-ink);
+    padding: 7cqw 7.3cqw 5.4cqw;
+    width: 100%;
+  }
+  .card-top { display: flex; align-items: center; justify-content: space-between; padding: 0 6.4cqw 0 6.4cqw; margin-bottom: 7.6cqw; gap: 3cqw; }
+  .card-title { font-size: 5.4cqw; line-height: 1.15; font-weight: 500; letter-spacing: -.01em; margin: 0; }
+  .card .reward, .pbc .reward {
+    width: 23cqw; aspect-ratio: 1 / 1; flex: none;
+    background: var(--box-bg); border: max(2px, .35cqw) solid var(--card-ink);
+    display: grid; place-items: center; overflow: hidden; position: relative;
+  }
+  .card .reward .words { font-size: 3.6cqw; padding: 1.6cqw; }
+  .card .reward .words.long { font-size: 2.8cqw; }
+  .card .reward .empty { font-size: 2.3cqw; padding: 1.5cqw; }
+  .card .reward.win, .pbc .reward.win { animation: bounce .7s ease-out 1; box-shadow: 0 0 0 .9cqw var(--win); }
+
+  .tokens { display: flex; flex-wrap: wrap; justify-content: center; gap: 2.1cqw; --cols: 5; }
+  .tok {
+    width: calc((100% - (var(--cols) - 1) * 2.1cqw) / var(--cols) - .01px);
+    aspect-ratio: 1 / 1; padding: 0;
+    background: var(--box-bg); border: max(2px, .35cqw) solid var(--card-ink); border-radius: 0;
+    display: grid; place-items: center; color: var(--card-ink);
+  }
+  .tok:hover { background: #fffdf6; }
+  .tok svg { width: 72%; height: 72%; display: block; }
+  .tok .ico, .bcheck .ico { opacity: 0; transform: scale(.5); transition: opacity .15s, transform .2s; }
+  .tok[aria-pressed="true"] .ico, .bcheck[aria-pressed="true"] .ico { opacity: 1; transform: scale(1); }
+  .tok .ico.pop, .bcheck .ico.pop { animation: pop .35s ease-out 1; }
+
+  /* Numbered work system strip (reference: countdown cells, then reward) */
+  .strip {
+    container-type: inline-size;
+    display: grid; grid-template-columns: repeat(var(--cols, 6), 1fr);
+    gap: 1.5px; background: var(--card-ink); border: 3px solid var(--card-ink);
+    width: 100%;
+  }
+  .cell {
+    position: relative; background: var(--box-bg); color: var(--card-ink);
+    aspect-ratio: 1 / 1.04; border: 0; padding: 0; border-radius: 0;
+    display: grid; place-items: center; overflow: hidden; min-width: 0;
+  }
+  button.cell:hover { background: #fffdf6; }
+  .cell .num { font-size: calc(100cqw / var(--cols) * .46); font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+  .cell .cover { position: absolute; inset: 0; background: var(--box-bg); display: grid; place-items: center; }
+  .cell .cover svg { width: 74%; height: 74%; display: block; }
+  .cell .cover .ico.pop { animation: pop .35s ease-out 1; }
+  .rcell .words { font-size: calc(100cqw / var(--cols) * .15); padding: 4%; }
+  .rcell .words.long { font-size: calc(100cqw / var(--cols) * .11); }
+  .rcell .empty { font-size: calc(100cqw / var(--cols) * .13); padding: 6%; }
+  .rcell.win { box-shadow: inset 0 0 0 calc(100cqw / var(--cols) * .06) var(--win); }
+  .rcell.win img { padding: 8%; }
+
+  /* Positive behaviour reward chart (reference: 880 x 600) */
+  .pbc {
+    background: var(--chart-bg); color: var(--card-ink);
+    border: max(2px, .4cqw) solid var(--card-ink);
+    padding: 0 2.5cqw .9cqw; width: 100%;
+  }
+  .pbc-title { font-size: 4.6cqw; line-height: 1.2; font-weight: 500; text-align: center; margin: 0; padding: 1.5cqw 0 2.1cqw; letter-spacing: -.005em; }
+  .pbc-band { background: #fff; display: flex; align-items: center; justify-content: space-between; gap: 3cqw; padding: .85cqw 13.5cqw .85cqw 8cqw; }
+  .pbc-working { font-size: 5.4cqw; line-height: 1.15; font-weight: 500; margin: 0; letter-spacing: -.01em; }
+  .pbc .reward { width: 23.3cqw; aspect-ratio: 205 / 200; }
+  .pbc .reward .words { font-size: 3.4cqw; padding: 1.4cqw; }
+  .pbc .reward .words.long { font-size: 2.6cqw; }
+  .pbc .reward .empty { font-size: 2.2cqw; padding: 1.4cqw; }
+  .pbc-row { display: grid; grid-template-columns: repeat(var(--n, 3), 1fr); padding: 3.2cqw 6.6cqw 0; }
+  .bcol { display: grid; justify-items: center; align-content: start; gap: .7cqw; padding: 0 1.2cqw; min-width: 0; }
+  .bbox {
+    width: min(100%, 23.4cqw); aspect-ratio: 206 / 179; background: #fff;
+    border: max(2px, .35cqw) solid var(--card-ink);
+    display: grid; place-items: center; overflow: hidden;
+  }
+  .bbox img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .bbox img.pict { object-fit: contain; padding: 4%; }
+  .bbox .words { font-size: 2.8cqw; font-weight: 600; text-align: center; line-height: 1.2; padding: 1cqw; overflow-wrap: anywhere; }
+  .bbox .empty { font-size: 1.9cqw; color: #555; text-align: center; font-weight: 500; padding: 1cqw; }
+  .bcheck {
+    width: max(7.8cqw, 28px); aspect-ratio: 1 / 1; background: #fff; padding: 0; border-radius: 0;
+    border: max(1px, .12cqw) solid var(--card-ink); display: grid; place-items: center;
+  }
+  .bcheck:hover { background: #f7fbf2; }
+  .bcheck svg { width: 82%; height: 82%; display: block; }
+
+  /* Token art, shared */
+  .ico .f { fill: var(--tok); stroke: #111; stroke-width: 1.2; stroke-linejoin: round; }
+  .ico .l { fill: none; stroke: var(--tok); stroke-width: 3.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ico .d { fill: #111; }
+  .ico .m { fill: none; stroke: #111; stroke-width: 1.4; stroke-linecap: round; }
+
+  @keyframes pop { 0% { transform: scale(.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  @keyframes bounce { 0% { transform: scale(1); } 35% { transform: scale(1.08); } 100% { transform: scale(1); } }
+
+  /* Status + actions */
+  .bar { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: var(--shadow); }
+  .progress { flex: 1 1 200px; min-width: 0; }
+  .progress-label { font-weight: 600; font-variant-numeric: tabular-nums; display: flex; justify-content: space-between; gap: 8px; }
+  .progress-label span:last-child { color: var(--muted); font-weight: 500; }
+  .meter { height: 8px; border-radius: 99px; background: var(--bg); border: 1px solid var(--line); margin-top: 8px; overflow: hidden; }
+  .meter > i { display: block; height: 100%; background: var(--accent); border-radius: 99px; transition: width .25s ease; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 9px 14px; font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:hover { border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
+  .btn.primary:hover { filter: brightness(1.08); color: var(--accent-fg); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; filter: none; border-color: var(--line); color: inherit; }
+  .btn.primary:disabled { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .done { background: var(--ok-soft); color: var(--ok); border-radius: 12px; padding: 12px 16px; font-weight: 600; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .done .btn { color: var(--fg); }
+
+  /* Panel (sits under the board) */
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow);
+    padding: 4px 20px 20px; display: grid; gap: 0 32px; align-items: start;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  }
+  .field { padding-top: 16px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .hint { font-size: 13px; color: var(--muted); margin: 0; }
+  .input { width: 100%; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 9px 12px; }
+  .input:focus-visible { outline-offset: 0; border-color: var(--accent); }
+  .seg { display: grid; grid-template-columns: repeat(2, 1fr); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+  .seg.n { grid-template-columns: repeat(var(--n, 3), 1fr); }
+  .seg button { border: 0; background: transparent; border-radius: 7px; padding: 7px 4px; font-weight: 600; font-size: 14px; color: var(--muted); }
+  .seg button[aria-pressed="true"] { background: var(--surface); color: var(--fg); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .row.nowrap { flex-wrap: nowrap; }
+  .row.between { justify-content: space-between; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .results:empty { display: none; }
+  .results button { aspect-ratio: 1 / 1; padding: 0; background: #fff; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; display: grid; place-items: center; }
+  .results button img { width: 100%; height: 100%; object-fit: contain; padding: 4px; display: block; }
+  .results button:hover { border-color: var(--accent); }
+  .results button[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
+  .presets { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .preset { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 5px 3px 6px; display: grid; gap: 4px; justify-items: center; align-content: start; font-size: 11px; font-weight: 600; color: var(--muted); line-height: 1.15; text-align: center; min-width: 0; }
+  .preset .pimg { width: 100%; aspect-ratio: 1 / 1; background: #fff; border-radius: 6px; display: grid; place-items: center; overflow: hidden; }
+  .preset .pimg img { width: 100%; height: 100%; object-fit: contain; padding: 3px; display: block; }
+  .preset:hover { border-color: var(--accent); }
+  .preset[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .credit { font-size: 12px; }
+  .credit a { color: var(--muted); }
+  .stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--bg); align-self: flex-start; }
+  .stepper button { width: 38px; height: 38px; border: 0; background: transparent; font-size: 18px; font-weight: 600; }
+  .stepper button:hover:not(:disabled) { background: var(--accent-soft); color: var(--accent); }
+  .stepper button:disabled { opacity: .35; cursor: not-allowed; }
+  .stepper output { min-width: 40px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .styles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .styles button { border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 8px 4px 6px; display: grid; gap: 2px; justify-items: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+  .styles button svg { width: 26px; height: 26px; }
+  .styles button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .file:focus-visible + .btn { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Group token system: students down the side, tokens across, then a tally or one more token */
+  .gt-card { --u: calc(100cqw / var(--units, 9)); background: var(--card-bg); color: var(--card-ink); border: max(2px, .35cqw) solid var(--card-ink); padding: calc(var(--u) * .25); width: 100%; }
+  .gt-grid { display: grid; gap: 2px; background: var(--card-ink); border: 3px solid var(--card-ink); }
+  .gname { display: flex; align-items: center; gap: calc(var(--u) * .14); padding: 0 calc(var(--u) * .14); background: var(--box-bg); border: 0; border-radius: 0; color: var(--card-ink); text-align: left; min-width: 0; }
+  .gname:hover { background: #fffdf6; }
+  .gname.gdone, .gtally.gdone { background: #fff3c4; }
+  .gav { flex: none; width: calc(var(--u) * .7); aspect-ratio: 1 / 1; border-radius: 50%; border: 2px solid var(--card-ink); background: #fff8e6; display: grid; place-items: center; overflow: hidden; font-size: calc(var(--u) * .44); line-height: 1; }
+  .gav img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .gn { font-size: calc(var(--u) * .27); font-weight: 600; line-height: 1.15; min-width: 0; overflow-wrap: anywhere; }
+  .gn.long { font-size: calc(var(--u) * .2); }
+  .gtok { aspect-ratio: 1 / 1; padding: 0; background: var(--box-bg); border: 0; border-radius: 0; color: var(--card-ink); display: grid; place-items: center; min-width: 0; }
+  .gtok:hover { background: #fffdf6; }
+  .gtok svg { width: 72%; height: 72%; display: block; }
+  .gtok .ico { opacity: 0; transform: scale(.5); transition: opacity .15s, transform .2s; }
+  .gtok[aria-pressed="true"] .ico { opacity: 1; transform: scale(1); }
+  .gtok .ico.pop { animation: pop .35s ease-out 1; }
+  .gtally { aspect-ratio: 1 / 1; background: var(--box-bg); display: grid; place-items: center; font-size: calc(var(--u) * .52); font-weight: 700; font-variant-numeric: tabular-nums; color: var(--card-ink); }
+
+  /* Finished -> next activity */
+  .gt-flow { display: flex; align-items: center; justify-content: center; gap: calc(var(--u) * .3); margin-top: calc(var(--u) * .35); }
+  .fbox { flex: none; width: calc(var(--u) * var(--d)); background: var(--box-bg); border: max(2px, .3cqw) solid var(--card-ink); display: flex; flex-direction: column; color: var(--card-ink); }
+  .fbox.win { box-shadow: 0 0 0 calc(var(--u) * .08) var(--win); animation: bounce .7s ease-out 1; }
+  .fpic { aspect-ratio: 1 / 1; display: grid; place-items: center; overflow: hidden; }
+  .fpic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .fpic img.pict { object-fit: contain; padding: 5%; }
+  .fpic svg { width: 78%; height: 78%; display: block; }
+  .fpic .empty { font-size: calc(var(--u) * var(--d) * .11); padding: 6%; color: #555; text-align: center; font-weight: 500; }
+  .flabel { border-top: max(2px, .3cqw) solid var(--card-ink); background: var(--card-bg); text-align: center; font-weight: 600; font-size: calc(var(--u) * var(--d) * .14); line-height: 1.15; padding: calc(var(--u) * var(--d) * .04); min-height: calc(var(--u) * var(--d) * .3); display: grid; place-items: center; overflow-wrap: anywhere; }
+  .flabel.long { font-size: calc(var(--u) * var(--d) * .1); }
+  .farrow { flex: none; width: calc(var(--u) * var(--d) * .45); }
+  .farrow svg { width: 100%; height: auto; display: block; }
+  .preset .pimg.emo { font-size: 24px; line-height: 1; background: var(--surface); }
+
+  /* Edit-student dialog */
+  .gt-modal { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--fg); padding: 0; width: min(380px, calc(100vw - 32px)); box-shadow: 0 12px 40px rgba(0, 0, 0, .35); }
+  .gt-modal::backdrop { background: rgba(10, 16, 26, .55); }
+  .gt-mbody { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+  .gt-mbody h2 { margin: 0; font-size: 17px; letter-spacing: -.01em; }
+  .gt-mbody .field { padding-top: 0; }
+
+  /* Full view: board only, a little larger */
+  body.present .top, body.present .panel, body.present .caption { display: none; }
+  body.present .wrap { max-width: 1000px; padding-top: 16px; }
+  .exit { display: none; justify-content: flex-end; }
+  body.present .exit { display: flex; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="wrap" id="app">
+
+  <header class="top">
+    <a class="brand" href="#" aria-label="Token Board home">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="1" y="1" width="26" height="26" rx="7" fill="var(--accent)"/><circle cx="9" cy="14" r="3.2" fill="var(--accent-fg)"/><circle cx="14" cy="14" r="3.2" fill="var(--accent-fg)" opacity=".75"/><circle cx="19" cy="14" r="3.2" fill="var(--accent-fg)" opacity=".45"/></svg>
+      Token Board
+    </a>
+    <a class="back" id="backLink" href="#" hidden>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3L5 8l5 5"/></svg>
+      All token systems
+    </a>
+  </header>
+
+  <section id="landing" aria-labelledby="choose-title">
+    <div class="hero">
+      <h1 id="choose-title">Choose a token system</h1>
+      <p class="lede">Pick the format that suits the learner or class. Each one is set up in a minute and can be shown full screen.</p>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <div id="boards"></div>
+</div>
+
+<script>
+(function () {
+  var ARASAAC_SEARCH = 'https://api.arasaac.org/v1/pictograms/en/search/';
+  function pictoUrl(id) { return 'https://static.arasaac.org/pictograms/' + id + '/' + id + '_300.png'; }
+  var STYLES = {
+    star:  { label: 'Star',  color: '#f5b400' },
+    check: { label: 'Tick',  color: '#1f9d55' },
+    heart: { label: 'Heart', color: '#e5484d' },
+    smile: { label: 'Smile', color: '#f5b400' }
+  };
+  // Picture files for the behaviour chart: put these in an "assets" folder next to the page.
+  var PRESETS = [
+    { k: 'sit',        label: 'Sit nicely',  src: 'assets/sit.png' },
+    { k: 'handsready', label: 'Hands ready', src: 'assets/handsready.png' },
+    { k: 'keepquiet',  label: 'Keep quiet',  src: 'assets/keepquiet.png' },
+    { k: 'wait',       label: 'Wait',        src: 'assets/wait.png' },
+    { k: 'listen',     label: 'Listen',      src: 'assets/listen.png' }
+  ];
+  function preset(k) { for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].k === k) return PRESETS[i]; return null; }
+
+  function icon(style, tickColor) {
+    var c = (style === 'check' && tickColor) ? tickColor : STYLES[style].color, body = '';
+    if (style === 'star') body = '<path class="f" d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/>';
+    if (style === 'check') body = '<path class="l" d="M4.5 12.5l5 5 10-11"/>';
+    if (style === 'heart') body = '<path class="f" d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/>';
+    if (style === 'smile') body = '<circle class="f" cx="12" cy="12" r="9"/><circle class="d" cx="9" cy="10" r="1.2"/><circle class="d" cx="15" cy="10" r="1.2"/><path class="m" d="M8 14c1 1.8 2.4 2.6 4 2.6s3-.8 4-2.6"/>';
+    return '<svg class="ico" viewBox="0 0 24 24" style="--tok:' + c + '" aria-hidden="true">' + body + '</svg>';
+  }
+
+  function $(id) { return document.getElementById(id); }
+  function normalize(arr, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(!!(arr && arr[i]));
+    return out;
+  }
+  function fmtSize(n) { return n < 1024 ? n + ' bytes' : (n / 1024).toFixed(1) + ' KB'; }
+  function emptyNote(text) { var e = document.createElement('div'); e.className = 'empty'; e.textContent = text; return e; }
+
+  /* ---------- sounds: tiny synthesized tones, no audio files ---------- */
+  var audio = { ctx: null, on: true };
+  try { audio.on = localStorage.getItem('tokenboard.sound') !== 'off'; } catch (e) {}
+  function audioCtx() {
+    if (!audio.ctx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { audio.ctx = new AC(); } catch (e) { return null; }
+    }
+    if (audio.ctx.state === 'suspended') { try { audio.ctx.resume(); } catch (e) {} }
+    return audio.ctx;
+  }
+  function tone(freq, delay, dur, type, vol) {
+    var c = audioCtx(); if (!c) return;
+    var t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  var SOUND = {
+    // a short, soft two-note "pop-ding" when a token goes in
+    token: function () {
+      if (!audio.on) return;
+      tone(660, 0, 0.10, 'sine', 0.22);
+      tone(990, 0.07, 0.20, 'sine', 0.18);
+    },
+    // a rising four-note fanfare when everything is complete
+    complete: function () {
+      if (!audio.on) return;
+      var notes = [523.25, 659.25, 783.99, 1046.5];
+      notes.forEach(function (f, i) {
+        var last = i === notes.length - 1;
+        tone(f, i * 0.13, last ? 0.75 : 0.22, 'triangle', 0.22);
+        if (last) tone(f * 2, i * 0.13, 0.6, 'sine', 0.08);
+      });
+    }
+  };
+  function soundBtnHTML() {
+    var waves = audio.on ? '<path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/>' : '<path d="M16 9.5l5 5M21 9.5l-5 5"/>';
+    return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9v6h4l5 4V5L7 9H3z"/>' + waves + '</svg><span>' + (audio.on ? 'Sound on' : 'Sound off') + '</span>';
+  }
+  function updateSoundButtons() {
+    document.querySelectorAll('.soundToggle').forEach(function (b) {
+      b.setAttribute('aria-pressed', audio.on ? 'true' : 'false');
+      b.innerHTML = soundBtnHTML();
+    });
+  }
+  function toggleSound() {
+    audio.on = !audio.on;
+    try { localStorage.setItem('tokenboard.sound', audio.on ? 'on' : 'off'); } catch (e) {}
+    updateSoundButtons();
+    if (audio.on) SOUND.token();
+  }
+
+  /* ---------- uploaded pictures: one small WebP blob each, in IndexedDB ---------- */
+  function idbOpen() {
+    return new Promise(function (res, rej) {
+      if (typeof indexedDB === 'undefined') { rej(new Error('no idb')); return; }
+      var r = indexedDB.open('tokenboard', 1);
+      r.onupgradeneeded = function () { r.result.createObjectStore('kv'); };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function idbRun(mode, fn) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (res, rej) {
+        var tx = db.transaction('kv', mode), out = fn(tx.objectStore('kv'));
+        tx.oncomplete = function () { db.close(); res(out && out.result); };
+        tx.onerror = tx.onabort = function () { db.close(); rej(tx.error); };
+      });
+    });
+  }
+  function idbGet(k) { return idbRun('readonly', function (s) { return s.get(k); }); }
+  function idbSet(k, v) { return idbRun('readwrite', function (s) { return s.put(v, k); }); }
+  function idbDel(k) { return idbRun('readwrite', function (s) { return s.delete(k); }); }
+
+  function toBlob(c, type, q) { return new Promise(function (r) { c.toBlob(r, type, q); }); }
+  function shrink(file) {
+    var url = URL.createObjectURL(file);
+    return new Promise(function (res, rej) {
+      var i = new Image(); i.onload = function () { res(i); }; i.onerror = rej; i.src = url;
+    }).then(async function (im) {
+      var w = im.naturalWidth || 300, h = im.naturalHeight || 300, s = Math.min(w, h);
+      // Boxes never show more than about 230 px, so 320 px covers sharp screens.
+      var plan = [[320, .7], [320, .5], [256, .5], [256, .35], [192, .35]], best = null;
+      for (var k = 0; k < plan.length; k++) {
+        var n = plan[k][0], q = plan[k][1];
+        var c = document.createElement('canvas'); c.width = c.height = n;
+        var x = c.getContext('2d');
+        x.fillStyle = '#fff'; x.fillRect(0, 0, n, n);
+        x.imageSmoothingQuality = 'high';
+        x.drawImage(im, (w - s) / 2, (h - s) / 2, s, s, 0, 0, n, n);
+        var b = await toBlob(c, 'image/webp', q);
+        if (!b || b.type !== 'image/webp') b = await toBlob(c, 'image/jpeg', q);
+        if (b && (!best || b.size < best.size)) best = b;
+        if (best && best.size <= 12000) break;
+      }
+      return best;
+    }).then(function (b) { URL.revokeObjectURL(url); return b; }, function (e) { URL.revokeObjectURL(url); throw e; });
+  }
+
+  /* ---------- ARASAAC pictogram search, wired to a form ---------- */
+  function fetchPictograms(term, signal) {
+    return fetch(ARASAAC_SEARCH + encodeURIComponent(term), { signal: signal })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+      .then(function (list) {
+        return (Array.isArray(list) ? list : []).filter(function (x) { return x && isFinite(+x._id); }).slice(0, 12).map(function (x) {
+          var kw = x.keywords && x.keywords[0] && x.keywords[0].keyword;
+          return { id: +x._id, word: kw || term };
+        });
+      });
+  }
+  function wireSearch(els, onPick, isPicked) {
+    var ctl = null, list = [];
+    function render() {
+      els.results.innerHTML = '';
+      list.forEach(function (r) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.title = r.word;
+        b.setAttribute('aria-label', 'Use pictogram: ' + r.word);
+        b.setAttribute('aria-pressed', isPicked(r) ? 'true' : 'false');
+        var im = document.createElement('img'); im.src = pictoUrl(r.id); im.alt = ''; im.loading = 'lazy';
+        b.appendChild(im);
+        b.addEventListener('click', function () { onPick(r); });
+        els.results.appendChild(b);
+      });
+    }
+    function run(term) {
+      term = term.trim();
+      if (!term) { els.status.textContent = 'Type a word to search.'; return; }
+      if (ctl) ctl.abort();
+      var mine = new AbortController(); ctl = mine;
+      var timedOut = false, timer = setTimeout(function () { timedOut = true; mine.abort(); }, 10000);
+      list = []; render();
+      els.status.textContent = 'Searching…';
+      fetchPictograms(term, mine.signal).then(function (found) {
+        clearTimeout(timer);
+        if (mine !== ctl) return;
+        list = found;
+        els.status.textContent = list.length ? 'Choose a pictogram.' : 'No pictograms found for “' + term + '”. Try a simpler word.';
+        render();
+      }).catch(function () {
+        clearTimeout(timer);
+        if (mine !== ctl) return;
+        if (mine.signal.aborted && !timedOut) return;
+        els.status.textContent = 'Pictogram search could not connect from this page. You can still upload a picture.';
+      });
+    }
+    els.form.addEventListener('submit', function (e) { e.preventDefault(); run(els.input.value); });
+    return { render: render };
+  }
+
+  /* ---------- landing tiles ---------- */
+  var TILES = [
+    { id: 'i-am-working-for', title: 'I am working for', desc: 'A learner earns tokens toward one chosen reward.', ready: true,
+      svg: '<svg viewBox="0 0 190 100" fill="none"><rect x="6" y="6" width="178" height="88" fill="#fff1cf" stroke="#111" stroke-width="2"/><rect x="24" y="30" width="62" height="6" fill="#111" opacity=".75"/><rect x="24" y="42" width="40" height="6" fill="#111" opacity=".75"/><rect x="118" y="16" width="40" height="40" fill="#fff" stroke="#111" stroke-width="2"/><g fill="#fff" stroke="#111" stroke-width="2"><rect x="22" y="64" width="22" height="22"/><rect x="50" y="64" width="22" height="22"/><rect x="78" y="64" width="22" height="22"/><rect x="106" y="64" width="22" height="22"/><rect x="134" y="64" width="22" height="22"/></g></svg>' },
+    { id: 'numbered-work-system', title: 'Numbered work system', desc: 'Numbered trials to finish in order, then a reward.', ready: true,
+      svg: '<svg viewBox="0 0 190 100" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="26" width="174" height="48"/><path d="M51.5 26v48M95 26v48M138.5 26v48"/><circle cx="29.75" cy="50" r="9" fill="currentColor" stroke="none"/><g fill="currentColor" stroke="none" font-family="Inter,sans-serif" font-size="24" font-weight="600" text-anchor="middle"><text x="73.25" y="58">2</text><text x="116.75" y="58">1</text></g><rect x="150" y="41" width="20" height="18" rx="2"/></svg>' },
+    { id: 'positive-behaviour-chart', title: 'Positive behaviour reward chart', desc: 'Check off behaviour expectations to earn a reward.', ready: true,
+      svg: '<svg viewBox="0 0 190 100" fill="none"><rect x="6" y="6" width="178" height="88" fill="#e2efd9" stroke="#111" stroke-width="2"/><rect x="14" y="16" width="162" height="30" fill="#fff"/><rect x="26" y="28" width="46" height="5" fill="#111" opacity=".75"/><rect x="128" y="19" width="24" height="24" fill="#fff" stroke="#111" stroke-width="2"/><g fill="#fff" stroke="#111" stroke-width="2"><rect x="26" y="52" width="38" height="26"/><rect x="76" y="52" width="38" height="26"/><rect x="126" y="52" width="38" height="26"/></g><g fill="#fff" stroke="#111" stroke-width="1"><rect x="38" y="80" width="14" height="10"/><rect x="88" y="80" width="14" height="10"/><rect x="138" y="80" width="14" height="10"/></g><g stroke="#4fae2a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M41 85l3 3 5-6"/><path d="M91 85l3 3 5-6"/><path d="M141 85l3 3 5-6"/></g></svg>' },
+    { id: 'group-token-system', title: 'Group token system', desc: 'A grid of students, each earning tokens toward finishing.', ready: true,
+      svg: '<svg viewBox="0 0 190 100" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="8" width="174" height="84"/><path d="M62 8v84M8 36h174M8 64h174M92 8v84M122 8v84M152 8v84"/><circle cx="35" cy="22" r="8"/><circle cx="35" cy="50" r="8"/><circle cx="35" cy="78" r="8"/><g fill="currentColor" stroke="none"><circle cx="77" cy="22" r="5"/><circle cx="107" cy="22" r="5"/><circle cx="77" cy="50" r="5"/></g><g fill="currentColor" stroke="none" font-family="Inter,sans-serif" font-size="18" font-weight="700" text-anchor="middle"><text x="167" y="28">2</text><text x="167" y="56">1</text><text x="167" y="84">0</text></g></svg>' },
+    { id: 'point-system', title: 'Point system', desc: 'Award and track points for individuals or teams.', ready: false,
+      svg: '<svg viewBox="0 0 190 100" fill="none" stroke="currentColor" stroke-width="2"><circle cx="30" cy="50" r="16"/><circle cx="160" cy="50" r="16"/><path d="M22 50h16M152 50h16M160 42v16" stroke-linecap="round"/><g fill="currentColor" stroke="none" font-family="Inter,sans-serif" font-size="40" font-weight="700" text-anchor="middle"><text x="95" y="64">24</text></g></svg>' }
+  ];
+  (function buildTiles() {
+    var host = $('tiles');
+    TILES.forEach(function (t) {
+      var el = document.createElement(t.ready ? 'a' : 'div');
+      el.className = 'tile';
+      if (t.ready) el.href = '#' + t.id; else el.setAttribute('aria-disabled', 'true');
+      el.innerHTML = '<div class="preview">' + t.svg + '</div><div><h2></h2><p></p></div>' +
+        '<div class="tile-foot">' + (t.ready ? '<span class="chip">Ready to use</span><span class="open">Open</span>' : '<span class="chip soon">Coming next</span>') + '</div>';
+      el.querySelector('h2').textContent = t.title;
+      el.querySelector('p').textContent = t.desc;
+      host.appendChild(el);
+    });
+  })();
+
+  /* ---------- stage templates, renderers and proportions ---------- */
+  var IAW_STAGE = '<div class="card"><div class="card-top"><p class="card-title">I am working for</p><div class="reward" data-r="reward"></div></div>' +
+                  '<div class="tokens" data-r="tokens" role="group" aria-label="Tokens"></div></div>';
+  var NWS_STAGE = '<div class="strip" data-r="strip" role="group" aria-label="Trials"></div>';
+  var PBC_STAGE = '<div class="pbc"><h2 class="pbc-title">Positive Behaviour Reward Chart</h2>' +
+                  '<div class="pbc-band"><p class="pbc-working">I am working for</p><div class="reward" data-r="reward"></div></div>' +
+                  '<div class="pbc-row" data-r="behaviours" role="group" aria-label="Behaviour expectations"></div></div>';
+
+  function iawRatio(S) { return 1 / (0.579 + (S.count <= 5 ? 0 : 0.175)); }
+  function nwsRatio(S) {
+    var total = S.count + 1, cols = S.count <= 6 ? total : Math.ceil(total / 2), rows = Math.ceil(total / cols);
+    return cols / (rows * 1.04) * 0.99;
+  }
+  function pbcRatio(S) {
+    var box = Math.min(81 / S.count - 2.4, 23.4), hBox = box * 179 / 206;
+    return 100 / (10.6 + 24.4 + 3.2 + hBox + 0.7 + 7.8 + 0.9 + 0.4);
+  }
+
+  function renderIawStage(B) {
+    var S = B.S;
+    B.renderReward(B.q('reward'));
+    var host = B.q('tokens');
+    host.style.setProperty('--cols', S.count <= 5 ? 5 : Math.ceil(S.count / 2));
+    host.innerHTML = '';
+    for (var i = 0; i < S.count; i++) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'tok'; b.dataset.i = i;
+      b.setAttribute('aria-pressed', S.filled[i] ? 'true' : 'false');
+      b.setAttribute('aria-label', 'Token ' + (i + 1) + ' of ' + S.count + (S.filled[i] ? ', earned' : ', empty'));
+      b.innerHTML = icon(S.style);
+      if (i === B.justIdx) b.firstChild.classList.add('pop');
+      host.appendChild(b);
+    }
+  }
+
+  function renderNwsStage(B) {
+    var S = B.S, host = B.q('strip'), n = S.count, total = n + 1;
+    var cols = n <= 6 ? total : Math.ceil(total / 2);
+    var empty = Math.ceil(total / cols) * cols - total;
+    host.style.setProperty('--cols', cols);
+    host.innerHTML = '';
+    for (var i = 0; i < n; i++) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'cell'; b.dataset.i = i;
+      var num = n - i;
+      b.setAttribute('aria-pressed', S.filled[i] ? 'true' : 'false');
+      b.setAttribute('aria-label', 'Trial ' + (i + 1) + ' of ' + n + ', number ' + num + (S.filled[i] ? ', finished' : ', not finished'));
+      var sp = document.createElement('span'); sp.className = 'num'; sp.textContent = num;
+      b.appendChild(sp);
+      if (S.filled[i]) {
+        var cv = document.createElement('span'); cv.className = 'cover'; cv.innerHTML = icon(S.style);
+        if (i === B.justIdx) cv.firstChild.classList.add('pop');
+        b.appendChild(cv);
+      }
+      host.appendChild(b);
+    }
+    var rc = document.createElement('div');
+    rc.className = 'cell rcell reward';
+    if (empty) { rc.style.gridColumn = 'span ' + (1 + empty); rc.style.aspectRatio = 'auto'; }
+    B.renderReward(rc);
+    host.appendChild(rc);
+  }
+
+  function itemLabel(S, i) {
+    var it = S.items[i];
+    if (it.t === 'preset') { var p = preset(it.k); return p ? p.label : 'picture'; }
+    if (it.t === 'pictogram') return it.word || 'pictogram';
+    return it.t === 'upload' ? 'your picture' : 'no picture yet';
+  }
+  function renderItem(B, box, i) {
+    var it = B.S.items[i];
+    box.innerHTML = '';
+    if (it.t === 'preset') {
+      var p = preset(it.k);
+      var im = document.createElement('img'); im.className = 'pict'; im.alt = p ? p.label : '';
+      im.onerror = function () {
+        // The picture file is not next to the page yet, so show the behaviour as words.
+        box.innerHTML = '';
+        var w = document.createElement('span'); w.className = 'words'; w.textContent = p ? p.label : ''; box.appendChild(w);
+      };
+      im.src = p ? p.src : '';
+      box.appendChild(im);
+    } else if (it.t === 'pictogram') {
+      var pi = document.createElement('img'); pi.className = 'pict'; pi.alt = it.word || 'Pictogram';
+      pi.onerror = function () { box.innerHTML = ''; box.appendChild(emptyNote('Pictogram could not load')); };
+      pi.src = pictoUrl(it.id);
+      box.appendChild(pi);
+    } else if (it.t === 'upload' && B.itemURL(i)) {
+      var up = document.createElement('img'); up.alt = 'Behaviour picture'; up.src = B.itemURL(i); box.appendChild(up);
+    } else {
+      box.appendChild(emptyNote('Add a picture'));
+    }
+  }
+  function renderPbcStage(B) {
+    var S = B.S, row = B.q('behaviours');
+    B.renderReward(B.q('reward'));
+    row.style.setProperty('--n', S.count);
+    row.innerHTML = '';
+    for (var i = 0; i < S.count; i++) {
+      var col = document.createElement('div'); col.className = 'bcol';
+      var box = document.createElement('div'); box.className = 'bbox';
+      renderItem(B, box, i);
+      var chk = document.createElement('button');
+      chk.type = 'button'; chk.className = 'bcheck'; chk.dataset.i = i;
+      chk.setAttribute('aria-pressed', S.filled[i] ? 'true' : 'false');
+      chk.setAttribute('aria-label', 'Behaviour ' + (i + 1) + ', ' + itemLabel(S, i) + (S.filled[i] ? ', done' : ', not yet'));
+      chk.innerHTML = icon(S.style, B.cfg.tickColor);
+      if (i === B.justIdx) chk.firstChild.classList.add('pop');
+      col.appendChild(box); col.appendChild(chk);
+      row.appendChild(col);
+    }
+  }
+
+  /* ---------- extra settings for the behaviour chart: one picture per behaviour ---------- */
+  var BEHAVIOUR_FIELD =
+    '<div class="field"><span class="label">Behaviour pictures</span>' +
+      '<div class="seg n" data-r="bSeg" role="group" aria-label="Choose a behaviour to edit"></div>' +
+      '<div class="stack">' +
+        '<div class="row between"><span class="hint" data-r="bCurrent"></span><button class="btn" type="button" data-r="bClear">Remove</button></div>' +
+        '<div class="presets" data-r="bPresets"></div>' +
+        '<div><div class="row"><input class="file" data-r="bFile" id="__ID__-bfile" type="file" accept="image/*"><label class="btn" for="__ID__-bfile">Upload picture</label></div>' +
+        '<p class="hint" data-r="bNote" style="margin-top:8px"></p></div>' +
+        '<div class="or">or search pictograms</div>' +
+        '<form class="row nowrap" data-r="bForm" role="search"><input class="input" data-r="bSearch" type="search" placeholder="e.g. sit, listen, wait" autocomplete="off" aria-label="Search ARASAAC pictograms"><button class="btn" type="submit">Search</button></form>' +
+        '<p class="hint" data-r="bStatus" aria-live="polite"></p>' +
+        '<div class="results" data-r="bResults"></div>' +
+        '<p class="hint credit">Pictograms by <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a> (Gobierno de Aragón), licence CC BY-NC-SA.</p>' +
+      '</div>' +
+    '</div>';
+
+  function pbcDefaultItems() {
+    return [{ t: 'preset', k: 'sit' }, { t: 'preset', k: 'handsready' }, { t: 'preset', k: 'keepquiet' }, { t: 'preset', k: 'wait' }, { t: 'preset', k: 'listen' }];
+  }
+  function pbcSanitize(d) {
+    var def = pbcDefaultItems(), out = [];
+    for (var i = 0; i < 5; i++) {
+      var it = d.items && d.items[i], ok = null;
+      if (it && it.t === 'preset' && preset(it.k)) ok = { t: 'preset', k: it.k };
+      else if (it && it.t === 'pictogram' && isFinite(+it.id)) ok = { t: 'pictogram', id: +it.id, word: String(it.word || '').slice(0, 40) };
+      else if (it && it.t === 'upload') ok = { t: 'upload' };
+      else if (it && it.t === 'none') ok = { t: 'none' };
+      out.push(ok || def[i]);
+    }
+    d.items = out;
+  }
+
+  function initBehaviours(B) {
+    var S = B.S, q = B.q, key = B.cfg.idb;
+    var sel = 0, blobs = [], urls = [], persisted = [true, true, true, true, true];
+    B.itemURL = function (i) { return urls[i] || ''; };
+
+    function dropUpload(i) {
+      if (urls[i]) URL.revokeObjectURL(urls[i]);
+      blobs[i] = null; urls[i] = ''; persisted[i] = true;
+      idbDel(key + '-' + i).catch(function () {});
+    }
+    function setItem(i, item) {
+      if (S.items[i].t === 'upload' && item.t !== 'upload') dropUpload(i);
+      S.items[i] = item; B.save(); B.renderAll();
+    }
+
+    // behaviour tabs
+    function renderSeg() {
+      var seg = q('bSeg');
+      seg.style.setProperty('--n', S.count);
+      seg.innerHTML = '';
+      for (var i = 0; i < S.count; i++) {
+        var b = document.createElement('button');
+        b.type = 'button'; b.textContent = i + 1; b.dataset.i = i;
+        b.setAttribute('aria-label', 'Behaviour ' + (i + 1));
+        b.addEventListener('click', function () { sel = +this.dataset.i; B.renderAll(); });
+        seg.appendChild(b);
+      }
+    }
+
+    // preset pictures
+    PRESETS.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'preset'; b.dataset.k = p.k;
+      b.setAttribute('aria-label', 'Use ' + p.label);
+      var box = document.createElement('span'); box.className = 'pimg';
+      var im = document.createElement('img'); im.alt = '';
+      im.onerror = function () { im.remove(); };
+      im.src = p.src; box.appendChild(im);
+      var t = document.createElement('span'); t.textContent = p.label;
+      b.appendChild(box); b.appendChild(t);
+      b.addEventListener('click', function () { setItem(sel, { t: 'preset', k: p.k }); });
+      q('bPresets').appendChild(b);
+    });
+
+    var search = wireSearch(
+      { form: q('bForm'), input: q('bSearch'), status: q('bStatus'), results: q('bResults') },
+      function (r) { setItem(sel, { t: 'pictogram', id: r.id, word: r.word }); },
+      function (r) { var it = S.items[sel]; return it.t === 'pictogram' && it.id === r.id; }
+    );
+
+    q('bClear').addEventListener('click', function () { setItem(sel, { t: 'none' }); });
+
+    q('bFile').addEventListener('change', function () {
+      var input = this, f = input.files && input.files[0], i = sel; if (!f) return;
+      q('bNote').textContent = 'Shrinking picture…';
+      shrink(f).then(function (blob) {
+        if (!blob) throw new Error('empty');
+        dropUpload(i);
+        blobs[i] = blob; urls[i] = URL.createObjectURL(blob); persisted[i] = true;
+        S.items[i] = { t: 'upload' }; B.save(); B.renderAll();
+        idbSet(key + '-' + i, blob).catch(function () { persisted[i] = false; B.renderAll(); });
+      }).catch(function () {
+        q('bNote').textContent = 'That file could not be read as a picture. Try a JPG or PNG.';
+      });
+      input.value = '';
+    });
+
+    B.renderExtra = function () {
+      if (sel >= S.count) sel = S.count - 1;
+      renderSeg();
+      q('bSeg').querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', +b.dataset.i === sel ? 'true' : 'false'); });
+      var it = S.items[sel];
+      q('bCurrent').textContent = 'Behaviour ' + (sel + 1) + ': ' + itemLabel(S, sel);
+      q('bClear').disabled = it.t === 'none';
+      q('bPresets').querySelectorAll('.preset').forEach(function (b) { b.setAttribute('aria-pressed', it.t === 'preset' && it.k === b.dataset.k ? 'true' : 'false'); });
+      var note = 'Uploads are shrunk to a small WebP before saving.';
+      if (it.t === 'upload' && blobs[sel]) note = 'Saved picture uses ' + fmtSize(blobs[sel].size) + (persisted[sel] ? '.' : ', for this visit only.');
+      else if (it.t === 'pictogram') note = 'Pictogram saved as a link, under 1 KB.';
+      else if (it.t === 'preset') note = 'Preset pictures load from the assets folder next to the page.';
+      q('bNote').textContent = note;
+      search.render();
+    };
+
+    // bring back saved uploads
+    S.items.forEach(function (it, i) {
+      if (it.t !== 'upload') return;
+      idbGet(key + '-' + i).then(function (b) {
+        if (b) { blobs[i] = b; urls[i] = URL.createObjectURL(b); }
+        else { S.items[i] = { t: 'none' }; B.save(); }
+        B.renderAll();
+      }).catch(function () { S.items[i] = { t: 'none' }; B.save(); B.renderAll(); });
+    });
+  }
+
+  /* ---------- the board factory: everything the cards share ---------- */
+  var boards = [];
+
+  function makeBoard(cfg) {
+    var maxCount = cfg.maxCount || 10;
+    var root = document.createElement('section');
+    root.className = 'work'; root.hidden = true; root.setAttribute('aria-label', cfg.title);
+    root.innerHTML =
+      '<div class="main">' +
+        '<div class="exit"><button class="btn" data-r="exit" type="button">Exit full view</button></div>' +
+        '<div class="caption"><h1></h1></div>' +
+        '<div class="stage"><div class="fit" data-r="fit">' + cfg.stage + '</div></div>' +
+        '<div class="bar">' +
+          '<div class="progress" aria-live="polite"><div class="progress-label"><span data-r="progText"></span><span data-r="progLeft"></span></div><div class="meter"><i data-r="meter" style="width:0%"></i></div></div>' +
+          '<div class="actions">' +
+            '<button class="btn primary" data-r="give" type="button">' + cfg.giveLabel + '</button>' +
+            '<button class="btn" data-r="undo" type="button">Take one back</button>' +
+            '<button class="btn" data-r="reset" type="button">Reset</button>' +
+            '<button class="btn" data-r="present" type="button">Full view</button>' +
+            '<button class="btn soundToggle" data-r="sound" type="button" aria-pressed="true"></button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="done" data-r="done" hidden><span>' + cfg.doneText + '</span><button class="btn" data-r="again" type="button">Start again</button></div>' +
+      '</div>' +
+      '<aside class="panel" aria-label="Settings">' +
+        '<div class="field"><span class="label">Reward</span>' +
+          '<div class="seg" data-r="kindSeg"><button type="button" data-kind="picture" aria-pressed="false">Picture</button><button type="button" data-kind="text" aria-pressed="false">Words</button></div>' +
+          '<div class="stack" data-r="pickPicture" hidden>' +
+            '<div><div class="row"><input class="file" data-r="file" id="' + cfg.id + '-file" type="file" accept="image/*"><label class="btn" for="' + cfg.id + '-file">Upload picture</label><button class="btn" type="button" data-r="clearPic">Remove</button></div>' +
+            '<p class="hint" data-r="sizeNote" style="margin-top:8px"></p></div>' +
+            '<div class="or">or search pictograms</div>' +
+            '<form class="row nowrap" data-r="searchForm" role="search"><input class="input" data-r="searchIn" type="search" placeholder="e.g. apple, swing, tablet" autocomplete="off" aria-label="Search ARASAAC pictograms"><button class="btn" type="submit">Search</button></form>' +
+            '<p class="hint" data-r="searchStatus" aria-live="polite"></p>' +
+            '<div class="results" data-r="results"></div>' +
+            '<p class="hint credit">Pictograms by <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a> (Gobierno de Aragón), licence CC BY-NC-SA.</p>' +
+          '</div>' +
+          '<div data-r="pickText" hidden><input class="input" data-r="textIn" type="text" maxlength="40" placeholder="e.g. 5 minutes of free time" autocomplete="off" aria-label="Reward in words"></div>' +
+        '</div>' +
+        (cfg.extraField ? cfg.extraField.split('__ID__').join(cfg.id) : '') +
+        '<div class="field"><span class="label">Number of ' + cfg.noun + 's</span>' +
+          '<div class="stepper" role="group" aria-label="Number of ' + cfg.noun + 's"><button type="button" data-r="minus" aria-label="Fewer ' + cfg.noun + 's">&minus;</button><output data-r="countOut" aria-live="polite">5</output><button type="button" data-r="plus" aria-label="More ' + cfg.noun + 's">+</button></div>' +
+          '<p class="hint">' + cfg.countHint + '</p></div>' +
+        '<div class="field"><span class="label">Token style</span><div class="styles" data-r="styleRow"></div></div>' +
+      '</aside>';
+    root.querySelector('.caption h1').textContent = cfg.title;
+    $('boards').appendChild(root);
+
+    var B = { root: root, hash: cfg.hash, justIdx: -1, cfg: cfg };
+    B.q = function (r) { return root.querySelector('[data-r="' + r + '"]'); };
+    var q = B.q;
+
+    /* state (small: no image data lives here) */
+    function load() {
+      var d = cfg.defaults();
+      try {
+        var raw = localStorage.getItem(cfg.key);
+        if (raw) {
+          var p = JSON.parse(raw);
+          ['kind', 'text', 'count', 'style', 'filled', 'pic'].concat(cfg.extraKeys || []).forEach(function (k) { if (p && p[k] !== undefined) d[k] = p[k]; });
+        }
+      } catch (e) {}
+      d.count = Math.min(maxCount, Math.max(1, parseInt(d.count, 10) || cfg.defaultCount || 5));
+      if (!STYLES[d.style]) d.style = 'star';
+      if (d.kind !== 'picture') d.kind = 'text';
+      d.text = typeof d.text === 'string' ? d.text.slice(0, 40) : '';
+      d.filled = normalize(d.filled, d.count);
+      var p2 = d.pic;
+      if (!(p2 && ((p2.type === 'pictogram' && isFinite(+p2.id)) || p2.type === 'upload'))) d.pic = null;
+      else if (p2.type === 'pictogram') d.pic = { type: 'pictogram', id: +p2.id, word: String(p2.word || '').slice(0, 40) };
+      if (cfg.sanitize) cfg.sanitize(d);
+      return d;
+    }
+    var S = B.S = load();
+    function save() { try { localStorage.setItem(cfg.key, JSON.stringify(S)); } catch (e) {} }
+    B.save = save;
+    function earned() { return S.filled.filter(Boolean).length; }
+    function isComplete() { return earned() === S.count; }
+
+    /* reward picture upload (blob URL in memory, blob in IndexedDB) */
+    var upBlob = null, upURL = '', upPersisted = true;
+    function setUpload(blob) {
+      if (upURL) URL.revokeObjectURL(upURL);
+      upBlob = blob; upURL = blob ? URL.createObjectURL(blob) : '';
+    }
+    function dropUpload() { setUpload(null); upPersisted = true; idbDel(cfg.idb).catch(function () {}); }
+
+    B.renderReward = function (box) {
+      box.innerHTML = '';
+      if (S.kind === 'picture') {
+        if (S.pic && S.pic.type === 'upload' && upURL) {
+          var im = document.createElement('img'); im.src = upURL; im.alt = 'Reward picture'; box.appendChild(im);
+        } else if (S.pic && S.pic.type === 'pictogram') {
+          var pi = document.createElement('img');
+          pi.className = 'pict'; pi.alt = S.pic.word || 'Reward pictogram';
+          pi.onerror = function () { box.innerHTML = ''; box.appendChild(emptyNote('Pictogram could not load')); };
+          pi.src = pictoUrl(S.pic.id);
+          box.appendChild(pi);
+        } else {
+          box.appendChild(emptyNote('Add a picture'));
+        }
+      } else {
+        var w = document.createElement('span');
+        w.className = 'words' + (S.text.length > 18 ? ' long' : '');
+        if (S.text.trim()) w.textContent = S.text; else { w.className = 'empty'; w.textContent = 'Type a reward'; }
+        box.appendChild(w);
+      }
+      box.classList.toggle('win', isComplete());
+    };
+
+    /* rendering */
+    function renderStatus() {
+      var n = earned(), total = S.count, left = total - n;
+      q('progText').textContent = n + ' of ' + total + ' ' + cfg.noun + (total === 1 ? '' : 's');
+      q('progLeft').textContent = left === 0 ? 'Complete' : left + ' to go';
+      q('meter').style.width = (n / total * 100) + '%';
+      q('give').disabled = n === total;
+      q('undo').disabled = n === 0;
+      q('reset').disabled = n === 0;
+      q('done').hidden = n !== total;
+    }
+
+    var searchUI;
+    function renderPanel() {
+      root.querySelectorAll('[data-r="kindSeg"] button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.kind === S.kind ? 'true' : 'false'); });
+      q('pickPicture').hidden = S.kind !== 'picture';
+      q('pickText').hidden = S.kind !== 'text';
+      q('clearPic').disabled = !S.pic;
+      var note = 'Uploads are shrunk to a small WebP before saving.';
+      if (S.pic && S.pic.type === 'upload' && upBlob) note = 'Saved picture uses ' + fmtSize(upBlob.size) + (upPersisted ? '.' : ', for this visit only.');
+      else if (S.pic && S.pic.type === 'pictogram') note = 'Pictogram saved as a link, under 1 KB.';
+      q('sizeNote').textContent = note;
+      if (q('textIn') !== document.activeElement) q('textIn').value = S.text;
+      q('countOut').textContent = S.count;
+      q('minus').disabled = S.count <= 1;
+      q('plus').disabled = S.count >= maxCount;
+      root.querySelectorAll('[data-r="styleRow"] button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.style === S.style ? 'true' : 'false'); });
+      if (searchUI) searchUI.render();
+      if (B.renderExtra) B.renderExtra();
+    }
+
+    function renderStage() {
+      q('fit').style.setProperty('--ratio', cfg.ratio(S).toFixed(4));
+      cfg.renderStage(B);
+    }
+    function renderAll() {
+      renderStage();
+      B.justIdx = -1;
+      renderStatus(); renderPanel();
+    }
+    B.renderAll = renderAll;
+
+    /* token style picker */
+    Object.keys(STYLES).forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.dataset.style = k;
+      b.innerHTML = icon(k, cfg.tickColor) + '<span>' + STYLES[k].label + '</span>';
+      b.addEventListener('click', function () { S.style = k; save(); renderAll(); });
+      q('styleRow').appendChild(b);
+    });
+
+    /* reward pictogram search */
+    searchUI = wireSearch(
+      { form: q('searchForm'), input: q('searchIn'), status: q('searchStatus'), results: q('results') },
+      function (r) { S.pic = { type: 'pictogram', id: r.id, word: r.word }; S.kind = 'picture'; dropUpload(); save(); renderAll(); },
+      function (r) { return !!(S.pic && S.pic.type === 'pictogram' && S.pic.id === r.id); }
+    );
+
+    /* events */
+    root.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-i]'); if (!b || !root.contains(b) || b.tagName !== 'BUTTON' || b.closest('[data-r="bSeg"]')) return;
+      var i = +b.dataset.i;
+      S.filled[i] = !S.filled[i];
+      if (S.filled[i]) B.justIdx = i;
+      save(); renderAll();
+      if (S.filled[i]) chime();
+    });
+    function chime() { if (isComplete()) SOUND.complete(); else SOUND.token(); }
+    q('give').addEventListener('click', function () {
+      var i = S.filled.indexOf(false); if (i < 0) return;
+      S.filled[i] = true; B.justIdx = i; save(); renderAll();
+      chime();
+    });
+    q('sound').addEventListener('click', toggleSound);
+    q('undo').addEventListener('click', function () {
+      var i = S.filled.lastIndexOf(true); if (i < 0) return;
+      S.filled[i] = false; save(); renderAll();
+    });
+    function reset() { S.filled = normalize([], S.count); save(); renderAll(); }
+    q('reset').addEventListener('click', reset);
+    q('again').addEventListener('click', reset);
+
+    root.querySelectorAll('[data-r="kindSeg"] button').forEach(function (b) {
+      b.addEventListener('click', function () { S.kind = b.dataset.kind; save(); renderAll(); });
+    });
+    q('textIn').addEventListener('input', function (e) { S.text = e.target.value; save(); renderStage(); });
+    function setCount(n) {
+      n = Math.min(maxCount, Math.max(1, n));
+      S.count = n; S.filled = normalize(S.filled, n); save(); renderAll();
+    }
+    q('minus').addEventListener('click', function () { setCount(S.count - 1); });
+    q('plus').addEventListener('click', function () { setCount(S.count + 1); });
+    q('clearPic').addEventListener('click', function () { S.pic = null; dropUpload(); save(); renderAll(); });
+
+    q('file').addEventListener('change', function () {
+      var input = this, f = input.files && input.files[0]; if (!f) return;
+      q('sizeNote').textContent = 'Shrinking picture…';
+      shrink(f).then(function (blob) {
+        if (!blob) throw new Error('empty');
+        setUpload(blob);
+        S.pic = { type: 'upload' }; S.kind = 'picture';
+        upPersisted = true;
+        save(); renderAll();
+        idbSet(cfg.idb, blob).catch(function () { upPersisted = false; renderPanel(); });
+      }).catch(function () {
+        q('sizeNote').textContent = 'That file could not be read as a picture. Try a JPG or PNG.';
+      });
+      input.value = '';
+    });
+
+    q('present').addEventListener('click', function () { document.body.classList.add('present'); });
+    q('exit').addEventListener('click', function () { document.body.classList.remove('present'); });
+
+    if (cfg.init) cfg.init(B);
+    renderAll();
+    if (S.pic && S.pic.type === 'upload') {
+      idbGet(cfg.idb).then(function (b) {
+        if (b) setUpload(b); else { S.pic = null; save(); }
+        renderAll();
+      }).catch(function () { S.pic = null; save(); renderAll(); });
+    }
+    boards.push(B);
+    return B;
+  }
+
+  makeBoard({
+    id: 'iaw', hash: 'i-am-working-for', title: 'I am working for', noun: 'token',
+    key: 'tokenboard.iamworkingfor.v1', idb: 'reward',
+    stage: IAW_STAGE, renderStage: renderIawStage, ratio: iawRatio,
+    giveLabel: 'Give a token', doneText: 'All tokens earned. Time for the reward.',
+    countHint: 'Between 1 and 10. Five is the standard card.',
+    defaults: function () { return { kind: 'text', text: 'Free choice time', count: 5, style: 'star', filled: [true, true, false, false, false], pic: null }; }
+  });
+
+  makeBoard({
+    id: 'nws', hash: 'numbered-work-system', title: 'Numbered work system', noun: 'trial',
+    key: 'tokenboard.numberedwork.v1', idb: 'reward-nws',
+    stage: NWS_STAGE, renderStage: renderNwsStage, ratio: nwsRatio,
+    giveLabel: 'Finish a trial', doneText: 'All trials finished. Time for the reward.',
+    countHint: 'Between 1 and 10. The reward follows the last trial.',
+    defaults: function () { return { kind: 'text', text: 'Tablet time', count: 5, style: 'star', filled: [true, true, false, false, false], pic: null }; }
+  });
+
+  makeBoard({
+    id: 'pbc', hash: 'positive-behaviour-chart', title: 'Positive behaviour reward chart', noun: 'behaviour',
+    key: 'tokenboard.behaviourchart.v1', idb: 'reward-pbc',
+    maxCount: 5, defaultCount: 3, tickColor: '#4fae2a',
+    stage: PBC_STAGE, renderStage: renderPbcStage, ratio: pbcRatio,
+    extraField: BEHAVIOUR_FIELD, extraKeys: ['items'], sanitize: pbcSanitize, init: initBehaviours,
+    giveLabel: 'Check a behaviour', doneText: 'All behaviours checked. Time for the reward.',
+    countHint: 'Between 1 and 5. Three is the standard chart.',
+    defaults: function () { return { kind: 'text', text: 'Choice time', count: 3, style: 'check', filled: [true, true, false], pic: null, items: pbcDefaultItems() }; }
+  });
+
+  /* ---------- Group token system: a grid of students x tokens ---------- */
+  (function () {
+    var MAXS = 10, MAXC = 10;
+    var KEY = 'tokenboard.grouptokens.v1';
+    var FINISHED_SRC = 'assets/finished.png';   // put finished.png in the assets folder next to the page
+    var AVS = [['\uD83D\uDC36', 'Dog'], ['\uD83D\uDC31', 'Cat'], ['\uD83D\uDC30', 'Rabbit'], ['\uD83E\uDD8A', 'Fox'], ['\uD83D\uDC3B', 'Bear'],
+               ['\uD83D\uDC3C', 'Panda'], ['\uD83D\uDC38', 'Frog'], ['\uD83E\uDD81', 'Lion'], ['\uD83D\uDC35', 'Monkey'], ['\uD83E\uDD84', 'Unicorn']];
+    var X_SVG = '<svg class="ico" viewBox="0 0 24 24" style="--tok:#d92d2d" aria-hidden="true"><path class="l" d="M6 6l12 12M18 6L6 18"/></svg>';
+    var CHECK_SVG = '<svg viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="#1f9d55" stroke="#111" stroke-width="3"/><path d="M29 52l15 15 28-32" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var ARROW_SVG = '<svg viewBox="0 0 60 30" aria-hidden="true"><path d="M4 15h46M38 4l13 11-13 11" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, n)); }
+    function defaults() {
+      var names = [], av = [], filled = [];
+      for (var i = 0; i < MAXS; i++) {
+        names.push('Student ' + (i + 1)); av.push({ t: 'emoji', e: i });
+        filled.push([0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+      }
+      filled[0][0] = filled[0][1] = 1; filled[1][0] = 1; filled[1][1] = 2;
+      return { v: 2, n: 5, cols: 5, tally: true, style: 'star', names: names, av: av, filled: filled, showFlow: true, nextText: 'Free choice', nextPic: null };
+    }
+    function load() {
+      var d = defaults(), p = null;
+      try { var raw = localStorage.getItem(KEY); if (raw) p = JSON.parse(raw); } catch (e) {}
+      if (!p || typeof p !== 'object') return d;
+      d.n = clamp(parseInt(p.n, 10) || 5, 2, MAXS);
+      d.cols = clamp(parseInt(p.cols, 10) || 5, 1, MAXC);
+      d.tally = p.v === 2 ? p.tally !== false : p.last !== 'token';
+      if (STYLES[p.style]) d.style = p.style;
+      d.showFlow = p.showFlow !== false;
+      if (typeof p.nextText === 'string') d.nextText = p.nextText.slice(0, 30);
+      for (var i = 0; i < MAXS; i++) {
+        if (p.names && typeof p.names[i] === 'string') d.names[i] = p.names[i].slice(0, 16);
+        var a = p.av && p.av[i];
+        if (a && a.t === 'upload') d.av[i] = { t: 'upload' };
+        else if (a && a.t === 'emoji' && AVS[+a.e]) d.av[i] = { t: 'emoji', e: +a.e };
+        for (var c = 0; c < MAXC; c++) {
+          var f = p.filled && p.filled[i] ? p.filled[i][c] : 0;
+          if (p.v !== 2 && c >= 5) f = 0;          // older saves had a separate last column
+          d.filled[i][c] = f === true || f === 1 ? 1 : f === 2 ? 2 : 0;
+        }
+      }
+      var np = p.nextPic;
+      if (np && np.type === 'pictogram' && isFinite(+np.id)) d.nextPic = { type: 'pictogram', id: +np.id, word: String(np.word || '').slice(0, 40) };
+      else if (np && np.type === 'upload') d.nextPic = { type: 'upload' };
+      else d.nextPic = null;
+      return d;
+    }
+    var S = load(), sel = 0, justKey = '';
+    S.v = 2;
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+    /* ----- shell ----- */
+    var root = document.createElement('section');
+    root.className = 'work'; root.hidden = true; root.setAttribute('aria-label', 'Group token system');
+    root.innerHTML =
+      '<div class="main">' +
+        '<div class="exit"><button class="btn" data-r="exit" type="button">Exit full view</button></div>' +
+        '<div class="caption"><h1>Group token system</h1></div>' +
+        '<div class="stage"><div class="fit" data-r="fit"></div></div>' +
+        '<div class="bar">' +
+          '<div class="progress" aria-live="polite"><div class="progress-label"><span data-r="progText"></span><span data-r="progLeft"></span></div><div class="meter"><i data-r="meter" style="width:0%"></i></div></div>' +
+          '<div class="actions">' +
+            '<button class="btn" data-r="reset" type="button">Reset all</button>' +
+            '<button class="btn" data-r="present" type="button">Full view</button>' +
+            '<button class="btn soundToggle" data-r="sound" type="button" aria-pressed="true"></button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="done" data-r="done" hidden><span data-r="doneText"></span><button class="btn" data-r="again" type="button">Start again</button></div>' +
+      '</div>' +
+      '<aside class="panel" aria-label="Settings">' +
+        '<div class="field"><span class="label">Number of students</span>' +
+          '<div class="stepper" role="group" aria-label="Number of students"><button type="button" data-r="sMinus" aria-label="Fewer students">&minus;</button><output data-r="sOut" aria-live="polite">5</output><button type="button" data-r="sPlus" aria-label="More students">+</button></div>' +
+          '<p class="hint">Between 2 and 10. Five is the standard board.</p></div>' +
+        '<div class="field"><span class="label">Token columns</span>' +
+          '<div class="stepper" role="group" aria-label="Number of token columns"><button type="button" data-r="cMinus" aria-label="Fewer token columns">&minus;</button><output data-r="cOut" aria-live="polite">5</output><button type="button" data-r="cPlus" aria-label="More token columns">+</button></div>' +
+          '<p class="hint">Between 1 and 10. Five is the standard board.</p></div>' +
+        '<div class="field"><span class="label">Tally</span>' +
+          '<div class="seg" data-r="tallySeg"><button type="button" data-tally="on" aria-pressed="false">On</button><button type="button" data-tally="off" aria-pressed="false">Off</button></div>' +
+          '<p class="hint" data-r="tallyHint"></p></div>' +
+        '<div class="field"><span class="label">Token style</span><div class="styles" data-r="styleRow"></div></div>' +
+        '<div class="field"><span class="label">Finished &rarr; next activity</span>' +
+          '<div class="seg" data-r="showSeg"><button type="button" data-show="yes" aria-pressed="false">Show</button><button type="button" data-show="no" aria-pressed="false">Hide</button></div>' +
+          '<div class="stack" data-r="nextStack">' +
+            '<input class="input" data-r="nextIn" type="text" maxlength="30" placeholder="e.g. Snack time" autocomplete="off" aria-label="Next activity in words">' +
+            '<div><div class="row"><input class="file" data-r="nextFile" id="gts-nextfile" type="file" accept="image/*"><label class="btn" for="gts-nextfile">Upload picture</label><button class="btn" type="button" data-r="nextClear">Remove</button></div>' +
+            '<p class="hint" data-r="nextNote" style="margin-top:8px"></p></div>' +
+            '<div class="or">or search pictograms</div>' +
+            '<form class="row nowrap" data-r="nextForm" role="search"><input class="input" data-r="nextSearch" type="search" placeholder="e.g. snack, playground" autocomplete="off" aria-label="Search ARASAAC pictograms"><button class="btn" type="submit">Search</button></form>' +
+            '<p class="hint" data-r="nextStatus" aria-live="polite"></p>' +
+            '<div class="results" data-r="nextResults"></div>' +
+            '<p class="hint credit">Pictograms by <a href="https://arasaac.org" target="_blank" rel="noopener">ARASAAC</a> (Gobierno de Aragón), licence CC BY-NC-SA.</p>' +
+          '</div></div>' +
+      '</aside>' +
+      '<dialog class="gt-modal" data-r="modal" aria-labelledby="gts-mtitle"><div class="gt-mbody">' +
+        '<div class="row between"><h2 id="gts-mtitle" data-r="mTitle">Edit student</h2><button class="btn primary" type="button" data-r="mClose">Done</button></div>' +
+        '<div class="field"><label class="label" for="gts-name">Name</label><input class="input" id="gts-name" data-r="nameIn" type="text" maxlength="16" autocomplete="off"></div>' +
+        '<div class="field"><span class="label">Picture</span>' +
+          '<div class="presets" data-r="avGrid"></div>' +
+          '<div class="row"><input class="file" data-r="avFile" id="gts-avfile" type="file" accept="image/*"><label class="btn" for="gts-avfile">Upload picture</label><button class="btn" type="button" data-r="avClear">Use emoji</button></div>' +
+          '<p class="hint" data-r="avNote"></p></div>' +
+      '</div></dialog>';
+    $('boards').appendChild(root);
+    function q(r) { return root.querySelector('[data-r="' + r + '"]'); }
+
+    /* ----- game logic ----- */
+    function rowEarned(s) { var n = 0; for (var c = 0; c < S.cols; c++) if (S.filled[s][c] === 1) n++; return n; }
+    function rowDone(s) { for (var c = 0; c < S.cols; c++) if (!S.filled[s][c]) return false; return true; }   // every box marked (token or X)
+    function doneRows() { var n = 0; for (var s = 0; s < S.n; s++) if (rowDone(s)) n++; return n; }
+    function allDone() { return doneRows() === S.n; }
+    function nameOf(s) { return (S.names[s] || '').trim() || ('Student ' + (s + 1)); }
+
+    /* ----- pictures: avatars and the next activity ----- */
+    var avBlobs = [], avURLs = [], avOK = [], nextBlob = null, nextURL = '', nextOK = true;
+    function dropAv(i) { if (avURLs[i]) URL.revokeObjectURL(avURLs[i]); avBlobs[i] = null; avURLs[i] = ''; avOK[i] = true; idbDel('group-av-' + i).catch(function () {}); }
+    function setNext(b) { if (nextURL) URL.revokeObjectURL(nextURL); nextBlob = b; nextURL = b ? URL.createObjectURL(b) : ''; }
+    function dropNext() { setNext(null); nextOK = true; idbDel('group-next').catch(function () {}); }
+
+    function avatarEl(s) {
+      var d = document.createElement('span'); d.className = 'gav';
+      var a = S.av[s];
+      if (a.t === 'upload' && avURLs[s]) { var im = document.createElement('img'); im.alt = ''; im.src = avURLs[s]; d.appendChild(im); }
+      else d.textContent = AVS[a.t === 'emoji' ? a.e : s % 10][0];
+      d.setAttribute('aria-hidden', 'true');
+      return d;
+    }
+    function fillNextPic(box) {
+      box.innerHTML = '';
+      var p = S.nextPic;
+      if (p && p.type === 'upload' && nextURL) { var im = document.createElement('img'); im.alt = ''; im.src = nextURL; box.appendChild(im); }
+      else if (p && p.type === 'pictogram') {
+        var pi = document.createElement('img'); pi.className = 'pict'; pi.alt = p.word || '';
+        pi.onerror = function () { box.innerHTML = ''; box.appendChild(emptyNote('Pictogram could not load')); };
+        pi.src = pictoUrl(p.id); box.appendChild(pi);
+      } else box.appendChild(emptyNote('Add a picture'));
+    }
+    function flowBox(label, win) {
+      var b = document.createElement('div'); b.className = 'fbox' + (win ? ' win' : '');
+      var pic = document.createElement('div'); pic.className = 'fpic';
+      var lab = document.createElement('div'); lab.className = 'flabel';
+      lab.textContent = label; if (label.length > 14) lab.className += ' long';
+      b.appendChild(pic); b.appendChild(lab);
+      return { box: b, pic: pic };
+    }
+
+    /* ----- rendering ----- */
+    function tokBtn(s, c) {
+      var b = document.createElement('button'), st = S.filled[s][c];
+      b.type = 'button'; b.className = 'gtok'; b.dataset.s = s; b.dataset.c = c;
+      b.setAttribute('aria-pressed', st ? 'true' : 'false');
+      b.setAttribute('aria-label', nameOf(s) + ', box ' + (c + 1) + (st === 1 ? ', token' : st === 2 ? ', crossed' : ', empty'));
+      b.innerHTML = st === 1 ? icon(S.style) : st === 2 ? X_SVG : icon(S.style);
+      if (justKey === s + '-' + c && b.firstChild) b.firstChild.classList.add('pop');
+      return b;
+    }
+    function renderStage() {
+      var fit = q('fit'), cols = S.cols;
+      var tcol = S.tally ? 1 : 0, d = Math.max(1.5, Math.min(3, (2.8 + cols + tcol) * 0.2));
+      var wU = 2.8 + cols + tcol + 0.5, hU = S.n + 0.5 + (S.showFlow ? 0.35 + d * 1.3 : 0);
+      fit.style.setProperty('--ratio', (wU / hU).toFixed(4));
+      fit.innerHTML = '';
+      var card = document.createElement('div'); card.className = 'gt-card';
+      card.style.setProperty('--units', wU.toFixed(2)); card.style.setProperty('--d', d.toFixed(2));
+      var grid = document.createElement('div'); grid.className = 'gt-grid';
+      grid.style.gridTemplateColumns = '2.8fr repeat(' + (cols + tcol) + ', 1fr)';
+      grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'Students and tokens');
+      for (var s = 0; s < S.n; s++) {
+        var done = rowDone(s), nm = nameOf(s);
+        var nb = document.createElement('button');
+        nb.type = 'button'; nb.className = 'gname' + (done ? ' gdone' : ''); nb.dataset.s = s;
+        nb.setAttribute('aria-label', 'Edit ' + nm);
+        nb.appendChild(avatarEl(s));
+        var sp = document.createElement('span'); sp.className = 'gn' + (nm.length > 11 ? ' long' : ''); sp.textContent = nm;
+        nb.appendChild(sp); grid.appendChild(nb);
+        for (var c = 0; c < cols; c++) grid.appendChild(tokBtn(s, c));
+        if (S.tally) {
+          var t = document.createElement('div'), tl = rowEarned(s); t.className = 'gtally' + (done ? ' gdone' : '');
+          t.textContent = tl; t.setAttribute('role', 'img');
+          t.setAttribute('aria-label', nm + ' has ' + tl + (tl === 1 ? ' token' : ' tokens'));
+          grid.appendChild(t);
+        }
+      }
+      card.appendChild(grid);
+      if (S.showFlow) {
+        var flow = document.createElement('div'); flow.className = 'gt-flow';
+        var fin = flowBox('Finished', allDone());
+        var fi = document.createElement('img'); fi.className = 'pict'; fi.alt = '';
+        fi.onerror = function () { fin.pic.innerHTML = CHECK_SVG; };
+        fi.src = FINISHED_SRC; fin.pic.appendChild(fi);
+        var arrow = document.createElement('span'); arrow.className = 'farrow'; arrow.innerHTML = ARROW_SVG;
+        var nx = flowBox((S.nextText || '').trim() || 'Next activity', false);
+        fillNextPic(nx.pic);
+        flow.appendChild(fin.box); flow.appendChild(arrow); flow.appendChild(nx.box);
+        flow.setAttribute('aria-label', 'Finished, then ' + ((S.nextText || '').trim() || 'next activity'));
+        card.appendChild(flow);
+      }
+      fit.appendChild(card);
+    }
+    function renderStatus() {
+      var total = S.n * S.cols, e = 0, marked = 0, fin = doneRows(), all = fin === S.n;
+      for (var s = 0; s < S.n; s++) for (var c = 0; c < S.cols; c++) { if (S.filled[s][c] === 1) e++; if (S.filled[s][c]) marked++; }
+      q('progText').textContent = e + ' of ' + total + ' tokens';
+      q('progLeft').textContent = all ? 'Everyone finished' : fin + ' of ' + S.n + ' finished';
+      q('meter').style.width = (marked / total * 100) + '%';
+      q('reset').disabled = marked === 0;
+      q('done').hidden = !all;
+      var nt = (S.nextText || '').trim();
+      q('doneText').textContent = 'Everyone is finished.' + (nt ? ' Next: ' + nt + '.' : ' Time for the next activity.');
+    }
+
+    var search;
+    function renderModal() {
+      var m = q('modal'); if (!m.open) return;
+      if (sel >= S.n) sel = S.n - 1;
+      q('mTitle').textContent = 'Edit student ' + (sel + 1);
+      var nameIn = q('nameIn'); nameIn.placeholder = 'Student ' + (sel + 1);
+      if (nameIn !== document.activeElement) nameIn.value = S.names[sel];
+      var a = S.av[sel];
+      q('avGrid').querySelectorAll('.preset').forEach(function (b) { b.setAttribute('aria-pressed', a.t === 'emoji' && a.e === +b.dataset.e ? 'true' : 'false'); });
+      q('avClear').disabled = a.t !== 'upload';
+      q('avNote').textContent = a.t === 'upload' && avBlobs[sel]
+        ? 'Saved picture uses ' + fmtSize(avBlobs[sel].size) + (avOK[sel] === false ? ', for this visit only.' : '.')
+        : 'Choose an emoji or upload a picture.';
+    }
+    function renderPanel() {
+      q('cOut').textContent = S.cols; q('cMinus').disabled = S.cols <= 1; q('cPlus').disabled = S.cols >= MAXC;
+      root.querySelectorAll('[data-r="tallySeg"] button').forEach(function (b) { b.setAttribute('aria-pressed', (b.dataset.tally === 'on') === S.tally ? 'true' : 'false'); });
+      q('tallyHint').textContent = S.tally ? 'An extra column after the tokens counts each student\u2019s tokens. Crosses are not counted.' : 'No extra column.';
+      root.querySelectorAll('[data-r="styleRow"] button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.style === S.style ? 'true' : 'false'); });
+      root.querySelectorAll('[data-r="showSeg"] button').forEach(function (b) { b.setAttribute('aria-pressed', (b.dataset.show === 'yes') === S.showFlow ? 'true' : 'false'); });
+      q('nextStack').hidden = !S.showFlow;
+      if (q('nextIn') !== document.activeElement) q('nextIn').value = S.nextText;
+      q('nextClear').disabled = !S.nextPic;
+      var np = S.nextPic, note = 'Uploads are shrunk to a small WebP before saving.';
+      if (np && np.type === 'upload' && nextBlob) note = 'Saved picture uses ' + fmtSize(nextBlob.size) + (nextOK ? '.' : ', for this visit only.');
+      else if (np && np.type === 'pictogram') note = 'Pictogram saved as a link, under 1 KB.';
+      q('nextNote').textContent = note;
+      search.render();
+      renderModal();
+    }
+    function refresh() { renderStage(); justKey = ''; renderStatus(); }
+    function renderAll() { refresh(); renderPanel(); }
+
+    /* ----- one-time panel pieces ----- */
+    AVS.forEach(function (p, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'preset'; b.dataset.e = i; b.title = p[1];
+      b.setAttribute('aria-label', 'Use ' + p[1] + ' picture');
+      var box = document.createElement('span'); box.className = 'pimg emo'; box.textContent = p[0]; b.appendChild(box);
+      b.addEventListener('click', function () {
+        if (S.av[sel].t === 'upload') dropAv(sel);
+        S.av[sel] = { t: 'emoji', e: i }; save(); renderAll();
+      });
+      q('avGrid').appendChild(b);
+    });
+    Object.keys(STYLES).forEach(function (k) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.dataset.style = k;
+      b.innerHTML = icon(k) + '<span>' + STYLES[k].label + '</span>';
+      b.addEventListener('click', function () { S.style = k; save(); renderAll(); });
+      q('styleRow').appendChild(b);
+    });
+    search = wireSearch(
+      { form: q('nextForm'), input: q('nextSearch'), status: q('nextStatus'), results: q('nextResults') },
+      function (r) { dropNext(); S.nextPic = { type: 'pictogram', id: r.id, word: r.word }; save(); renderAll(); },
+      function (r) { return !!(S.nextPic && S.nextPic.type === 'pictogram' && S.nextPic.id === r.id); }
+    );
+
+    /* ----- events ----- */
+    q('fit').addEventListener('click', function (ev) {
+      var t = ev.target.closest('.gtok');
+      if (t) {
+        var s = +t.dataset.s, c = +t.dataset.c;
+        S.filled[s][c] = (S.filled[s][c] + 1) % 3;      // empty -> token -> cross -> empty
+        var st = S.filled[s][c];
+        if (st) justKey = s + '-' + c;
+        save(); renderStage(); renderStatus(); justKey = '';
+        if (st && allDone()) SOUND.complete(); else if (st === 1) SOUND.token();
+        return;
+      }
+      var n = ev.target.closest('.gname');
+      if (n) openModal(+n.dataset.s);
+    });
+    var modal = q('modal'), lastOpener = -1;
+    function openModal(s) {
+      sel = s; lastOpener = s;
+      if (!modal.open) modal.showModal();
+      renderModal();
+      q('nameIn').focus(); q('nameIn').select();
+    }
+    q('mClose').addEventListener('click', function () { modal.close(); });
+    modal.addEventListener('click', function (e) { if (e.target === modal) modal.close(); });
+    modal.addEventListener('keydown', function (e) { if (e.key === 'Escape') e.stopPropagation(); });
+    modal.addEventListener('close', function () {
+      var b = root.querySelector('.gname[data-s="' + lastOpener + '"]'); if (b) b.focus();
+    });
+    q('sound').addEventListener('click', toggleSound);
+    function resetAll() { for (var s = 0; s < MAXS; s++) for (var c = 0; c < MAXC; c++) S.filled[s][c] = 0; save(); renderAll(); }
+    q('reset').addEventListener('click', resetAll);
+    q('again').addEventListener('click', resetAll);
+    q('present').addEventListener('click', function () { document.body.classList.add('present'); });
+    q('exit').addEventListener('click', function () { document.body.classList.remove('present'); });
+
+    q('sMinus').addEventListener('click', function () { S.n = clamp(S.n - 1, 2, MAXS); save(); renderAll(); });
+    q('sPlus').addEventListener('click', function () { S.n = clamp(S.n + 1, 2, MAXS); save(); renderAll(); });
+    q('cMinus').addEventListener('click', function () { S.cols = clamp(S.cols - 1, 1, MAXC); save(); renderAll(); });
+    q('cPlus').addEventListener('click', function () { S.cols = clamp(S.cols + 1, 1, MAXC); save(); renderAll(); });
+    root.querySelectorAll('[data-r="tallySeg"] button').forEach(function (b) {
+      b.addEventListener('click', function () { S.tally = b.dataset.tally === 'on'; save(); renderAll(); });
+    });
+    root.querySelectorAll('[data-r="showSeg"] button').forEach(function (b) {
+      b.addEventListener('click', function () { S.showFlow = b.dataset.show === 'yes'; save(); renderAll(); });
+    });
+    q('nameIn').addEventListener('input', function (e) {
+      S.names[sel] = e.target.value.slice(0, 16); save(); refresh();
+    });
+    q('nextIn').addEventListener('input', function (e) { S.nextText = e.target.value.slice(0, 30); save(); refresh(); });
+
+    q('avFile').addEventListener('change', function () {
+      var input = this, f = input.files && input.files[0], i = sel; if (!f) return;
+      q('avNote').textContent = 'Shrinking picture…';
+      shrink(f).then(function (blob) {
+        if (!blob) throw new Error('empty');
+        dropAv(i); avBlobs[i] = blob; avURLs[i] = URL.createObjectURL(blob); avOK[i] = true;
+        S.av[i] = { t: 'upload' }; save(); renderAll();
+        idbSet('group-av-' + i, blob).catch(function () { avOK[i] = false; renderPanel(); });
+      }).catch(function () { q('avNote').textContent = 'That file could not be read as a picture. Try a JPG or PNG.'; });
+      input.value = '';
+    });
+    q('avClear').addEventListener('click', function () { dropAv(sel); S.av[sel] = { t: 'emoji', e: sel % 10 }; save(); renderAll(); });
+
+    q('nextFile').addEventListener('change', function () {
+      var input = this, f = input.files && input.files[0]; if (!f) return;
+      q('nextNote').textContent = 'Shrinking picture…';
+      shrink(f).then(function (blob) {
+        if (!blob) throw new Error('empty');
+        setNext(blob); nextOK = true; S.nextPic = { type: 'upload' }; save(); renderAll();
+        idbSet('group-next', blob).catch(function () { nextOK = false; renderPanel(); });
+      }).catch(function () { q('nextNote').textContent = 'That file could not be read as a picture. Try a JPG or PNG.'; });
+      input.value = '';
+    });
+    q('nextClear').addEventListener('click', function () { S.nextPic = null; dropNext(); save(); renderAll(); });
+
+    renderAll();
+    // bring back saved uploads
+    S.av.forEach(function (a, i) {
+      if (a.t !== 'upload') return;
+      idbGet('group-av-' + i).then(function (b) {
+        if (b) { avBlobs[i] = b; avURLs[i] = URL.createObjectURL(b); }
+        else { S.av[i] = { t: 'emoji', e: i % 10 }; save(); }
+        renderAll();
+      }).catch(function () { S.av[i] = { t: 'emoji', e: i % 10 }; save(); renderAll(); });
+    });
+    if (S.nextPic && S.nextPic.type === 'upload') {
+      idbGet('group-next').then(function (b) {
+        if (b) setNext(b); else { S.nextPic = null; save(); }
+        renderAll();
+      }).catch(function () { S.nextPic = null; save(); renderAll(); });
+    }
+    boards.push({ root: root, hash: 'group-token-system' });
+  })();
+
+  /* ---------- routing ---------- */
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') document.body.classList.remove('present'); });
+  function route() {
+    var h = (location.hash || '').replace('#', '');
+    var active = null;
+    boards.forEach(function (b) { if (b.hash === h) active = b; });
+    $('landing').hidden = !!active;
+    $('backLink').hidden = !active;
+    boards.forEach(function (b) { b.root.hidden = b !== active; });
+    if (!active) document.body.classList.remove('present');
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener('hashchange', route);
+  updateSoundButtons();
+  route();
+})();
+</script>
+
+</body></html>
