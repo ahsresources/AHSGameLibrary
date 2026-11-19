@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Counting Games</title>
+<meta name="description" content="Free early numeracy games: learn numbers to 10 and practise counting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Layout: sticky slim header, short intro, two labelled sections each with a responsive card grid. */
+  :root {
+    --bg: #f6f8fb;
+    --surface: #ffffff;
+    --ink: #14213d;
+    --muted: #5a677d;
+    --line: #e1e7ef;
+    --learn: #2563eb;
+    --learn-soft: #e8efff;
+    --practice: #0d9488;
+    --practice-soft: #dff5f2;
+    --shadow: 0 1px 2px rgba(20,33,61,.06), 0 4px 14px rgba(20,33,61,.05);
+    --shadow-hover: 0 2px 4px rgba(20,33,61,.08), 0 12px 28px rgba(20,33,61,.12);
+    --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e1424; --surface: #161e33; --ink: #eef2fa; --muted: #a2aec4; --line: #26314b;
+      --learn: #7aa2ff; --learn-soft: #1b2a52; --practice: #4fd1c1; --practice-soft: #10332f;
+      --shadow: 0 1px 2px rgba(0,0,0,.4); --shadow-hover: 0 12px 28px rgba(0,0,0,.45);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e1424; --surface: #161e33; --ink: #eef2fa; --muted: #a2aec4; --line: #26314b;
+    --learn: #7aa2ff; --learn-soft: #1b2a52; --practice: #4fd1c1; --practice-soft: #10332f;
+    --shadow: 0 1px 2px rgba(0,0,0,.4); --shadow-hover: 0 12px 28px rgba(0,0,0,.45);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: var(--font); font-size: 16px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--learn); outline-offset: 3px; border-radius: 8px; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  header.site {
+    background: var(--surface); border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; z-index: 10;
+  }
+  header.site .wrap { display: flex; align-items: center; justify-content: flex-start; gap: 16px; height: 64px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: -.01em; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
+    background: var(--learn); color: #fff; font-weight: 700; font-size: 17px;
+  }
+  :root[data-theme="dark"] .brand-mark { color: #0e1424; }
+  nav { display: flex; gap: 4px; }
+  nav a { padding: 8px 14px; border-radius: 8px; font-weight: 500; font-size: 15px; color: var(--muted); }
+  nav a:hover { background: var(--bg); color: var(--ink); }
+
+  .intro { padding: 56px 0 8px; }
+  .intro h1 { margin: 0 0 12px; font-size: clamp(32px, 5vw, 46px); line-height: 1.12; letter-spacing: -.03em; text-wrap: balance; max-width: 18ch; }
+  .intro p { margin: 0; color: var(--muted); font-size: 18px; max-width: 58ch; }
+
+  section { padding: 48px 0 8px; scroll-margin-top: 72px; }
+  .section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
+  .section-badge {
+    width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none;
+  }
+  .section-badge svg { width: 24px; height: 24px; }
+  #learn .section-badge { background: var(--learn-soft); color: var(--learn); }
+  #practice .section-badge { background: var(--practice-soft); color: var(--practice); }
+  .section-head h2 { margin: 0; font-size: 26px; letter-spacing: -.02em; line-height: 1.2; }
+  .section-head p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
+  .card {
+    display: flex; flex-direction: column; background: var(--surface);
+    border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .thumb {
+    position: relative; aspect-ratio: 16 / 10; overflow: hidden;
+    display: grid; place-items: center; font-weight: 700; font-size: 64px; letter-spacing: -.04em;
+  }
+  #learn .thumb { background: linear-gradient(135deg, var(--learn-soft), var(--bg)); color: var(--learn); }
+  #practice .thumb { background: linear-gradient(135deg, var(--practice-soft), var(--bg)); color: var(--practice); }
+  .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: var(--surface); }
+  .body { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 20px; flex: 1; }
+  .body h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; line-height: 1.3; }
+  .body p { margin: 0; color: var(--muted); font-size: 15px; flex: 1; }
+  .play { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; }
+  #learn .play { color: var(--learn); }
+  #practice .play { color: var(--practice); }
+  .play svg { width: 16px; height: 16px; transition: transform .18s ease; }
+  .card:hover .play svg { transform: translateX(3px); }
+
+  footer { margin-top: 72px; border-top: 1px solid var(--line); background: var(--surface); }
+  footer .wrap { padding: 28px 24px; color: var(--muted); font-size: 14px; }
+
+  @media (max-width: 560px) {
+    .wrap { padding: 0 16px; }
+    .intro { padding-top: 36px; }
+    nav a { padding: 8px 10px; font-size: 14px; }
+    .brand span.name { font-size: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .card, .play svg { transition: none; }
+    .card:hover { transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav aria-label="Sections">
+      <a href="#learn">Learn about Numbers</a>
+      <a href="#practice">Practice Counting</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap intro">
+    <h1>Count, learn and play with numbers</h1>
+    <p>Simple, hands-on games for early learners. Start with the number cards, then practise counting with six interactive activities.</p>
+  </div>
+
+  <div class="wrap">
+    <section id="learn" aria-labelledby="learn-title">
+      <div class="section-head">
+        <div class="section-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5z"/><path d="M4 21h14"/></svg>
+        </div>
+        <div>
+          <h2 id="learn-title">Learn about Numbers</h2>
+          <p>Build number sense before you play.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/number-learning/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">1 2 3<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/number-learning/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Number Learning Cards</h3>
+            <p>Recap numbers and quantities to 10.</p>
+            <span class="play">Open game <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <section id="practice" aria-labelledby="practice-title">
+      <div class="section-head">
+        <div class="section-badge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".5"/></svg>
+        </div>
+        <div>
+          <h2 id="practice-title">Practice Counting</h2>
+          <p>Put counting skills to work.</p>
+        </div>
+      </div>
+      <div class="grid">
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/count-and-toss/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">5<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/count-and-toss/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Count Quick and Toss</h3>
+            <p>Practice subitising to 5 with this bottle toss game.</p>
+            <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/quack-and-count/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">4<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/quack-and-count/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Quack &amp; Count</h3>
+            <p>Count 1 to 5 ducks! Companion game to Five Little Ducks story.</p>
+            <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/pizza-chef/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">6<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/pizza-chef/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Pizza Chef</h3>
+            <p>Count ingredients and follow recipes to make pizzas!</p>
+            <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/farm-counting/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">8<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/farm-counting/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Farm Counting</h3>
+            <p>Look at the group of farm animals, count them, and select the number.</p>
+            <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/counting-fun/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">3<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/counting-fun/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Counting Fun</h3>
+            <p>Tap on each item to count, then tap the number that matches the quantity.</p>
+            <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/flower-counting/" target="_blank" rel="noopener">
+          <div class="thumb" aria-hidden="true">7<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/flower-counting/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="body">
+            <h3>Flower Counting</h3>
+            <p>Count and collect the flowers.</p>
+            <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">Games open in a new tab and are hosted by AHS Resources.</div>
+</footer>
+
+</body>
+</html>
