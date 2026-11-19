@@ -9,34 +9,49 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Layout: sticky slim header, short intro, two labelled sections each with a responsive card grid. */
+  /* Layout: coloured header with nav flush right, short intro, two labelled sections of colour-coded cards. */
   :root {
-    --bg: #f6f8fb;
+    --bg: #f3f6ff;
     --surface: #ffffff;
-    --ink: #14213d;
-    --muted: #5a677d;
-    --line: #e1e7ef;
-    --learn: #2563eb;
-    --learn-soft: #e8efff;
-    --practice: #0d9488;
-    --practice-soft: #dff5f2;
-    --shadow: 0 1px 2px rgba(20,33,61,.06), 0 4px 14px rgba(20,33,61,.05);
-    --shadow-hover: 0 2px 4px rgba(20,33,61,.08), 0 12px 28px rgba(20,33,61,.12);
+    --ink: #1b2559;
+    --muted: #55608c;
+    --line: #dfe5fa;
+    --header: #3949c9;
+    --header-ink: #ffffff;
     --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --shadow: 0 1px 2px rgba(27,37,89,.06), 0 4px 14px rgba(27,37,89,.06);
+    --shadow-hover: 0 2px 4px rgba(27,37,89,.08), 0 12px 28px rgba(27,37,89,.16);
+    /* colour trios: main / soft tint / text-safe dark */
+    --orange: #f97316; --orange-s: #ffedd9; --orange-d: #c2410c;
+    --blue: #2563eb;   --blue-s: #e1ebff;   --blue-d: #1d4ed8;
+    --pink: #ec4899;   --pink-s: #fde4f1;   --pink-d: #be185d;
+    --green: #16a34a;  --green-s: #dcf5e4;  --green-d: #15803d;
+    --purple: #8b5cf6; --purple-s: #ece6ff; --purple-d: #6d28d9;
+    --teal: #0d9488;   --teal-s: #d9f4f0;   --teal-d: #0f766e;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0e1424; --surface: #161e33; --ink: #eef2fa; --muted: #a2aec4; --line: #26314b;
-      --learn: #7aa2ff; --learn-soft: #1b2a52; --practice: #4fd1c1; --practice-soft: #10332f;
-      --shadow: 0 1px 2px rgba(0,0,0,.4); --shadow-hover: 0 12px 28px rgba(0,0,0,.45);
+      --bg: #0f1530; --surface: #182047; --ink: #eef1ff; --muted: #a9b2d8; --line: #2a3563;
+      --header: #1f2a6e; --shadow: 0 1px 2px rgba(0,0,0,.4); --shadow-hover: 0 12px 28px rgba(0,0,0,.5);
+      --orange-s: #46280f; --orange-d: #fdba74;
+      --blue-s: #1c2c5e;   --blue-d: #93b4ff;
+      --pink-s: #4a1b38;   --pink-d: #f9a8d4;
+      --green-s: #153a26;  --green-d: #86efac;
+      --purple-s: #2f2459; --purple-d: #c4b5fd;
+      --teal-s: #123a39;   --teal-d: #5eead4;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0e1424; --surface: #161e33; --ink: #eef2fa; --muted: #a2aec4; --line: #26314b;
-    --learn: #7aa2ff; --learn-soft: #1b2a52; --practice: #4fd1c1; --practice-soft: #10332f;
-    --shadow: 0 1px 2px rgba(0,0,0,.4); --shadow-hover: 0 12px 28px rgba(0,0,0,.45);
+    --bg: #0f1530; --surface: #182047; --ink: #eef1ff; --muted: #a9b2d8; --line: #2a3563;
+    --header: #1f2a6e; --shadow: 0 1px 2px rgba(0,0,0,.4); --shadow-hover: 0 12px 28px rgba(0,0,0,.5);
+    --orange-s: #46280f; --orange-d: #fdba74;
+    --blue-s: #1c2c5e;   --blue-d: #93b4ff;
+    --pink-s: #4a1b38;   --pink-d: #f9a8d4;
+    --green-s: #153a26;  --green-d: #86efac;
+    --purple-s: #2f2459; --purple-d: #c4b5fd;
+    --teal-s: #123a39;   --teal-d: #5eead4;
     color-scheme: dark;
   }
 
@@ -48,60 +63,54 @@
     -webkit-font-smoothing: antialiased;
   }
   a { color: inherit; text-decoration: none; }
-  :focus-visible { outline: 3px solid var(--learn); outline-offset: 3px; border-radius: 8px; }
+  :focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; border-radius: 8px; }
 
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-  header.site {
-    background: var(--surface); border-bottom: 1px solid var(--line);
-    position: sticky; top: 0; z-index: 10;
-  }
-  header.site .wrap { display: flex; align-items: center; justify-content: flex-start; gap: 16px; height: 64px; }
-  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 18px; letter-spacing: -.01em; }
-  .brand-mark {
-    width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center;
-    background: var(--learn); color: #fff; font-weight: 700; font-size: 17px;
-  }
-  :root[data-theme="dark"] .brand-mark { color: #0e1424; }
-  nav { display: flex; gap: 4px; }
-  nav a { padding: 8px 14px; border-radius: 8px; font-weight: 500; font-size: 15px; color: var(--muted); }
-  nav a:hover { background: var(--bg); color: var(--ink); }
+  header.site { background: var(--header); position: sticky; top: 0; z-index: 10; box-shadow: 0 2px 10px rgba(27,37,89,.18); }
+  header.site .wrap { display: flex; align-items: center; justify-content: flex-end; height: 64px; }
+  nav { display: flex; gap: 6px; }
+  nav a { padding: 9px 16px; border-radius: 999px; font-weight: 600; font-size: 15px; color: var(--header-ink); opacity: .9; }
+  nav a:hover { background: rgba(255,255,255,.16); opacity: 1; }
+  :root :focus-visible { outline-color: var(--orange); }
+  header.site :focus-visible { outline-color: #fff; }
 
   .intro { padding: 56px 0 8px; }
   .intro h1 { margin: 0 0 12px; font-size: clamp(32px, 5vw, 46px); line-height: 1.12; letter-spacing: -.03em; text-wrap: balance; max-width: 18ch; }
   .intro p { margin: 0; color: var(--muted); font-size: 18px; max-width: 58ch; }
 
-  section { padding: 48px 0 8px; scroll-margin-top: 24px; }
+  section { padding: 48px 0 8px; scroll-margin-top: 88px; }
   .section-head { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
-  .section-badge {
-    width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; flex: none;
-  }
+  .section-badge { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; flex: none; background: var(--c); color: #fff; }
   .section-badge svg { width: 24px; height: 24px; }
-  #learn .section-badge { background: var(--learn-soft); color: var(--learn); }
-  #practice .section-badge { background: var(--practice-soft); color: var(--practice); }
+  #learn { --c: var(--orange); }
+  #practice { --c: var(--blue); }
   .section-head h2 { margin: 0; font-size: 26px; letter-spacing: -.02em; line-height: 1.2; }
   .section-head p { margin: 2px 0 0; color: var(--muted); font-size: 15px; }
 
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; }
   .card {
     display: flex; flex-direction: column; background: var(--surface);
-    border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    border: 1px solid var(--line); border-top: 5px solid var(--c); border-radius: 16px; overflow: hidden;
     box-shadow: var(--shadow); transition: transform .18s ease, box-shadow .18s ease;
   }
   .card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .card.c-orange { --c: var(--orange); --cs: var(--orange-s); --cd: var(--orange-d); }
+  .card.c-blue   { --c: var(--blue);   --cs: var(--blue-s);   --cd: var(--blue-d); }
+  .card.c-pink   { --c: var(--pink);   --cs: var(--pink-s);   --cd: var(--pink-d); }
+  .card.c-green  { --c: var(--green);  --cs: var(--green-s);  --cd: var(--green-d); }
+  .card.c-purple { --c: var(--purple); --cs: var(--purple-s); --cd: var(--purple-d); }
+  .card.c-teal   { --c: var(--teal);   --cs: var(--teal-s);   --cd: var(--teal-d); }
   .thumb {
     position: relative; aspect-ratio: 16 / 10; overflow: hidden;
     display: grid; place-items: center; font-weight: 700; font-size: 64px; letter-spacing: -.04em;
+    background: var(--cs); color: var(--cd);
   }
-  #learn .thumb { background: linear-gradient(135deg, var(--learn-soft), var(--bg)); color: var(--learn); }
-  #practice .thumb { background: linear-gradient(135deg, var(--practice-soft), var(--bg)); color: var(--practice); }
   .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: var(--surface); }
   .body { display: flex; flex-direction: column; gap: 8px; padding: 18px 20px 20px; flex: 1; }
   .body h3 { margin: 0; font-size: 18px; letter-spacing: -.01em; line-height: 1.3; }
   .body p { margin: 0; color: var(--muted); font-size: 15px; flex: 1; }
-  .play { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px; }
-  #learn .play { color: var(--learn); }
-  #practice .play { color: var(--practice); }
+  .play { margin-top: 8px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: 15px; color: var(--cd); }
   .play svg { width: 16px; height: 16px; transition: transform .18s ease; }
   .card:hover .play svg { transform: translateX(3px); }
 
@@ -111,8 +120,8 @@
   @media (max-width: 560px) {
     .wrap { padding: 0 16px; }
     .intro { padding-top: 36px; }
+    nav { gap: 2px; }
     nav a { padding: 8px 10px; font-size: 14px; }
-    .brand span.name { font-size: 16px; }
   }
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
@@ -122,6 +131,15 @@
 </style>
 </head>
 <body>
+
+<header class="site">
+  <div class="wrap">
+    <nav aria-label="Sections">
+      <a href="#learn">Learn about Numbers</a>
+      <a href="#practice">Practice Counting</a>
+    </nav>
+  </div>
+</header>
 
 <main id="top">
   <div class="wrap intro">
@@ -141,7 +159,7 @@
         </div>
       </div>
       <div class="grid">
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/number-learning/" target="_blank" rel="noopener">
+        <a class="card c-orange" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/number-learning/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">1 2 3<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/number-learning/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Number Learning Cards</h3>
@@ -163,7 +181,7 @@
         </div>
       </div>
       <div class="grid">
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/count-and-toss/" target="_blank" rel="noopener">
+        <a class="card c-blue" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/count-and-toss/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">5<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/count-and-toss/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Count Quick and Toss</h3>
@@ -171,7 +189,7 @@
             <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
           </div>
         </a>
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/quack-and-count/" target="_blank" rel="noopener">
+        <a class="card c-pink" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/quack-and-count/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">4<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/quack-and-count/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Quack &amp; Count</h3>
@@ -179,7 +197,7 @@
             <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
           </div>
         </a>
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/pizza-chef/" target="_blank" rel="noopener">
+        <a class="card c-green" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/pizza-chef/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">6<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/pizza-chef/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Pizza Chef</h3>
@@ -187,7 +205,7 @@
             <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
           </div>
         </a>
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/farm-counting/" target="_blank" rel="noopener">
+        <a class="card c-purple" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/farm-counting/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">8<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/farm-counting/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Farm Counting</h3>
@@ -195,7 +213,7 @@
             <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
           </div>
         </a>
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/counting-fun/" target="_blank" rel="noopener">
+        <a class="card c-teal" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/counting-fun/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">3<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/counting-fun/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Counting Fun</h3>
@@ -203,7 +221,7 @@
             <span class="play">Play now <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></span>
           </div>
         </a>
-        <a class="card" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/flower-counting/" target="_blank" rel="noopener">
+        <a class="card c-orange" href="https://ahsresources.github.io/AHSGameLibrary/Numeracy/flower-counting/" target="_blank" rel="noopener">
           <div class="thumb" aria-hidden="true">7<img src="https://ahsresources.github.io/AHSGameLibrary/Numeracy/flower-counting/preview.png" alt="" loading="lazy" onerror="this.remove()"></div>
           <div class="body">
             <h3>Flower Counting</h3>
